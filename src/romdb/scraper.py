@@ -41,7 +41,7 @@ def get_media_files(directory):
     return dirname
 
 #TVMODE
-def get_tvdb_api():
+def tvdb_api():
     """
     Gets a new instance of the Tvdb class using the api key
     hardcoded in the package.
@@ -71,7 +71,7 @@ def directory_is_series(directory):
     #3. PROFIT!    
 
 #@log_info
-def get_series_name_from_file_name(dirname):
+def series_name_from_file_name(dirname):
     """
     Attempt to extract the series name from the given directory or file name.\n
     This will always work for names which follow the scene naming conventions of:

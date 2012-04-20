@@ -52,3 +52,15 @@ samt afhverju ertu að hugsa allt á ensku gimpið þitt
 * Table notes
 ** Maybe genre shouldn't be there. Make a join table with 'tags' tag<->tag-series<-> series (many many baby)
 
+* Parsing
+** Start with the easiest/most common case, single episode, properly named scene releases. 
+*** Single eps can easily be parsed for series, season and episode info.
+*** If it's a dir, check if there is a media file inside. If there are rars, unpack them into the output/[Series]/s[season] directory.
+
+
+
+
+
+
+
+ 
