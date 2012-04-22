@@ -88,7 +88,7 @@ def series_name_from_file_name(dirname):
     result = result.replace('.', ' ')
     result = result.strip('-')
     return result.title()
-    
+
 def test():
     
     #for dir_ in traverse_source(sources['tv'][0]):
