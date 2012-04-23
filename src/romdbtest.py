@@ -7,9 +7,31 @@ excluded_dirs = ('sample', )
 
 #regular expressions for parsing series, season and ep info from filenames
 filename_regexes = [
-    r'(?P<series>.+)\.s(?P<season>\d+)e(?P<episode>\d+)', #series.name.s01e01.extra.shit
-    r'(?P<series>(.?)*)\s(?P<season>\d+)x(?P<episode>\d+)', #series name 01x01 extra shit    
+    #r'(?P<series>.+)\.s(?P<season>\d+)e(?P<episode>\d+)', #series.name.s01e01.i.dont.care
+    #r'(?P<series>(.?)*)\s(?P<season>\d+)x(?P<episode>\d+)', #series name 01x01 i dont care
+    #Series name S01E01 i dont care
+    #series.name.s01e01.i.dont.care
+    r'(?P<series>[\w\.\s]*)[\\\/\.\-_\s]*[Ss](?P<season>\d+)[eE](?P<episode>\d+)'
     ]
+
+
+names = [
+    'Top Gear - S12E02.avi',
+    'Top Gear - S12E07.avi',
+    'Top Gear - S12E06.avi',
+    'Top Gear - S12E05.avi',
+    'Top Gear - S12E04.avi',
+    'Top Gear - S12E03.avi',
+    'Top Gear - S12E01.avi',
+    'Test show shit s10e10 blehle',
+    'Some.whack.shit.s10e10 bleh',    
+    ]
+for name in names:
+    m = re.match(filename_regexes[2], name, re.IGNORECASE)
+    if m:
+        print m.groups()
+
+
 
 #file names that will be completely ignored (* for wildcard)
 ignored_files = ('thumbs.db',) #todo: this belongs in a config file
