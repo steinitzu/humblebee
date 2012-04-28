@@ -1,1 +1,3 @@
 * Parsing tv show file and folder names
+
+* TODO Deluge labels. Automatically parse scene release tv shows and apply tv label.

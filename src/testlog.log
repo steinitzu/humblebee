@@ -1,0 +1,3 @@
+INFO 2012-04-28 03:45:18,190 <stdin>.non_destructive_test: Number of proper_episodes = 28
+INFO 2012-04-28 03:45:18,191 <stdin>.non_destructive_test: Number of unparseable_eps = 70
+INFO 2012-04-28 03:45:18,191 <stdin>.non_destructive_test: Number of single_ep_dirs = 79
