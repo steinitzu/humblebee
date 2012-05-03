@@ -1,0 +1,32 @@
+INFO 2012-05-01 00:41:08,935: series: I Escaped Real Prison Breaks, s1, e1
+path=/home/steini/tvtesttree/+incoming/I.Escaped.Real.Prison.Breaks.S01E01-04
+
+
+
+why the zero?
+
+INFO 2012-05-01 00:48:45,370: series: Simpsons 0, s8, e10
+path=/home/steini/tvtesttree/Simpsons/Simpsons Season 08 - Complete/Simpsons 08x10 - The Springfield Files [rl].avi
+
+
+
+* For 510 naming scheme
+Check the parent dir for a season, then go back to the filename
+season_num = 5
+strip 5 from the number
+there you have the ep num
+
+INFO: series: Scrubs, s5, eNone
+path=/home/steini/tvtesttree/Scrubs/Season 5/510 - Her Story II.avi
+
+
+
+* Yeah, this is the most fucked up naming scheme
+INFO: series: 131,, s1, e32
+path=/home/steini/tvtesttree/Seinfeld/Season 7 - [DVD]/131, 132 - The Bottle Deposits - [DVD].avi
+
+
+
+INFO 2012-05-01 00:58:33,621: Number of parsed_eps = 2505
+INFO 2012-05-01 00:58:33,621: Number of unparseable_eps = 1785
+INFO 2012-05-01 00:58:33,621: Number of single_ep_dirs = 220

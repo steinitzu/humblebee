@@ -2,6 +2,9 @@ import os, re
 from collections import namedtuple
 
 from romlog import *
+from regexes import tv_regexes
+
+raise DeprecationWarning('This module has been deprecated')
 
 #TODO: Use the ep objects instead of passing paths around
 
@@ -46,6 +49,43 @@ and absolute path to the media file.
 Episode = namedtuple('Episode', 'info, path')
 
 
+def parse_filename(path):
+    """
+    Takes absolute path as input -> returns an Episode object
+    """
+    ep = Episode({'season':None,'series':None,'episode':None}, path)
+    directory,filename = os.path.split(path)
+    match = None
+    for pattern in tv_regexes:
+        match = re.match(pattern,filename)
+        if match:
+            break
+    if not match:
+        #ep is unparseable
+        return ep
+    groups = match.groupdict()
+    #when score is 0, info is complete
+    #each key in (season,series,episode) adds 1 to the score
+    score = -3
+    if groups.haskey('series'):
+        ep.info['series'] = groups['series']
+        score+=1
+    if groups.haskey('season'):
+        ep.info['season'] = int(groups['season'])
+        score+=1
+    if groups.haskey('episode'):
+        ep.info['episode'] = int(groups['episode'])
+        score+=1
+    if score == 0:
+        #parsing is complete
+        return ep
+    if ep.info['season'] is None and ep.info['episode'] is not None:
+        seasoninfo = parse_filename(directory)
+        if seasoninfo.info['season'] is not None and seasoninfo.info['series'] it not None:
+            ep.info['series'] = seasoninfo.info['series']
+            ep.info['season'] = seasoninfo.info['season']
+    return ep
+    
 class TVSourceScanner(object):
     """
     TVSourceScanner class: \n
@@ -169,11 +209,7 @@ def get_info_from_filename(path):
         raise RomError('No filename in path \'%s\'.' % path)
 
     info = parse_episode_filename(filename)
-    return Episode(info, path)        
-        
-
-
-
+    return Episode(info, path)     
 
 def parse_episode_filename(filename):
     """
