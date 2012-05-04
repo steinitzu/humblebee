@@ -100,6 +100,8 @@ tv_regexes = [
     ((?<![. _-])-(?P<release_group>[^-]+))?)?$  # Group
     '''),
 
+
+    
     Regex('stupid',
     # tpz-abc102
     '''
@@ -120,6 +122,19 @@ tv_regexes = [
     (?P<extra_info>.+)$                         # Source_Quality_Etc-
     '''),
 
+
+    Regex('season_ep_only',
+    # S01E01
+    # season 1 episode 2
+    # s01xe02
+    '''
+    (s|season)%(separator)s*
+    (?P<season_num>\d+)(%(separator)s|x)*
+    (e|episode)%(separator)s*
+    (?P<ep_num>\d+)
+    '''),
+    
+
     Regex('season_only',
     # Show.Name.S01.Source.Quality.Etc-Group
     '''
@@ -129,7 +144,7 @@ tv_regexes = [
     [. _-]*((?P<extra_info>.+?)                 # Source_Quality_Etc-
     ((?<![. _-])-(?P<release_group>[^-]+))?)?$  # Group
     '''),
-
+          
     Regex('no_season_multi_ep',
     # Show.Name.E02-03
     # Show.Name.E02.2010
@@ -169,6 +184,15 @@ tv_regexes = [
     (-(?P<release_group>.+))?)?$                        # Group
     '''),
 
+    Regex('bare_no_series',
+    # 102.ep.name.Etc-Group
+    '''
+    ^(?P<season_num>\d{1,2})                    
+    (?P<ep_num>\d{2})
+    (%(separator)s+(?P<extra_info>(?!\d{3}%(separator)s+)[^-]+)
+    (-(?P<release_group>.+))?)?$    
+    '''),
+
     Regex('no_season',
     # Show Name - 01 - Ep Name
     # 01 - Ep Name
@@ -177,7 +201,7 @@ tv_regexes = [
     (?P<ep_num>\d{2})                           # 02
     [. _-]+((?P<extra_info>.+?)                 # Source_Quality_Etc-
     ((?<![. _-])-(?P<release_group>[^-]+))?)?$  # Group
-    '''),
+    '''),          
     
 ]
 

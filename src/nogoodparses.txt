@@ -30,3 +30,97 @@ path=/home/steini/tvtesttree/Seinfeld/Season 7 - [DVD]/131, 132 - The Bottle Dep
 INFO 2012-05-01 00:58:33,621: Number of parsed_eps = 2505
 INFO 2012-05-01 00:58:33,621: Number of unparseable_eps = 1785
 INFO 2012-05-01 00:58:33,621: Number of single_ep_dirs = 220
+
+
+
+
+
+INFO: Number of parsed_eps = 3554
+INFO: Number of unparseable_eps = 503
+INFO: Number of single_ep_dirs = 154
+
+
+
+There's a flaw in assuming 2 up is the series name, cause sometime's it's 1 up
+
+INFO: series: None, sNone, e09
+path=/home/steini/tvtesttree/Band of Brothers/09. Why We Fight.avi
+
+
+
+Should check if is None, cause of 0
+
+INFO: series: Curb Your Enthusiasm, s1, e0
+path=/home/steini/tvtesttree/Curb Your Enthusiasm/Curb Your Enthusiasm - Season 1/Curb Your Enthusiasm - S01E00 - Larry David- Curb Your Enthusiasm (Pilot).mkv
+
+
+
+
+INFO: Number of parsed_eps = 3613
+INFO: Number of unparseable_eps = 444
+INFO: Number of single_ep_dirs = 154
+
+
+
+* Fri May  4 02:58:15 GMT 2012
+
+** probably doable
+** Maybe some kind of reverse parsing, starting from directory
+
+INFO: series: Spin City, s4, eNone
+path=/home/steini/tvtesttree/Spin City/Season 4/SC403.avi
+
+INFO: series: Flight of the Conchords, s2, eNone
+path=/home/steini/tvtesttree/Flight of the Conchords/Flight of the Conchords SEASON 2/FOTCs2e3/FOTCs2e3.avi
+
+path=/home/steini/tvtesttree/The Office/The Office UK (2001) Season 2/Th2E03 - Party [digitaldistractions].avi
+
+INFO: series: The King Of Queens, s1, eNone
+path=/home/steini/tvtesttree/The King of Queens/The King Of Queens - Season 1 DVD/18TheKingOfQueens.avi
+
+INFO: series: Seinfeld, s0, e67
+path=/home/steini/tvtesttree/Seinfeld/Season 5 - [DVD]/067 - The Glasses - [DVD].avi
+
+** what the hell parses this?
+INFO: series: 2, s2, e1
+path=/home/steini/tvtesttree/Flight of the Conchords/Flight of the Conchords SEASON 2/FOTCs2e1/2.01-A Good Opportunity.avi
+
+INFO: series: 3, s3, e5
+path=/home/steini/tvtesttree/Arrested Development/Season 3/3-05 Mr F.avi
+
+INFO: series: 3, s3, e11
+path=/home/steini/tvtesttree/Arrested Development/Season 3/3-11 Family Ties.avi
+
+** Check for extra ep
+
+INFO: series: Invader Zim, s1, e1
+path=/home/steini/tvtesttree/Invader Zim DVD-RIPs by sNeK/Zim Vol 01 Disc 01/invader.zim.[1x01&1x02].the.nightmare.begins.snek.avi
+INFO: series: Invader Zim, s5, e5
+path=/home/steini/tvtesttree/Invader Zim DVD-RIPs by sNeK/Zim Vol 03 Disc 05/invader.zim.[5x05&06].backseat.drivers.from.beyond.the.stars.snek.avi
+
+** This shit, can it be handled?
+INFO: series: Aaf Kvs, s6, e2
+path=/home/steini/tvtesttree/Kenny vs. Spenny/Season 6/aaf-kvs.s06e02.avi
+
+INFO: series: Aaf Tssp, s3, e9
+path=/home/steini/tvtesttree/The Sarah Silverman Program/Season 3/aaf-tssp.s03e09.720p.mkv
+
+INFO: series: Cheers, s7, e722
+path=/home/steini/tvtesttree/Cheers/Season 7/Episode 722 The Visiting Lecher.avi
+
+
+INFO: series: Drawn Together Seasons 1 3 Uncensored Xvid Dvdrip, s2, e8
+path=/home/steini/tvtesttree/Drawn Together/Drawn Together Seasons 1-3 Uncensored XviD DVDRip/Season 2/208 - Terms Of Endearment.avi
+
+** leave out the 1
+
+INFO: series: Titus 1, s1, e6
+path=/home/steini/tvtesttree/Titus/Titus Season 1/Titus.1.06.Red.Asphalt.avi
+
+** ffs seinfeld
+
+INFO: series: Seinfeld, s1, e36
+path=/home/steini/tvtesttree/Seinfeld/Season 8/136 - The Soul Mate.mpg
+
+INFO: series: Seinfeld, s1, e48
+path=/home/steini/tvtesttree/Seinfeld/Season 8/148 - The Van Buren Boys.mpg

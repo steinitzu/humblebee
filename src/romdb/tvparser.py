@@ -1,6 +1,8 @@
 import os, re
 
-from regexes import tv_regexes, junk
+import regexes
+junk = regexes.junk
+tv_regexes = regexes.tv_regexes
 
 from romexception import *
 
@@ -22,7 +24,8 @@ class Episode(dict):
             ep_num=None,
             extra_ep_num=None,
             extra_info=None,
-            release_group=None            
+            release_group=None,
+            which_regex=None
             )
 
     def __repr__(self):
@@ -146,14 +149,16 @@ def parse_filename(path):
     """
     parse_filename(path) -> Episode\n
     path should be absolute.    
-    """
+    """    
     ep = Episode(path)
     directory,filename = os.path.split(path)
+    if os.path.isfile(path):
+        filename = os.path.splitext(filename)[0]
     match = None
-    matchedregex = None
     for regex in tv_regexes:
         match = re.match(regex.pattern,filename)
         if match:
+            ep['which_regex'] = regex.alias
             break
     if not match:
         #we are unmatched
