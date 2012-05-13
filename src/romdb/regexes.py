@@ -52,6 +52,12 @@ tv_regexes = [
     ((?<!%(separator)s)-(?P<release_group>[^-]+))?)?$  # Group
     '''),
 
+    Regex('stupid_acronyms',
+    '''
+    (?P<release_group>.+?)-\w+?[\.]?
+    s(?P<season_num>\d+)e(?P<ep_num>\d+)
+    '''),    
+
     Regex('standard',
     # Show.Name.S01E02.Source.Quality.Etc-Group
     # Show Name - S01E02 - My Ep Name
@@ -111,6 +117,9 @@ tv_regexes = [
     (?P<ep_num>\d{2})$                          # 02
     '''),
 
+
+    
+
     Regex('verbose',
     # Show Name Season 1 Episode 2 Ep Name
     '''
@@ -158,6 +167,18 @@ tv_regexes = [
     ((?<![. _-])-(?P<release_group>[^-]+))?)?$  # Group
     '''),
 
+    Regex('bare_no_series',
+    #102
+    #1x02
+    #1-02
+    '''
+    ^(?P<season_num>\d{1,2})(%(separator)s|x)*
+    (?P<ep_num>\d{2})
+    (%(separator)s+(?P<extra_info>(?!\d{3}%(separator)s+)[^-]+)
+    (-(?P<release_group>.+))?)?$
+    '''),
+    
+
     Regex('no_season_general',
     # Show.Name.E23.Test
     # Show.Name.Part.3.Source.Quality.Etc-Group
@@ -182,6 +203,17 @@ tv_regexes = [
     (?P<ep_num>\d{2})                                   # 02 and separator
     ([. _-]+(?P<extra_info>(?!\d{3}[. _-]+)[^-]+)       # Source_Quality_Etc-
     (-(?P<release_group>.+))?)?$                        # Group
+    '''),
+
+    Regex('bare_no_series',
+    #102
+    #1x02
+    #1-02
+    '''
+    ^(?P<season_num>\d{1,2})(%(separator)s|x)*
+    (?P<ep_num>\d{2})
+    (%(separator)s+(?P<extra_info>(?!\d{3}%(separator)s+)[^-]+)
+    (-(?P<release_group>.+))?)?$
     '''),
 
     Regex('bare_no_series',

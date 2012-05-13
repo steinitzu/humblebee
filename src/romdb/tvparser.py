@@ -43,6 +43,13 @@ class Episode(dict):
             if self[key] is not None: continue
             self[key] = otherep[key]
 
+def ep_is_parsed(ep):
+    """
+    Ep is fully parsed, true or false.\n
+    Will throw key exceptions if it's not a good ep dict.    
+    """
+    return ep['series_name'] and ep['season_num'] is not None and ep['ep_num'] is not None
+
 
 class TVParser(object):
 
@@ -61,18 +68,21 @@ class TVParser(object):
 
         for subdir in get_sub_directories(dir_):
             ep = parse_filename(subdir)
-            if ep['series_name'] and ep['season_num'] and ep['ep_num']:
+            if ep_is_parsed(ep):
+            #if ep['series_name'] and ep['season_num'] and ep['ep_num']:
                 #we handle single ep dirs specially cause the special mkay
                 self.single_ep_dirs.append(ep) 
                 continue
             for file_ in get_video_files(subdir):
                 ep = parse_filename(file_)
-                if ep['series_name'] and ep['season_num'] and ep['ep_num']:
+                if ep_is_parsed(ep):
+                #if ep['series_name'] and ep['season_num'] and ep['ep_num']:
                     #TODO: add to database
                     self.parsed_eps.append(ep)
                 else:
                     ep = hardcore_parse_filename(ep)
-                    if ep['series_name'] and ep['season_num'] and ep['ep_num']:
+                    if ep_is_parsed(ep):
+                    #if ep['series_name'] and ep['season_num'] and ep['ep_num']:
                         self.parsed_eps.append(ep)
                     else:
                         self.unparseable_eps.append(ep)                    
@@ -139,9 +149,10 @@ def clean_ep(ep):
     try:
         ep['ep_num'] = int(ep['ep_num'])
     except ValueError as e:
-        raise RomError(
-            'Original message %s\n%s' % (e.message, ep)
-            )
+        ep['ep_num'] = None
+        #raise RomError(
+        #    'Original message %s\n%s' % (e.message, ep)
+        #    )
     
     return ep
 
@@ -164,7 +175,8 @@ def parse_filename(path):
         #we are unmatched
         return ep
     ep.update(match.groupdict())
-    if ep['series_name'] and ep['season_num'] and ep['ep_num']:
+    if ep_is_parsed(ep):
+    #if ep['series_name'] and ep['season_num'] and ep['ep_num']:
         #wow, that was easy
         return clean_ep(ep)
     return ep
@@ -193,7 +205,7 @@ def hardcore_parse_filename(ep):
         #We are going to assume that ../../ is the series name
         ep['series_name'] = os.path.split(directory)[1]
         
-    if ep['series_name'] and ep['season_num'] and ep['ep_num']:
-        #ep is full
+    #if ep['series_name'] and ep['season_num'] and ep['ep_num']:
+    if ep_is_parsed(ep):
         return clean_ep(ep)
     return ep

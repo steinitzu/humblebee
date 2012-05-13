@@ -48,7 +48,9 @@ path=/home/steini/tvtesttree/Band of Brothers/09. Why We Fight.avi
 
 
 
-Should check if is None, cause of 0
+* Should check if is None, cause of 0
+** DONE yes?  (seee ep_is_parsed(ep))
+
 
 INFO: series: Curb Your Enthusiasm, s1, e0
 path=/home/steini/tvtesttree/Curb Your Enthusiasm/Curb Your Enthusiasm - Season 1/Curb Your Enthusiasm - S01E00 - Larry David- Curb Your Enthusiasm (Pilot).mkv
@@ -64,7 +66,7 @@ INFO: Number of single_ep_dirs = 154
 
 * Fri May  4 02:58:15 GMT 2012
 
-** probably doable
+
 ** Maybe some kind of reverse parsing, starting from directory
 
 INFO: series: Spin City, s4, eNone
@@ -83,13 +85,11 @@ path=/home/steini/tvtesttree/Seinfeld/Season 5 - [DVD]/067 - The Glasses - [DVD]
 
 ** what the hell parses this?
 INFO: series: 2, s2, e1
-path=/home/steini/tvtesttree/Flight of the Conchords/Flight of the Conchords SEASON 2/FOTCs2e1/2.01-A Good Opportunity.avi
+*** DONE path=/home/steini/tvtesttree/Flight of the Conchords/Flight of the Conchords SEASON 2/FOTCs2e1/2.01-A Good Opportunity.avi
+
 
 INFO: series: 3, s3, e5
-path=/home/steini/tvtesttree/Arrested Development/Season 3/3-05 Mr F.avi
-
-INFO: series: 3, s3, e11
-path=/home/steini/tvtesttree/Arrested Development/Season 3/3-11 Family Ties.avi
+*** DONE path=/home/steini/tvtesttree/Arrested Development/Season 3/3-05 Mr F.avi
 
 ** Check for extra ep
 
@@ -105,12 +105,8 @@ path=/home/steini/tvtesttree/Kenny vs. Spenny/Season 6/aaf-kvs.s06e02.avi
 INFO: series: Aaf Tssp, s3, e9
 path=/home/steini/tvtesttree/The Sarah Silverman Program/Season 3/aaf-tssp.s03e09.720p.mkv
 
-INFO: series: Cheers, s7, e722
-path=/home/steini/tvtesttree/Cheers/Season 7/Episode 722 The Visiting Lecher.avi
-
-
 INFO: series: Drawn Together Seasons 1 3 Uncensored Xvid Dvdrip, s2, e8
-path=/home/steini/tvtesttree/Drawn Together/Drawn Together Seasons 1-3 Uncensored XviD DVDRip/Season 2/208 - Terms Of Endearment.avi
+*** DONE path=/home/steini/tvtesttree/Drawn Together/Drawn Together Seasons 1-3 Uncensored XviD DVDRip/Season 2/208 - Terms Of Endearment.avi
 
 ** leave out the 1
 
@@ -119,8 +115,57 @@ path=/home/steini/tvtesttree/Titus/Titus Season 1/Titus.1.06.Red.Asphalt.avi
 
 ** ffs seinfeld
 
-INFO: series: Seinfeld, s1, e36
-path=/home/steini/tvtesttree/Seinfeld/Season 8/136 - The Soul Mate.mpg
+INFO: 
+season_num = 0
+which_regex = bare_no_series
+extra_ep_num = None
+series_name = Seinfeld
+ep_num = 62
+release_group =  [DVD]
+extra_info = The Handicap Spot 
+*** TODO path = '/home/steini/tvtesttree/Seinfeld/Season 4 - [DVD]/062 - The Handicap Spot - [DVD].avi'
 
-INFO: series: Seinfeld, s1, e48
-path=/home/steini/tvtesttree/Seinfeld/Season 8/148 - The Van Buren Boys.mpg
+INFO: 
+season_num = 0
+which_regex = bare
+extra_ep_num = None
+series_name = 043,
+ep_num = 44
+release_group =  [DVD]
+extra_info = The Pitch, The Ticket 
+*** TODO path = '/home/steini/tvtesttree/Seinfeld/Season 4 - [DVD]/043, 044 - The Pitch, The Ticket - [DVD].avi'
+
+
+** ffs cheers
+INFO: 
+season_num = 6
+which_regex = no_season_general
+extra_ep_num = None
+series_name = Cheers
+ep_num = 617
+release_group = None
+extra_info = To All The Girls I've Loved Before
+*** TODO path = '/home/steini/tvtesttree/Cheers/Season 6/Episode 617 To All The Girls I've Loved Before.avi'
+
+INFO: 
+season_num = 6
+which_regex = no_season_general
+extra_ep_num = None
+series_name = Episode 603 Little Carla, Happy At Last
+ep_num = 1
+release_group = None
+extra_info = None
+*** TODO path = '/home/steini/tvtesttree/Cheers/Season 6/Episode 603 Little Carla, Happy At Last - Part 1.avi'
+
+
+** ffs titus
+INFO: 
+season_num = 1
+which_regex = no_season
+extra_ep_num = None
+series_name = Titus 1
+ep_num = 5
+release_group = None
+extra_info = Titus.Integritous
+*** TODO path = '/home/steini/tvtesttree/Titus/Titus Season 1/Titus.1.05.Titus.Integritous.avi'
+

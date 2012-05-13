@@ -62,5 +62,42 @@ samt afhverju ertu að hugsa allt á ensku gimpið þitt
 
 
 
+* CLASSES
 
- 
+** Episode(dict)
+*** func is_fully_parsed(self)
+self[ep_num] and self[season_num] and self[series_name]
+if all exist, return true
+
+** TVParser
+*** attr parsed_eps
+list successfully parsed ep objects
+*** attr unparsed_eps
+list partially or completely unparsed eps bin
+*** attr single_ep_dirs
+list directories that contain a single episode
+
+*** func _scan_source(self, _dir)
+is called recursively
+goes through the subfolders in _dir looking for media files
+will attempt to parse every subfolder name as an episode
+if it is fully parseable it is dumped in [single_ep_dirs] and that subfolder will not be parsed further
+
+
+
+
+* A thought about parsing
+When an ep from parsed_eps is looked up on tvdb and no match is found 
+what should happen is some kind of reverse parsing.
+It will find the upmost directory containing the episode below source
+e.g. if source is /home/tvshow/ and path is /home/tvshows/house/
+the dir to start parsing is house/
+It might assume that dir name is the series name and below that is parsed for season number
+
+Although, might want to do something so +incoming doesn't get parsed
+Perhaps keep a list of dirs that contain other properly parsed episodes and check if it's in that dir
+
+
+* ability to organize by local db
+there will be a simple local database editor
+there will be an option which renames and organizes based on the info in local db linked to each file
