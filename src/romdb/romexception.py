@@ -1,4 +1,5 @@
-
+#!/usr/bin/env python
+#encoding:utf-8
 
 
 class RomError(Exception):
@@ -7,6 +8,10 @@ class RomError(Exception):
 class FileNotFoundError(RomError):
     def __init__(self, *args):
         super(FileNotFoundError, self).__init__(*args)
+
+class InvalidArgumentError(RomError):
+    def __init__(self, *args):
+        super(InvalidArgumentError, self).__init__(*args)
 
 def main():
     raise FileNotFoundError('lol', 'ae2')

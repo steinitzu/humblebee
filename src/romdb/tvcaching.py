@@ -1,12 +1,14 @@
 
 
 
-"""
-Stuff for caching series objects and shit.
-Will hold a nifty little datastore for this purpose.
-The scraper will check here first before pulling from tvdb.
-"""
 
-class CacheStore(dict):
-    #TODO: Eitthvad snidugt
-    pass
+"""
+Will store mappings from file name series name to real series name
+supported by tvdb, defined by user.
+e.g. {'house md' : 'house'}
+"""
+translations = {}
+
+
+
+

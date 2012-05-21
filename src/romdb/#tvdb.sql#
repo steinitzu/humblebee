@@ -1,0 +1,60 @@
+
+/*
+TOOD: make join tables for actors, directors, writers, etc for a series.
+*/
+
+/*[TV]*/
+CREATE TABLE IF NOT EXISTS series (
+        id INTEGER PRIMARY KEY NOT NULL, /*The tvdb series_id*/
+        title VARCHAR,
+        summary TEXT,
+        first_air DATE, /*integer is appropriate?*/        
+        run_time INTEGER, /*runtime in minutes*/
+        network VARCHAR
+);
+
+CREATE TABLE IF NOT EXISTS season (
+        id INTEGER PRIMARY KEY NOT NULL, /*the tvdb season id*/
+        season_number INTEGER,
+        series_id INTEGER, /*TODO: Make it foreign key*/
+        FOREIGN KEY(series_id) REFERENCES series(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS episode (
+        id INTEGER PRIMARY KEY NOT NULL, /*the tvdb episode id*/
+        episode_number INTEGER,
+        title VARCHAR,
+        air_date DATE,
+        summary TEXT,
+        filename VARCHAR,
+        season_id INTEGER,
+        FOREIGN KEY(season_id) REFERENCES season(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS actor (
+        id INTEGER PRIMARY KEY NOT NULL,
+        actor_name VARCHAR,
+        picture_file VARCHAR
+);
+
+CREATE TABLE IF NOT EXISTS actor_role_series (
+        actor_id INTEGER NOT NULL,
+        series_id INTEGER NOT NULL,
+        role_name VARCHAR NOT NULL,
+        FOREIGN KEY(actor_id) REFERENCES actor(id) ON DELETE CASCADE,
+        FOREIGN KEY(series_id) REFERENCES series(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS genre_tag (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        tag VARCHAR NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS series_genre_tag (
+        series_id INTEGER NOT NULL,
+        genre_tag_id INTEGER NOT NULL,
+        FOREIGN KEY(series_id) REFERENCES series(id) ON DELETE CASCADE,
+        FOREIGN KEY(genre_tag_id) REFERENCES genre_tag(id) ON DELETE CASCADE
+);
+
+/*[/TV]*/

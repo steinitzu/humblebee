@@ -86,6 +86,8 @@ if it is fully parseable it is dumped in [single_ep_dirs] and that subfolder wil
 
 
 
+
+
 * A thought about parsing
 When an ep from parsed_eps is looked up on tvdb and no match is found 
 what should happen is some kind of reverse parsing.
@@ -101,3 +103,17 @@ Perhaps keep a list of dirs that contain other properly parsed episodes and chec
 * ability to organize by local db
 there will be a simple local database editor
 there will be an option which renames and organizes based on the info in local db linked to each file
+
+
+* Actors
+** tvdb_api doesn't seem to support actors well
+Do I need to extend it my self to add proper actor support?
+wt
+
+* Quality battle
+If an episode which already exists in the database is being added again from another file
+** 1. diff the files 
+if they are same, delete the one not in db
+** 2. check which file has higher quality
+check resolution, encoding, bitrate and that stuff to determine it
+lower quality file will be replaced by a higher quality one

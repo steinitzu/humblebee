@@ -115,6 +115,18 @@ path=/home/steini/tvtesttree/Titus/Titus Season 1/Titus.1.06.Red.Asphalt.avi
 
 ** ffs seinfeld
 
+*** FUCKING SEINFELD
+INFO: 
+season_num = 1
+which_regex = bare
+extra_ep_num = None
+series_name = 100 %
+ep_num = 1
+release_group =  [DVD]
+extra_info = Highlights of a Hundred 
+path = '/home/steini/tvtesttree/Seinfeld/Season 6 - [DVD]/100, 101 - Highlights of a Hundred - [DVD].avi'
+current bin = found_at_tvdb2012-05-15
+
 INFO: 
 season_num = 0
 which_regex = bare_no_series

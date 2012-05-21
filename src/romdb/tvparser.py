@@ -94,8 +94,9 @@ class TVParser(object):
 def get_sub_directories(dir_):
     """
     A generator functions which yields first level sub
-    directories in the given dir_.
-    Ignores dirs in ignored_dirs.
+    directories in the given dir_.\n
+    Ignores dirs in ignored_dirs.\n
+    returns absolute paths    
     """
     for name in os.listdir(dir_):
         abspath = os.path.join(dir_,name)
@@ -108,7 +109,8 @@ def get_sub_directories(dir_):
 
 def get_video_files(dir_):
     """
-    Generator function. Yields video files in given dir_
+    Generator function. Yields video files in given dir_.\n
+    returns absolute paths
     """
     for name in os.listdir(dir_):
         abspath = os.path.join(dir_,name)
