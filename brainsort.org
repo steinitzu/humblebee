@@ -117,3 +117,83 @@ if they are same, delete the one not in db
 ** 2. check which file has higher quality
 check resolution, encoding, bitrate and that stuff to determine it
 lower quality file will be replaced by a higher quality one
+
+
+* names
+brandon
+couch potato
+couchman
+potatoman
+potato
+
+visualextravaganza
+tvservant
+filemanager
+filer
+pro-filer
+filer of professionalism
+the tv manager from hell
+ttvmfh
+
+tongo is not a media player
+tinamp
+
+tvamper
+tviler
+tvingo
+tvanger
+
+tvis
+tvendur
+tventyone two
+twatter of doom
+tweek it
+
+TVeeker
+TVeakalon
+TVilight
+
+
+TVorganizer
+TVmanager
+man my TV
+mongoloid
+mongoTV
+manglemyTV
+sortmyTV
+TVSORTER of doom
+TViggle my jimmmies
+Rustle my tv
+tvunfucker
+tvundfucker
+tvunrocker
+
+untangles
+
+episode untangler
+
+eptangler
+tanglep
+
+lambokockm
+cockarootv
+
+tvbitch
+seabitch
+ship's boy
+
+greenman
+
+bottled episodes
+unbottle my episodes
+unleash my eps
+eps unleashed
+
+
+working title
+TVUNFUCKER
+
+
+
+* THIS IS THE NEW SHIT
+** Parser
