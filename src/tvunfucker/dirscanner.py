@@ -7,7 +7,7 @@ from exceptions import *
 
 #these functions belong to the world
 
-def get_sub_directories(dir_):
+def _get_sub_directories(dir_):
     """
     A generator functions which yields first level sub
     directories in the given dir_.\n
@@ -23,7 +23,7 @@ def get_sub_directories(dir_):
             continue
         yield abspath
 
-def get_video_files(dir_):
+def _get_video_files(dir_):
     """
     Generator function. Yields video files in given dir_\n
     yields absolute paths
@@ -43,10 +43,13 @@ def get_video_files(dir_):
 
 
 def dir_is_single_ep(dir_):
+    ep = parser.ez_parse_episode(dir_)
+    return ep.is_fully_parsed()
     #TODO: check if dir has a single ep
     #directories will be parsed twice, whic is gay
     #once here and again if this is true and it is passed on to the parser
-    raise NotImplementedError('shit is not implemented')
+    #raise NotImplementedError('shit is not implemented')
+
 
 class SourceScanner(object):
 
@@ -63,10 +66,10 @@ class SourceScanner(object):
                 '\'%s\' is not a valid directory.' % dir_
                 )
 
-        for subdir in get_sub_directories(dir_):
+        for subdir in _get_sub_directories(dir_):
             log.debug('Probing directory \'%s\'' % subdir)
             if dir_is_single_ep(subdir):
                 yield subdir
                 continue
-            for file_ in get_video_files(subdir):
+            for file_ in _get_video_files(subdir):
                 yield file_
