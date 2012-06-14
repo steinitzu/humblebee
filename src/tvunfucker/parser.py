@@ -1,4 +1,4 @@
-import os
+import os, re
 
 import tvregexes
 
@@ -12,7 +12,7 @@ def ez_parse_episode(path):
     if os.path.isfile(path):
         filename = os.path.splitext(filename)[0]
     match = None
-    for regex in tvregexes:
+    for regex in tvregexes.tv_regexes:
         match  = re.match(regex.pattern,filename)
         if match:
             result['which_regex'] = regex.alias
@@ -77,7 +77,7 @@ def reverse_parse_episode(path, source):
     ep = ez_parse_episode(path)
 
 
-    one_up_dir = os.path.dirname(ep)
+    one_up_dir = os.path.dirname(path)
     if os.path.samefile(one_up_dir, source):
         #we reached the source, nothing to see here
         return ep
@@ -112,7 +112,7 @@ class LocalEpisode(dict):
     """
     
     def __init__(self, path):
-        super(Episode,self).__init__(
+        super(LocalEpisode,self).__init__(
             season_num=None,
             series_name=None,
             ep_num=None,
@@ -154,7 +154,7 @@ class LocalEpisode(dict):
         name = name.title()
         return name
 
-    def __setitem__(key, value):
+    def __setitem__(self, key, value):
         """
         Introducing some type safety and stuff to this dict.\n
         Will implicitly convert any value put in a key in numerics to int.\n
@@ -179,7 +179,7 @@ class LocalEpisode(dict):
         if key in numerics and value is not None:
             #will raise an error if value is not a valid number
             return super(LocalEpisode, self).__setitem__(key,int(value))
-        elif key is series_name and value is not None:
+        elif key == 'series_name' and value is not None:
             #Will just assume that values is utf8 cause character encodings are hard
             #(so we most likely won't get unicode erros and shit)
             if isinstance(value, unicode):
@@ -203,12 +203,10 @@ class LocalEpisode(dict):
             except UnicodeDecodeError:
                 value = unicode(value.decode('utf8'))
             s+=u'%s = %s\n' % (key,value)
-        path = self.path
+        path = self['path']
         try:
             path = unicode(path)
         except UnicodeDecodeError:
             path = unicode(path.decode('utf8'))
         s+=u'path = \'%s\'\n' % path
-        if self.bin:
-            s+=u'current bin = %s' % self.bin.name
         return s
