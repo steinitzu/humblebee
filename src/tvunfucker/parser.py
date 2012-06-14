@@ -22,6 +22,12 @@ def ez_parse_episode(path):
     result.safe_update(match.groupdict())
     return result
 
+def _combine_reveresed_eps(eps):
+    """
+    input {'ep' : LocalEpisode, 'oneup': LocalEpisode, 'twoup' : LocalEpisode}\n
+    returns LocalEpisode
+    """
+
 def reverse_parse_episode(path, source):
     """
     Takes a path to an episode and a tv source directory.\n
@@ -38,6 +44,13 @@ def reverse_parse_episode(path, source):
     If the episode file is in the root of source and can't be parsed by any
     regex it will remain unparsed.
     """
+
+    #what is the goal?
+    #to get ONE fully parsed episode (series_name, ep_num, season_num)
+
+    whatdoiwant = ('series_name', 'season_num', 'ep_num')
+    
+    
     raise NotImplementedError('Shit is not implemented')
     directory, filename = os.path.split(path)
     if os.path.isfile(ep.path):
@@ -50,17 +63,70 @@ def reverse_parse_episode(path, source):
     ep = ez_parse_episode(path)
     if ep.is_fully_parsed(): return ep #we're done
 
-    in_ep = []
-    if ep['series_name']: in_ep.append('series_name')
-    if ep['season_num']: in_ep.append('season_num')
-    if ep['ep_num']: in_ep.append('ep_num')
+    #reverese this shit
+    #get the highest path below source
+    relpath = os.path.relpath(path, source)
 
-    #up one level in the tree from path
-    oneup = ez_parse_episode(directory)
-    if oneup.is_fully_parsed(): return oneup
+    #now I have a path relative to the source
+    #e.g. /home/tv/seinfeld/s01/episode 1.avi
+    #becomes seinfeld/s01/episode 1.avi
 
-    if ep['ep_num'] and (ep['season_num'] or oneup['season_num']):
-        if oneup['series_name']:
+    paths = []
+    temppath = relpath
+
+    #but how do I get the root directory (seinfeld)?o
+    #we will go upwards, putting each path in paths so we get
+    #['seinfeld/s01/episode 1.avi', 'seinfeld/s01', 'seinfeld']
+
+    while temppath:
+        paths.append(temppath)
+        temppath = os.path.split(temppath)[0]
+    #mkay?
+
+    #lastindex = paths[len(paths)-1]
+
+    series = None
+    season = None
+
+    for i in range(1,len(paths)): #we skip 0 cause that is ep
+        tempep = ez_parse_episode(paths[i])
+        if tempep['series_name'] and tempep['season_num'] is not None:
+            ep.safe_update(tempep)
+            break
+        if tempep['series_name']:
+            series = tempep['series_name']
+        if tempep['season_num'] is not None:
+            season = tempep['season_num']
+
+    if season is not None and ep['season_num'] is None:
+        ep['season_num'] = season        
+    if series and not ep['series_name']:
+        ep['series_name'] = series
+    elif not series and not ep['series_name']:
+        #we can't assume the last path is series name
+        #cause it could be anything (+incoming for example)        
+        #so what can we assume?
+
+        # we need to guess the series name, where should it come from?
+
+
+        #here is what needs to be done
+        #keep a dict somewhere, accessible from here
+        #when a series name is gotten from an episode
+        #and this series name matches the name of a parent folder in the hierarchy
+        #add the path to that folder as kery
+        #{'path' : 'series_name'}
+        #e.g. '/source/seinfeld' : 'seinfeld'
+        #then we can just do ep['series_name'] = 'series_name[daspath]
+        #(test every path in paths)
+        #if no match, then we can do the retarded monkey parse
+
+        #this is good, cause this way we can
+        #go through all the unparsed episodes again
+        #later and maybe some of them will match
+
+        #WTF? This is so fucking complicated and stupid.
+        
 
             
             
