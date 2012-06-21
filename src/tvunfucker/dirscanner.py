@@ -50,32 +50,24 @@ def dir_is_single_ep(dir_):
     return ep.is_fully_parsed()
 
 
-class SourceScanner(object):
+def get_episodes(dir_):
+    """
+    Recursive function which yields episodes from dir_ and down.
+    """
+    if not os.path.isdir(dir_):
+        raise InvalidArgumentError(
+            '\'%s\' is not a valid directory.' % dir_
+            )
 
-    def __init__(self, sourcedir):
-        self.source_dir = sourcedir
-
-
-    def get_episodes(self, dir_):
-        """
-        Recursive function which yields episodes from dir_ and down.
-        """
-        if not os.path.isdir(dir_):
-            raise InvalidArgumentError(
-                '\'%s\' is not a valid directory.' % dir_
-                )
-
-        for subdir in _get_sub_directories(dir_):
-            log.debug('Probing directory \'%s\'' % subdir)
-            if dir_is_single_ep(subdir):
-                yield subdir
-                continue
-            for file_ in _get_video_files(subdir):
-                yield file_
-            for result in self.get_episodes(subdir):
-                yield result
-            
-
+    for subdir in _get_sub_directories(dir_):
+        log.debug('Probing directory \'%s\'' % subdir)
+        if dir_is_single_ep(subdir):
+            yield subdir
+            continue
+        for file_ in _get_video_files(subdir):
+            yield file_
+        for result in get_episodes(subdir):
+            yield result            
 
 
 def main():
@@ -84,16 +76,7 @@ def main():
     a = scanner.get_episodes(scanner.source_dir)
     l = [i for i in a]
     #print '\n'.join([i for i in l])
-    print len(l)
-
-    for x in range(len(l)):
-        for y in range(len(l)):
-            if y==x:
-                continue
-            if l[y] == l[x]:
-                print 'duplicate '+l[x]
-            
-    
+    print len(l)    
     #print '\n'.join([a for a in scanner.get_episodes(scanner.source_dir)])
 
 

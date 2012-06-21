@@ -76,7 +76,6 @@ def reverse_parse_episode(path, source):
 
     ep = ez_parse_episode(path)
 
-
     one_up_dir = os.path.dirname(path)
     if os.path.samefile(one_up_dir, source):
         #we reached the source, nothing to see here
@@ -139,7 +138,7 @@ class LocalEpisode(dict):
     def is_fully_parsed(self):
         """
         Ep is fully parsed, true or false.\n
-        Will throw key exceptions if it's not a good ep dict.    
+        Will throw key exceptions if self is not a good ep dict.    
         """
         return self['series_name'] and self['season_num'] is not None and self['ep_num'] is not None
 
@@ -148,6 +147,7 @@ class LocalEpisode(dict):
         """
         Strips all kinds of junk from a name.
         """
+        junk = tvregexes.junk
         if name is None: return None
         name = re.sub(junk, ' ', name)
         name = name.strip()
@@ -194,7 +194,14 @@ class LocalEpisode(dict):
         #no more, please
         return super(LocalEpisode,self).__setitem__(key,value)
 
+    def __repr__(self):
+        result = ''
+        for key,value in self.items():
+            result+='%s : %s\n' % (key,value)
+        result = '{%s}' % result
+        return result
 
+    """
     def __repr__(self):
         s = u''
         for key,value in self.items():
@@ -210,3 +217,4 @@ class LocalEpisode(dict):
             path = unicode(path.decode('utf8'))
         s+=u'path = \'%s\'\n' % path
         return s
+    """

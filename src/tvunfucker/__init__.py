@@ -1,0 +1,2 @@
+
+tvdb_key = '29E8EC8DF23A5918'
