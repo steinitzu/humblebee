@@ -43,12 +43,11 @@ def _get_video_files(dir_):
 
 
 def dir_is_single_ep(dir_):
+    """
+    str path -> bool
+    """
     ep = parser.ez_parse_episode(dir_)
     return ep.is_fully_parsed()
-    #TODO: check if dir has a single ep
-    #directories will be parsed twice, whic is gay
-    #once here and again if this is true and it is passed on to the parser
-    #raise NotImplementedError('shit is not implemented')
 
 
 class SourceScanner(object):
@@ -59,7 +58,7 @@ class SourceScanner(object):
 
     def get_episodes(self, dir_):
         """
-        Recursive function which yields episodes from self.source_dir and down.
+        Recursive function which yields episodes from dir_ and down.
         """
         if not os.path.isdir(dir_):
             raise InvalidArgumentError(
@@ -73,3 +72,33 @@ class SourceScanner(object):
                 continue
             for file_ in _get_video_files(subdir):
                 yield file_
+            for result in self.get_episodes(subdir):
+                yield result
+            
+
+
+
+def main():
+
+    scanner = SourceScanner('/home/steini/tvtesttree')
+    a = scanner.get_episodes(scanner.source_dir)
+    l = [i for i in a]
+    #print '\n'.join([i for i in l])
+    print len(l)
+
+    for x in range(len(l)):
+        for y in range(len(l)):
+            if y==x:
+                continue
+            if l[y] == l[x]:
+                print 'duplicate '+l[x]
+            
+    
+    #print '\n'.join([a for a in scanner.get_episodes(scanner.source_dir)])
+
+
+
+if __name__ == '__main__':
+    main()
+    
+    
