@@ -1,6 +1,9 @@
 import os, re
 
 import tvregexes
+import tvunfucker
+
+log = tvunfucker.log
 
 def ez_parse_episode(path):
     """
@@ -32,6 +35,8 @@ def _merge_episodes(eps, path_to_ep, backup_series_name=None):
     Also takes a backup_series_name which can be a string,
     in case no series name data is available in any of the eps.
     """
+    log.info(eps)
+    log.info(path_to_ep)
     resultep = LocalEpisode(path_to_ep)
     for ep in eps:
         resultep.safe_update(ep)
@@ -84,7 +89,7 @@ def reverse_parse_episode(path, source):
 
     two_up_dir = os.path.dirname(one_up_dir)
     if os.path.samefile(two_up_dir, source):
-        return _merge_episodes((ep, one_up_ep))
+        return _merge_episodes((ep, one_up_ep), path)
     two_up_ep = ez_parse_episode(two_up_dir)
 
     return _merge_episodes(
@@ -195,26 +200,12 @@ class LocalEpisode(dict):
         return super(LocalEpisode,self).__setitem__(key,value)
 
     def __repr__(self):
-        result = ''
-        for key,value in self.items():
-            result+='%s : %s\n' % (key,value)
-        result = '{%s}' % result
-        return result
-
-    """
-    def __repr__(self):
-        s = u''
+        result = u''
         for key,value in self.items():
             try:
                 value = unicode(value)
             except UnicodeDecodeError:
-                value = unicode(value.decode('utf8'))
-            s+=u'%s = %s\n' % (key,value)
-        path = self['path']
-        try:
-            path = unicode(path)
-        except UnicodeDecodeError:
-            path = unicode(path.decode('utf8'))
-        s+=u'path = \'%s\'\n' % path
-        return s
-    """
+                value = unicode(value.decode('utf8'))            
+            result+= u'%s : %s\n' % (key,value)
+        result = u'{%s}' % result
+        return result

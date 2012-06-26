@@ -4,10 +4,11 @@ import tvunfucker
 
 import dirscanner
 import parser
+import tvdbwrapper
 
 
 
-
+log = tvunfucker.log
 api = tvdb_api.Tvdb(apikey=tvunfucker.tvdb_key)
 
 
@@ -32,7 +33,10 @@ def tvdb_lookup(ep):
     """
     if not ep.is_fully_parsed():
         return ep
-    webep = api[ep.clean_name(ep['series_name'])][ep['season_num']][ep['ep_num']]
+    series = tvdbwrapper.get_series(ep.clean_name(ep['series_name']), api)
+    if not series:
+        return ep
+    webep = series[ep['season_num']][ep['ep_num']]
     ep['tvdb_ep'] = webep
     return ep
 
@@ -43,16 +47,22 @@ class EpisodeSource(dict):
         self.source_dir = sourcedir
         super(EpisodeSource, self).__init__()
 
-
-
 def main():
     unparsed = []
     source = EpisodeSource('/home/steini/tvtesttree')
     for ep in get_parsed_episodes(source.source_dir):
         webep = None
+        #print ep['path']
         try:
             tvdb_lookup(ep)
-        except tvdb_api.tvdb_shownotfound:
+        except tvdb_api.tvdb_shownotfound as e:
+            log.error(e.message)
             unparsed.append(ep)
+        except tvdb_api.tvdb_seasonnotfound as e:
+            log.error(e.message)
+            unparsed.append(ep)
+        except tvdb_api.tvdb_episodenotfound as e:
+            log.error(e.message)
+            unparsed.append(ep)  
         else:
             source[ep['path']] = ep            

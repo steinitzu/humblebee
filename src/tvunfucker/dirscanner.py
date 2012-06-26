@@ -52,7 +52,8 @@ def dir_is_single_ep(dir_):
 
 def get_episodes(dir_):
     """
-    Recursive function which yields episodes from dir_ and down.
+    Recursive function which yields episodes from dir_ and down.\n
+    Returns strings, just paths.
     """
     if not os.path.isdir(dir_):
         raise InvalidArgumentError(
@@ -60,7 +61,7 @@ def get_episodes(dir_):
             )
 
     for subdir in _get_sub_directories(dir_):
-        log.debug('Probing directory \'%s\'' % subdir)
+        log.info('Probing directory \'%s\'' % subdir)
         if dir_is_single_ep(subdir):
             yield subdir
             continue
