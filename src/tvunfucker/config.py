@@ -10,3 +10,5 @@ video_files = ('.avi', '.mkv', '.mpg', '.mpeg', '.mp4', '.wmv') #todo: add more 
 
 tvdb_retry_limit = 3
 tvdb_retry_interval = 3
+
+local_database_filename = '.tvunfucker.sqlite'

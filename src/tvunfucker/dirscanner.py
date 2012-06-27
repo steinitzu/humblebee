@@ -2,7 +2,7 @@ import os
 
 import config, parser #from this package
 from logger import *
-from exceptions import *
+from texceptions import *
 
 
 #these functions belong to the world
