@@ -1,0 +1,142 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installing LLFUSE &mdash; LLFUSE v0.37.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.37.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="LLFUSE v0.37.1 documentation" href="index.html" />
+    <link rel="next" title="Getting started" href="getting_started.html" />
+    <link rel="prev" title="LLFUSE Documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="getting_started.html" title="Getting started"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="LLFUSE Documentation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">LLFUSE v0.37.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="installing-llfuse">
+<h1>Installing LLFUSE<a class="headerlink" href="#installing-llfuse" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="stable-releases">
+<h2>Stable releases<a class="headerlink" href="#stable-releases" title="Permalink to this headline">¶</a></h2>
+<p>LLFUSE can be installed like any other Python extension. Make sure
+that you have the Python, FUSE and extended attribute (&#8220;xattr&#8221;)
+development headers installed, then download and extract the LLFUSE
+tarball and run</p>
+<div class="highlight-sh"><div class="highlight"><pre>sudo python setup.py install
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-sh"><div class="highlight"><pre>python setup.py install --user
+</pre></div>
+</div>
+<p>Note that LLFUSE requires at least FUSE 2.8.0 and Python 2.6.</p>
+</div>
+<div class="section" id="development-version">
+<h2>Development Version<a class="headerlink" href="#development-version" title="Permalink to this headline">¶</a></h2>
+<p>If you have checked out the unstable development version from the
+Mercurial repository, a bit more effort is required. You need to have
+recent versions of <a class="reference external" href="http://www.cython.org/">Cython</a> and <a class="reference external" href="http://sphinx.pocoo.org/">Sphinx</a> installed, and the necessary
+commands are:</p>
+<div class="highlight-sh"><div class="highlight"><pre>python setup.py build_cython
+python setup.py build_ext --inplace
+python setup.py build_sphinx
+python setup.py install
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper"><h3><a href="index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Installing LLFUSE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fuse_api.html">FUSE API Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data Structures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lock.html">The global lock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operations.html">Request Handlers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example.html">Example File System</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">LLFUSE Documentation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="getting_started.html"
+                        title="next chapter">Getting started</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="getting_started.html" title="Getting started"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="LLFUSE Documentation"
+             >previous</a> |</li>
+        <li><a href="index.html">LLFUSE v0.37.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Nikolaus Rath.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.8.
+    </div>
+  </body>
+</html>

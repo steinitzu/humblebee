@@ -1,0 +1,307 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Data Structures &mdash; LLFUSE v0.37.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.37.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="LLFUSE v0.37.1 documentation" href="index.html" />
+    <link rel="next" title="The global lock" href="lock.html" />
+    <link rel="prev" title="FUSE API Functions" href="fuse_api.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="lock.html" title="The global lock"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="fuse_api.html" title="FUSE API Functions"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">LLFUSE v0.37.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="data-structures">
+<h1>Data Structures<a class="headerlink" href="#data-structures" title="Permalink to this headline">¶</a></h1>
+<dl class="data">
+<dt id="llfuse.ENOATTR">
+<tt class="descclassname">llfuse.</tt><tt class="descname">ENOATTR</tt><a class="headerlink" href="#llfuse.ENOATTR" title="Permalink to this definition">¶</a></dt>
+<dd><p>This errorcode is unfortunately missing in the <a class="reference external" href="http://docs.python.org/library/errno.html#module-errno" title="(in Python v2.7)"><tt class="xref py py-obj docutils literal"><span class="pre">errno</span></tt></a> module,
+so it is provided by llfuse instead.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="llfuse.ROOT_INODE">
+<tt class="descclassname">llfuse.</tt><tt class="descname">ROOT_INODE</tt><a class="headerlink" href="#llfuse.ROOT_INODE" title="Permalink to this definition">¶</a></dt>
+<dd><p>The inode of the root directory, i.e. the mount point of the file
+system.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="llfuse.FUSEError">
+<em class="property">exception </em><tt class="descclassname">llfuse.</tt><tt class="descname">FUSEError</tt><a class="headerlink" href="#llfuse.FUSEError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapped errno value to be returned to the fuse kernel module</p>
+<p>This exception can store only an errno. Request handlers should raise
+it to return a specific errno to the fuse kernel module.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="llfuse.RequestContext">
+<em class="property">class </em><tt class="descclassname">llfuse.</tt><tt class="descname">RequestContext</tt><a class="headerlink" href="#llfuse.RequestContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instances of this class provide information about the caller
+of the syscall that triggered a request. The attributes should be
+self-explanatory.</p>
+<dl class="attribute">
+<dt id="llfuse.RequestContext.pid">
+<tt class="descname">pid</tt><a class="headerlink" href="#llfuse.RequestContext.pid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.RequestContext.uid">
+<tt class="descname">uid</tt><a class="headerlink" href="#llfuse.RequestContext.uid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.RequestContext.gid">
+<tt class="descname">gid</tt><a class="headerlink" href="#llfuse.RequestContext.gid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.RequestContext.umask">
+<tt class="descname">umask</tt><a class="headerlink" href="#llfuse.RequestContext.umask" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="llfuse.StatvfsData">
+<em class="property">class </em><tt class="descclassname">llfuse.</tt><tt class="descname">StatvfsData</tt><a class="headerlink" href="#llfuse.StatvfsData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instances of this class store information about the file system.
+The attributes correspond to the elements of the <tt class="docutils literal"><span class="pre">statvfs</span></tt>
+struct, see <em class="manpage">statvfs(2)</em> for details.</p>
+<p>Request handlers do not need to return objects that inherit from
+<a class="reference internal" href="#llfuse.StatvfsData" title="llfuse.StatvfsData"><tt class="xref py py-obj docutils literal"><span class="pre">StatvfsData</span></tt></a> directly as long as they provide the required
+attributes.</p>
+<dl class="attribute">
+<dt id="llfuse.StatvfsData.f_bsize">
+<tt class="descname">f_bsize</tt><a class="headerlink" href="#llfuse.StatvfsData.f_bsize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.StatvfsData.f_frsize">
+<tt class="descname">f_frsize</tt><a class="headerlink" href="#llfuse.StatvfsData.f_frsize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.StatvfsData.f_blocks">
+<tt class="descname">f_blocks</tt><a class="headerlink" href="#llfuse.StatvfsData.f_blocks" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.StatvfsData.f_bfree">
+<tt class="descname">f_bfree</tt><a class="headerlink" href="#llfuse.StatvfsData.f_bfree" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.StatvfsData.f_bavail">
+<tt class="descname">f_bavail</tt><a class="headerlink" href="#llfuse.StatvfsData.f_bavail" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.StatvfsData.f_files">
+<tt class="descname">f_files</tt><a class="headerlink" href="#llfuse.StatvfsData.f_files" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.StatvfsData.f_ffree">
+<tt class="descname">f_ffree</tt><a class="headerlink" href="#llfuse.StatvfsData.f_ffree" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.StatvfsData.f_favail">
+<tt class="descname">f_favail</tt><a class="headerlink" href="#llfuse.StatvfsData.f_favail" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="llfuse.EntryAttributes">
+<em class="property">class </em><tt class="descclassname">llfuse.</tt><tt class="descname">EntryAttributes</tt><a class="headerlink" href="#llfuse.EntryAttributes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instances of this class store attributes of directory entries.
+Most of the attributes correspond to the elements of the <tt class="docutils literal"><span class="pre">stat</span></tt>
+C struct as returned by e.g. <tt class="docutils literal"><span class="pre">fstat</span></tt> and should be
+self-explanatory.</p>
+<p>Note that the  <em>st_Xtime</em> attributes support floating point numbers to
+allow for nanosecond resolution.</p>
+<p>Request handlers do not need to return objects that inherit from 
+<a class="reference internal" href="#llfuse.EntryAttributes" title="llfuse.EntryAttributes"><tt class="xref py py-obj docutils literal"><span class="pre">EntryAttributes</span></tt></a> directly as long as they provide the required
+attributes.</p>
+<dl class="attribute">
+<dt id="llfuse.EntryAttributes.st_ino">
+<tt class="descname">st_ino</tt><a class="headerlink" href="#llfuse.EntryAttributes.st_ino" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.EntryAttributes.generation">
+<tt class="descname">generation</tt><a class="headerlink" href="#llfuse.EntryAttributes.generation" title="Permalink to this definition">¶</a></dt>
+<dd><p>The inode generation number.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.EntryAttributes.entry_timeout">
+<tt class="descname">entry_timeout</tt><a class="headerlink" href="#llfuse.EntryAttributes.entry_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validity timeout (in seconds) for the name of the directory entry</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.EntryAttributes.attr_timeout">
+<tt class="descname">attr_timeout</tt><a class="headerlink" href="#llfuse.EntryAttributes.attr_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validity timeout (in seconds) for the attributes</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.EntryAttributes.st_mode">
+<tt class="descname">st_mode</tt><a class="headerlink" href="#llfuse.EntryAttributes.st_mode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.EntryAttributes.st_nlink">
+<tt class="descname">st_nlink</tt><a class="headerlink" href="#llfuse.EntryAttributes.st_nlink" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.EntryAttributes.st_uid">
+<tt class="descname">st_uid</tt><a class="headerlink" href="#llfuse.EntryAttributes.st_uid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.EntryAttributes.st_gid">
+<tt class="descname">st_gid</tt><a class="headerlink" href="#llfuse.EntryAttributes.st_gid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.EntryAttributes.st_rdev">
+<tt class="descname">st_rdev</tt><a class="headerlink" href="#llfuse.EntryAttributes.st_rdev" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.EntryAttributes.st_size">
+<tt class="descname">st_size</tt><a class="headerlink" href="#llfuse.EntryAttributes.st_size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.EntryAttributes.st_blksize">
+<tt class="descname">st_blksize</tt><a class="headerlink" href="#llfuse.EntryAttributes.st_blksize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.EntryAttributes.st_blocks">
+<tt class="descname">st_blocks</tt><a class="headerlink" href="#llfuse.EntryAttributes.st_blocks" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.EntryAttributes.st_atime">
+<tt class="descname">st_atime</tt><a class="headerlink" href="#llfuse.EntryAttributes.st_atime" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.EntryAttributes.st_ctime">
+<tt class="descname">st_ctime</tt><a class="headerlink" href="#llfuse.EntryAttributes.st_ctime" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.EntryAttributes.st_mtime">
+<tt class="descname">st_mtime</tt><a class="headerlink" href="#llfuse.EntryAttributes.st_mtime" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper"><h3><a href="index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing LLFUSE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fuse_api.html">FUSE API Functions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Data Structures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lock.html">The global lock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operations.html">Request Handlers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example.html">Example File System</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="fuse_api.html"
+                        title="previous chapter">FUSE API Functions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="lock.html"
+                        title="next chapter">The global lock</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="lock.html" title="The global lock"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="fuse_api.html" title="FUSE API Functions"
+             >previous</a> |</li>
+        <li><a href="index.html">LLFUSE v0.37.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Nikolaus Rath.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.8.
+    </div>
+  </body>
+</html>

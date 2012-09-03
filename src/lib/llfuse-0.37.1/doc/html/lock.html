@@ -1,0 +1,185 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>The global lock &mdash; LLFUSE v0.37.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.37.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="LLFUSE v0.37.1 documentation" href="index.html" />
+    <link rel="next" title="Request Handlers" href="operations.html" />
+    <link rel="prev" title="Data Structures" href="data.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="operations.html" title="Request Handlers"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="data.html" title="Data Structures"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">LLFUSE v0.37.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="the-global-lock">
+<h1>The global lock<a class="headerlink" href="#the-global-lock" title="Permalink to this headline">¶</a></h1>
+<p>LLFUSE uses a global lock to synchronize concurrent requests. Since
+the GIL already enforces that Python threads do not run concurrently,
+this does not result in any additional performance penalties. However,
+the use of an explicit lock allows direct control over which Python
+thread is running at a given time.</p>
+<p>Request handlers will always be called with the global lock acquired.
+However, they may release the global lock for potentially time
+consuming operations (like network or disk I/O), or to give other
+threads a chance to run during longer computations.</p>
+<p>Non-request handling threads may acquire the global lock to ensure
+that the execution of a particular code block will not be interrupted
+by any request handlers.</p>
+<p>Obviously, any method that directly or indirectly releases the global
+lock must be prepared to be called again while it has released the
+lock. In addition, it (and all its callers) must not hold any prior
+locks, since this may lead to deadlocks when re-acquiring the global
+lock. For this reason it is crucial that every method that directly or
+indirectly releases the lock is explicitly marked as such.</p>
+<p>The global lock is controlled with the <a class="reference internal" href="#llfuse.lock" title="llfuse.lock"><tt class="xref py py-obj docutils literal"><span class="pre">lock</span></tt></a> and <a class="reference internal" href="#llfuse.lock_disabled" title="llfuse.lock_disabled"><tt class="xref py py-obj docutils literal"><span class="pre">lock_disabled</span></tt></a>
+attributes of the <a class="reference internal" href="index.html#module-llfuse" title="llfuse"><tt class="xref py py-obj docutils literal"><span class="pre">llfuse</span></tt></a> module:</p>
+<dl class="attribute">
+<dt id="llfuse.lock_disabled">
+<tt class="descclassname">llfuse.</tt><tt class="descname">lock_disabled</tt><a class="headerlink" href="#llfuse.lock_disabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Controls the global lock. This object can be used as a context
+manager for the <tt class="docutils literal"><span class="pre">with</span></tt> statement to execute a block of code
+with the global lock released.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="llfuse.lock">
+<tt class="descclassname">llfuse.</tt><tt class="descname">lock</tt><a class="headerlink" href="#llfuse.lock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Controls the global lock. This object can be used as a context
+manager for the <tt class="docutils literal"><span class="pre">with</span></tt> statement to execute a block of code
+with the global lock acquired.</p>
+<p>Note that this object resembles a <tt class="docutils literal"><span class="pre">threading.Lock</span></tt> instance but
+is an instance of the <a class="reference internal" href="#llfuse.llfuse.Lock" title="llfuse.llfuse.Lock"><tt class="xref py py-obj docutils literal"><span class="pre">llfuse.Lock</span></tt></a> class which is quite different from
+<tt class="docutils literal"><span class="pre">threading.Lock</span></tt>.</p>
+</dd></dl>
+
+<p>The <a class="reference internal" href="#llfuse.lock" title="llfuse.lock"><tt class="xref py py-obj docutils literal"><span class="pre">lock</span></tt></a> object has the following methods:</p>
+<dl class="class">
+<dt id="llfuse.llfuse.Lock">
+<em class="property">class </em><tt class="descclassname">llfuse.</tt><tt class="descname">Lock</tt><a class="headerlink" href="#llfuse.llfuse.Lock" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="llfuse.llfuse.Lock.Lock.acquire">
+<tt class="descclassname">Lock.</tt><tt class="descname">acquire</tt><big>(</big><big>)</big><a class="headerlink" href="#llfuse.llfuse.Lock.Lock.acquire" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lock.acquire(self, timeout=None)
+Acquire global lock</p>
+<blockquote>
+<div>If <em>timeout</em> is not None, and the lock could not be acquired
+after waiting for <em>timeout</em> seconds, return False. Otherwise
+return True.</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="llfuse.llfuse.Lock.Lock.release">
+<tt class="descclassname">Lock.</tt><tt class="descname">release</tt><big>(</big><em>self</em>, <em>*a</em><big>)</big><a class="headerlink" href="#llfuse.llfuse.Lock.Lock.release" title="Permalink to this definition">¶</a></dt>
+<dd><p>Release global lock</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="llfuse.llfuse.Lock.Lock.yield_">
+<tt class="descclassname">Lock.</tt><tt class="descname">yield_</tt><big>(</big><em>self</em>, <em>count=1</em><big>)</big><a class="headerlink" href="#llfuse.llfuse.Lock.Lock.yield_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield global lock to a different thread</p>
+<p>The <em>count</em> argument may be used to yield the lock up to
+<em>count</em> times if there are still other threads waiting for the
+lock.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper"><h3><a href="index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing LLFUSE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fuse_api.html">FUSE API Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data Structures</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">The global lock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operations.html">Request Handlers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example.html">Example File System</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="data.html"
+                        title="previous chapter">Data Structures</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="operations.html"
+                        title="next chapter">Request Handlers</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="operations.html" title="Request Handlers"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="data.html" title="Data Structures"
+             >previous</a> |</li>
+        <li><a href="index.html">LLFUSE v0.37.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Nikolaus Rath.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.8.
+    </div>
+  </body>
+</html>

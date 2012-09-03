@@ -1,0 +1,47 @@
+Metadata-Version: 1.1
+Name: llfuse
+Version: 0.37.1
+Summary: Python bindings for the low-level FUSE API
+Home-page: http://python-llfuse.googlecode.com/
+Author: Nikolaus Rath
+Author-email: Nikolaus@rath.org
+License: LGPL
+Download-URL: http://code.google.com/p/python-llfuse/downloads/
+Description: About LLFUSE
+        ============
+        
+        LLFUSE is a set of Python bindings for the low level FUSE_ API. It
+        requires at least FUSE 2.8.0 and supports both Python 2.x and 3.x.
+        
+        LLFUSE was originally part of S3QL_, but has been factored out so
+        that it can be used by other projects as well.
+        
+        To download LLFUSE, please visit the `LLFUSE homepage`_. The
+        documentation can be `read online`__ and is also included in the
+        :file:`doc/html` directory of the LLFUSE tarball.
+        
+        Please report any bugs on the `issue tracker`_. For discussion and
+        questions, please use the general `FUSE mailing list`_. A searchable
+        `mailing list archive`_ is kindly provided by Gmane_.
+        
+        .. __: http://www.rath.org/llfuse-docs/.
+        .. _FUSE: http://fuse.sourceforge.net/
+        .. _LLFUSE homepage: http://code.google.com/p/python-llfuse/
+        .. _FUSE mailing list: https://lists.sourceforge.net/lists/listinfo/fuse-devel
+        .. _issue tracker: http://code.google.com/p/python-llfuse/issues/
+        .. _mailing list archive: http://dir.gmane.org/gmane.comp.file-systems.fuse.devel
+        .. _Gmane: http://www.gmane.org/
+        .. _S3QL: http://code.google.com/p/s3ql
+        
+Keywords: FUSE,python
+Platform: POSIX
+Platform: UNIX
+Platform: Linux
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: System :: Filesystems
+Classifier: License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)
+Classifier: Operating System :: POSIX
+Provides: llfuse

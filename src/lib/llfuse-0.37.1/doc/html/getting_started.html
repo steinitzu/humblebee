@@ -1,0 +1,122 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Getting started &mdash; LLFUSE v0.37.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.37.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="LLFUSE v0.37.1 documentation" href="index.html" />
+    <link rel="next" title="FUSE API Functions" href="fuse_api.html" />
+    <link rel="prev" title="Installing LLFUSE" href="install.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="fuse_api.html" title="FUSE API Functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Installing LLFUSE"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">LLFUSE v0.37.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="getting-started">
+<span id="id1"></span><h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<p>A file system is implemented by subclassing the <a class="reference internal" href="operations.html#llfuse.Operations" title="llfuse.Operations"><tt class="xref py py-obj docutils literal"><span class="pre">llfuse.Operations</span></tt></a>
+class and implementing the various request handlers. An instance of
+the this class must then be passed to <a class="reference internal" href="fuse_api.html#llfuse.init" title="llfuse.init"><tt class="xref py py-obj docutils literal"><span class="pre">llfuse.init</span></tt></a> to mount the file
+system. To enter the request handling loop, run <a class="reference internal" href="fuse_api.html#llfuse.main" title="llfuse.main"><tt class="xref py py-obj docutils literal"><span class="pre">llfuse.main</span></tt></a>. This
+function will return when the file system should be unmounted again,
+which is done by calling <a class="reference internal" href="fuse_api.html#llfuse.close" title="llfuse.close"><tt class="xref py py-obj docutils literal"><span class="pre">llfuse.close</span></tt></a>.</p>
+<p>It is probably a good idea to look at the <a class="reference internal" href="example.html#example-file-system"><em>Example File System</em></a>
+as well.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper"><h3><a href="index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing LLFUSE</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fuse_api.html">FUSE API Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data Structures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lock.html">The global lock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operations.html">Request Handlers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example.html">Example File System</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="install.html"
+                        title="previous chapter">Installing LLFUSE</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="fuse_api.html"
+                        title="next chapter">FUSE API Functions</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="fuse_api.html" title="FUSE API Functions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Installing LLFUSE"
+             >previous</a> |</li>
+        <li><a href="index.html">LLFUSE v0.37.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Nikolaus Rath.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.8.
+    </div>
+  </body>
+</html>

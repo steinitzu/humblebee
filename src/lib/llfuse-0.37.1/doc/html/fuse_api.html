@@ -1,0 +1,198 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>FUSE API Functions &mdash; LLFUSE v0.37.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.37.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="LLFUSE v0.37.1 documentation" href="index.html" />
+    <link rel="next" title="Data Structures" href="data.html" />
+    <link rel="prev" title="Getting started" href="getting_started.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="data.html" title="Data Structures"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="getting_started.html" title="Getting started"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">LLFUSE v0.37.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="fuse-api-functions">
+<h1>FUSE API Functions<a class="headerlink" href="#fuse-api-functions" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="llfuse.init">
+<tt class="descclassname">llfuse.</tt><tt class="descname">init</tt><big>(</big><em>operations_</em>, <em>mountpoint_</em>, <em>list args</em><big>)</big><a class="headerlink" href="#llfuse.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize and mount FUSE file system</p>
+<p><em>operations_</em> has to be an instance of the <a class="reference internal" href="operations.html#llfuse.Operations" title="llfuse.Operations"><tt class="xref py py-obj docutils literal"><span class="pre">Operations</span></tt></a> class (or another
+class defining the same methods).</p>
+<p><em>args</em> has to be a list of strings. Valid options are listed under <tt class="docutils literal"><span class="pre">struct</span>
+<span class="pre">fuse_opt</span> <span class="pre">fuse_mount_opts[]</span></tt>
+(<a class="reference external" href="http://fuse.git.sourceforge.net/git/gitweb.cgi?p=fuse/fuse;a=blob;f=lib/mount.c;h=224ae9d5f299e3e497475d24400587f031e41d78;hb=HEAD#l82">mount.c:82</a>)
+and <tt class="docutils literal"><span class="pre">struct</span> <span class="pre">fuse_opt</span> <span class="pre">fuse_ll_opts[]</span></tt>
+(<a class="reference external" href="http://fuse.git.sourceforge.net/git/gitweb.cgi?p=fuse/fuse;a=blob;f=lib/fuse_lowlevel.c;h=a19d429fc51417f4d55797f6c8f10b7db316b1de;hb=HEAD#l2209">fuse_lowlevel_c:2209</a>).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="llfuse.main">
+<tt class="descclassname">llfuse.</tt><tt class="descname">main</tt><big>(</big><em>single=False</em><big>)</big><a class="headerlink" href="#llfuse.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run FUSE main loop</p>
+<p>Note that <em>single</em> merely enforces that at most one request
+handler runs at a time. The main loop may still start background
+threads to e.g. asynchronously send notifications submitted with
+<a class="reference internal" href="#llfuse.invalidate_entry" title="llfuse.invalidate_entry"><tt class="xref py py-obj docutils literal"><span class="pre">invalidate_entry</span></tt></a> and <a class="reference internal" href="#llfuse.invalidate_inode" title="llfuse.invalidate_inode"><tt class="xref py py-obj docutils literal"><span class="pre">invalidate_inode</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="llfuse.close">
+<tt class="descclassname">llfuse.</tt><tt class="descname">close</tt><big>(</big><em>unmount=True</em><big>)</big><a class="headerlink" href="#llfuse.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unmount file system and clean up</p>
+<p>If <em>unmount</em> is False, the only clean up operations are peformed,
+but the file system is not unmounted. As long as the file system
+process is still running, all requests will hang. Once the process
+has terminated, these (and all future) requests fail with
+ESHUTDOWN.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="llfuse.setxattr">
+<tt class="descclassname">llfuse.</tt><tt class="descname">setxattr</tt><big>(</big><em>path</em>, <em>name</em>, <em>value</em><big>)</big><a class="headerlink" href="#llfuse.setxattr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set extended attribute</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="llfuse.getxattr">
+<tt class="descclassname">llfuse.</tt><tt class="descname">getxattr</tt><big>(</big><em>path</em>, <em>name</em>, <em>size_guess=128</em><big>)</big><a class="headerlink" href="#llfuse.getxattr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get extended attribute</p>
+<p>If the caller knows the approximate size of the attribute value,
+it should be supplied in <em>size_guess</em>. If the guess turns out
+to be wrong, the system call has to be carried out three times
+(the first call will fail, the second determines the size and
+the third finally gets the value).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="llfuse.listdir">
+<tt class="descclassname">llfuse.</tt><tt class="descname">listdir</tt><big>(</big><em>path</em><big>)</big><a class="headerlink" href="#llfuse.listdir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like os.listdir(), but releases the GIL</p>
+</dd></dl>
+
+<dl class="function">
+<dt>
+<tt class="descclassname">llfuse.</tt><tt class="descname">close</tt><big>(</big><em>unmount=True</em><big>)</big></dt>
+<dd><p>Unmount file system and clean up</p>
+<p>If <em>unmount</em> is False, the only clean up operations are peformed,
+but the file system is not unmounted. As long as the file system
+process is still running, all requests will hang. Once the process
+has terminated, these (and all future) requests fail with
+ESHUTDOWN.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="llfuse.invalidate_inode">
+<tt class="descclassname">llfuse.</tt><tt class="descname">invalidate_inode</tt><big>(</big><em>inode</em>, <em>attr_only=False</em><big>)</big><a class="headerlink" href="#llfuse.invalidate_inode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Invalidate cache for <em>inode</em></p>
+<p>Instructs the FUSE kernel module to forgot cached attributes and
+data (unless <em>attr_only</em> is True) for <em>inode</em>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="llfuse.invalidate_entry">
+<tt class="descclassname">llfuse.</tt><tt class="descname">invalidate_entry</tt><big>(</big><em>inode_p</em>, <em>name</em><big>)</big><a class="headerlink" href="#llfuse.invalidate_entry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Invalidate directory entry</p>
+<p>Instructs the FUSE kernel module to forget about the
+directory entry <em>name</em> in the directory with inode <em>inode_p</em></p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper"><h3><a href="index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing LLFUSE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">FUSE API Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data Structures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lock.html">The global lock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operations.html">Request Handlers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example.html">Example File System</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="getting_started.html"
+                        title="previous chapter">Getting started</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="data.html"
+                        title="next chapter">Data Structures</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="data.html" title="Data Structures"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="getting_started.html" title="Getting started"
+             >previous</a> |</li>
+        <li><a href="index.html">LLFUSE v0.37.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Nikolaus Rath.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.8.
+    </div>
+  </body>
+</html>
