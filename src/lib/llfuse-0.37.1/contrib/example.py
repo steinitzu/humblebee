@@ -35,7 +35,7 @@ from llfuse import FUSEError
 log = logging.getLogger()
 
 class Operations(llfuse.Operations):
-    '''An example filesystem that stores all data in memory
+    """An example filesystem that stores all data in memory
     
     This is a very simple implementation with terrible
     performance. Don't try to store significant amounts of
@@ -44,7 +44,7 @@ class Operations(llfuse.Operations):
     
     * atime, mtime and ctime are not updated
     * generation numbers are not supported
-    '''
+    """
     
     
     def __init__(self):      
