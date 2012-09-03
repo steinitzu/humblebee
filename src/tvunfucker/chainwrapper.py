@@ -56,10 +56,9 @@ class EpisodeSource(dict):
     def __init__(self, sourcedir):
         self.source_dir = sourcedir
         super(EpisodeSource, self).__init__()
-        self.db_file = None
+        self.db_file = os.path.join(self.source_dir, config.local_database_filename)
 
     def initialize_database(self):
-        self.db_file = os.path.join(self.source_dir, config.local_database_filename)
         schema = open(os.path.join(os.path.dirname(tvunfucker.__file__), 'schema.sql')).read()
         conn = sqlite3.connect(self.db_file)
         cur = conn.cursor()
