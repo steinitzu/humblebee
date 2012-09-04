@@ -2,7 +2,7 @@ import logging
 from collections import defaultdict
 
 
-import llfuse
+import fuse
 
 
 log = logging.getLogger('tvunfucker')
@@ -16,6 +16,12 @@ class VirtualLinker(llfuse.Operations):
 
     def access(self, inode, mode, ctx):
         return True
+
+    def lookup(self, inode_parent, name):
+        if name == '.':
+            inode=inode_parent
+        elif name == '..':
+            inode = self.database
 
 
     def readdir(self, fh, off):

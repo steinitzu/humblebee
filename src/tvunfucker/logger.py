@@ -1,3 +1,4 @@
+
 import logging
 
 #romlog
@@ -16,6 +17,6 @@ log.addHandler(streamhdlr)
 #testlog
 test_log = logging.getLogger('testlog')
 file_handler = logging.FileHandler('testlog.log',  mode='a')
-file_handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
+file_handler.setFormatter(logging.Formatter(formatter))
 test_log.addHandler(file_handler)
 test_log.setLevel(logging.DEBUG)

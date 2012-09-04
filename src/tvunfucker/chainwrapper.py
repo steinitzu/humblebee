@@ -35,16 +35,17 @@ def tvdb_lookup(ep):
     """
     LocalEpisode -> LocalEpisode (the same one)\n
     Look up the given ep with the tvdb api and attach the resulting
-    tvdb_api.Episode object to it's 'tvdb_ep' key.    
+    tvdb_api.Episode object to it's 'tvdb_eop' key.    
     """
     if not ep.is_fully_parsed():
-        return ep
+        return None
     series = tvdbwrapper.get_series(ep.clean_name(ep['series_name']), api)
     if not series:
-        return ep
+        return None
     webep = series[ep['season_num']][ep['ep_num']]
-    ep['tvdb_ep'] = webep
-    return ep
+    #ep['tvdb_ep'] = webep
+    return webep
+    #return ep
 
 
 #TODO: Move this somewhere more appropriate
@@ -59,6 +60,10 @@ class EpisodeSource(dict):
         self.db_file = os.path.join(self.source_dir, config.local_database_filename)
 
     def initialize_database(self):
+        #TODO: name doesn't describe this, maybe create_database?
+        """
+        Use when you want to create a new database.
+        """
         schema = open(os.path.join(os.path.dirname(tvunfucker.__file__), 'schema.sql')).read()
         conn = sqlite3.connect(self.db_file)
         cur = conn.cursor()
@@ -88,13 +93,68 @@ class EpisodeSource(dict):
         """
         add_episode_to_db(parser.LocalEpisode)
         """
-        pass
+        tutil.type_safe(
+            ep, parser.LocalEpisode,
+            arg_num=1
+            )
+        webep = ep['tvdb_ep']
+        log.debug(webep.keys())
+        season_id = int(webep['seasonid'])
+        if not self.season_exists(season_id):
+            self.add_season_to_db(ep)
+
+        q = '''
+            INSERT INTO episode (
+                id,
+                ep_number,
+                extra_ep_number,
+                title,
+                summary,
+                air_date,
+                file_path,
+                season_id
+                )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+            '''
+        exep = None
+        if ep['extra_ep_num'] is not None:
+            exep = int(ep['extra_ep_num'])
+        params = (
+            int(webep['id']),
+            int(webep['episodenumber']),
+            exep,
+            webep['episodename'],
+            webep['overview'],
+            datetime.strptime(webep['firstaired'], '%Y-%m-%d').date(),
+            ep['path'],
+            season_id
+            )
+
+        self.run_query(q, params, get_none=True)        
 
     def add_season_to_db(self, ep):
         """
         add_season_to_db(parser.LocalEpisode)
         """
-        pass
+        tutil.type_safe(
+            ep, parser.LocalEpisode,
+            arg_num=1
+            )
+        webep = ep['tvdb_ep']
+        show_id = int(webep.season.show['id'])
+        if not self.series_exists(show_id):
+            self.add_series_to_db(ep)
+
+        q = 'INSERT INTO season (id, season_number, series_id) VALUES (?, ?, ?);'
+        params = (
+            int(webep['seasonid']),
+            int(webep['seasonnumber']),
+            show_id
+            )
+
+        self.run_query(q, params, get_none=True)
+
+        #TODO: upsert if season exists
 
     def add_series_to_db(self, ep):
         """
@@ -134,8 +194,30 @@ class EpisodeSource(dict):
             #this usually means the series with this id already exists.
             #we should make a column with 'lastupdate' (tvdb ep has that too)
             #check that and if it's newer, we update the data here
+            #--- much later, High self, says "that makes sense" (upsert)
             raise
+
+    def _item_exists(self, pk, item_type):
+        """
+        _item_exists(self, int id, item_type 'season'||'series'||episode)
+        -> bool
+        """
+        pk = int(pk)
+        q = 'SELECT id FROM %s WHERE id = ?;' % item_type
+        result = self.run_query(q, (pk,), get_one=True)
+        if result: return True
+        return False        
         
+    def season_exists(self, season_id):
+        return self._item_exists(season_id, 'season')        
+
+    def series_exists(self, series_id):
+        """
+        series_exists(int) -> bool\n
+        Returns True or False depending on wheather
+        the given series_id exists in the database.
+        """
+        return self._item_exists(series_id, 'series')
         
 
 def main():
@@ -156,6 +238,7 @@ def main():
             log.error(e.message)
             unparsed.append(ep)  
         else:
+            log.info(ep)
             source[ep['path']] = ep
 
     log.info('\n***UNPARSED EPISODES***\n')
