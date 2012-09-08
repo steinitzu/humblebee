@@ -1,7 +1,7 @@
 import os
 import logging
 
-import llfuse
+import fuse
 
 from tvunfucker import localdbapi, logger, thefuse
 
@@ -19,20 +19,7 @@ print db.get_rows("SELECT * FROM series;")
 print db.get_row("SELECT * FROM series WHERE id = 73255;")
 
 
-fs = thefuse.VirtualLinker(_dbfile)
+fs = thefuse.FileSystem(_dbfile)
 
-
-llfuse.init(
-    fs,
-    os.path.join(_currentdir, 'testmount'),
-    [  b'fsname=llfuse_xmp', b"nonempty" ]
-    
-    #[ b'fsname=testtvfs', b'noempty']
-    )
-
-
-try:
-    llfuse.main(single=True)
-except:
-    llfuse.close(unmount=False)
-llfuse.close()
+mtpt = os.path.join(_currentdir, 'testmount')
+fuse = fuse.FUSE(fs, mtpt, foreground=True)
