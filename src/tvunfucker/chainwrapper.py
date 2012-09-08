@@ -48,6 +48,13 @@ def tvdb_lookup(ep):
     #return ep
 
 
+def dict_factory(cursor, row):
+    d = {}
+    for idx, col in enumerate(cursor.description):
+        d[col[0]] = row[idx]
+    return d
+    
+
 #TODO: Move this somewhere more appropriate
 class EpisodeSource(dict):
     """
@@ -71,7 +78,7 @@ class EpisodeSource(dict):
         conn.commit()
         conn.close()
 
-    def run_query(self, query, params, get_one=False, get_none=False):
+    def run_query(self, query, params=(), get_one=False, get_none=False):
         """
         run_query(query, params) -> []\n
         run_query(query, params,get_one=True) -> object\n
@@ -79,6 +86,7 @@ class EpisodeSource(dict):
         If get_none, it will return the last row id
         """        
         conn = sqlite3.connect(self.db_file)
+        conn.row_factory = sqlite3.Row
         cur = conn.cursor()
         cur.execute(query, params)
         ret = None
@@ -88,6 +96,54 @@ class EpisodeSource(dict):
         conn.commit()
         conn.close()
         return ret
+
+    def get_series(self, series_id):
+        return self.run_query(
+            'SELECT * FROM series WHERE id = ?',
+            (int(series_id),),
+            get_one=True
+            )
+
+    def get_season(self, season_id):
+        return self.run_query(
+            'SELECT * FROM season WHERE id = ?',
+            (int(season_id),),
+            get_one=True
+            )
+
+    def get_episode(self, episode_id):
+        return self.run_query(
+            'SELECT * FROM episode WHERE id = ?',
+            (int(season_id),),
+             get_one=True
+            )    
+
+    def get_series_plural(self, column=None, value=None):
+        """
+        Returns all series where column matches value.
+        """
+        return self.run_query(
+            'SELECT * FROM series WHERE %s = ?' % column,
+            (value,)
+            )
+
+    def get_seasons(self, column=None, value=None):
+        """
+        Returns all season where column matches value.
+        """
+        return self.run_query(
+            'SELECT * FROM season WHERE %s = ?' % column,
+            (value,)
+            )
+
+    def get_episodes(self, column=None, value=None):
+        """
+        Returns all episode where column matches value.
+        """
+        return self.run_query(
+            'SELECT * FROM episode WHERE %s = ?' % column,
+            (value,)
+            )
 
     def add_episode_to_db(self, ep):
         """
