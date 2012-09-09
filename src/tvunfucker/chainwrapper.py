@@ -66,6 +66,7 @@ class EpisodeSource(dict):
         self.source_dir = sourcedir
         super(EpisodeSource, self).__init__()
         self.db_file = os.path.join(self.source_dir, config.local_database_filename)
+        self.db = localdbapi.Database(self.db_file)
 
     def initialize_database(self):
         #TODO: name doesn't describe this, maybe create_database?
@@ -99,55 +100,53 @@ class EpisodeSource(dict):
         return ret
 
     def get_series(self, series_id):
-        return self.run_query(
+        return self.db.get_row(
             'SELECT * FROM series WHERE id = ?',
-            (int(series_id),),
-            get_one=True
+            (int(series_id),)
             )
 
     def get_season(self, season_id):
-        return self.run_query(
+        return self.db.get_row(
             'SELECT * FROM season WHERE id = ?',
-            (int(season_id),),
-            get_one=True
+            (int(season_id),)
             )
 
     def get_episode(self, episode_id):
-        return self.run_query(
+        return self.db.get_row(
             'SELECT * FROM episode WHERE id = ?',
-            (int(season_id),),
-             get_one=True
-            )    
+            (int(season_id),)
+            )
 
-    def get_series_plural(self, column=None, value=None):
+    def _get_entities(self, e_type, **kwargs):
+        """
+        _get_entities(column1=value1, column2=value2) -> sqlite3.Row\n
+        Accepts a variable number of arguments. This will be the where statement.
+        """
+        where = localdbapi.make_where_statement(dicta=kwargs)
+        return self.db.get_rows(
+            'SELECT * FROM %s %s' % (e_type, where[0]),
+            params=where[1]
+            )        
+
+    def get_series_plural(self, **kwargs):
         """
         Returns all series where column matches value.
         """
-        return self.run_query(
-            'SELECT * FROM series WHERE %s = ?' % column,
-            (value,)
-            )
-
+        return self._get_entities('series', **kwargs)
 
     def get_seasons(self, **kwargs):
         #TODO: Do same thing with get_seriess and episodes
         """
         Takes column=value kwargs
         """
-        where = localdbapi.make_where_statement(dicta=kwargs)
-        return self.run_query(
-            'SELECT * FROM season '+where[0],
-            params = where[1]
-            )            
+        return self._get_entities('season', **kwargs)
 
-    def get_episodes(self, column=None, value=None):
+    def get_episodes(self, **kwargs):
         """
-        Returns all episode where column matches value.
+        Returns all episode where column matches value.\n
+        Takes named args like _get_entities.
         """
-        return self.run_query(
-            'SELECT * FROM episode WHERE %s = ?' % column,
-            (value,)
-            )
+        return self._get_entities('episode', **kwargs)
 
     def add_episode_to_db(self, ep):
         """

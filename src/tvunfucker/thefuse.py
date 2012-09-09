@@ -37,7 +37,7 @@ class FileSystem(LoggingMixIn, Operations):
                 }
         
         if path == '/':
-            rows = self.db.get_series_plural('1', 1)
+            rows = self.db.get_series_plural()
             ret = ['.', '..']
             for row in rows:
                 ret.append(row['title'])
@@ -76,7 +76,7 @@ class FileSystem(LoggingMixIn, Operations):
                 }                        
         elif len(pathpcs) ==  1: # series
             log.debug('Getting series: %s', pathpcs[0])            
-            row = self.db.get_series_plural('title', pathpcs[0])
+            row = self.db.get_series_plural(title=pathpcs[0])
             if not row:
                 raise FuseOSError(ENOENT)
             return {
@@ -91,7 +91,7 @@ class FileSystem(LoggingMixIn, Operations):
                 'Getting season: %s of series: %s',
                 pathpcs[0], pathpcs[1]
                 )
-            seasid = self.db.get_series_plural('title', pathpcs[0])[0]['id']
+            seasid = self.db.get_series_plural(title=pathpcs[0])[0]['id']
             row = self.db.get_seasons(
                 #TODO: Need to make sure dirname is 's##'
                 season_number=int(pathpcs[1][1:]), #first letter is 's', stripping it

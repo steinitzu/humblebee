@@ -1,5 +1,10 @@
-import sqlite3
+import sqlite3, logging
+
+import logger
+
 #TODO: separate dbapi from EpisodeSource and put it here
+
+log = logging.getLogger('tvunfucker')
 
 """
 Connection pool make sense with sqlite/
@@ -16,13 +21,13 @@ class Database(object):
         Returns a connection to the sqlite database.
         """
         conn = sqlite3.connect(self.db_file)
-        conn.row_factory = self.dict_factory
+        conn.row_factory = sqlite3.Row
         return conn
 
-    def _get_row(self, query, oneormany):
+    def _get_row(self, query, params=(), oneormany='one'):
         conn = self.get_connection()
         cur = conn.cursor()
-        cur.execute(query)
+        cur.execute(query, params)
         #TODO: error handling, conn doesn't close if error        
         if oneormany == 'one':
             result = cur.fetchone()
@@ -35,21 +40,15 @@ class Database(object):
         conn.close()
         return result
 
-    def get_row(self, query):
+    def get_row(self, query, params=()):
         #TODO: make it take params too
-        return self._get_row(query, 'one')
+        
+        return self._get_row(query, params, 'one')
 
-    def get_rows(self, query):
-        return self._get_row(query, 'many')
-    
-
-    def dict_factory(self, cursor, row):
-        d = {}
-        for idx, col in enumerate(cursor.description):
-            d[col[0]] = row[idx]
-        return d
-
-
+    def get_rows(self, query, params=()):
+        log.debug('query: %s', query)
+        log.debug('params: %s', params)        
+        return self._get_row(query, params, 'many')
 
 def make_where_statement(dicta=None, operator='=', separator='AND', **kwargs):
     """
@@ -63,6 +62,8 @@ def make_where_statement(dicta=None, operator='=', separator='AND', **kwargs):
     Takes any other named arg and intperpres as a column name:value pair.    
     """
     dicta=dicta if dicta else kwargs
+    if not dicta:
+        return ('', ())
     sufstring = ''
     sufparams = []
     for key, value in dicta.iteritems():
