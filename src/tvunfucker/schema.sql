@@ -3,6 +3,7 @@
 
 CREATE TABLE IF NOT EXISTS series (
         id INTEGER PRIMARY KEY NOT NULL, /* use the tvdb id */
+        created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         title VARCHAR,
         summary TEXT,
         start_date DATE,
@@ -12,6 +13,7 @@ CREATE TABLE IF NOT EXISTS series (
 
 CREATE TABLE IF NOT EXISTS season (
         id INTEGER PRIMARY KEY NOT NULL, /*tvdb season id*/
+        created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         season_number INTEGER,
         series_id INTEGER,
         FOREIGN KEY(series_id) REFERENCES series(id) ON DELETE CASCADE
@@ -19,6 +21,7 @@ CREATE TABLE IF NOT EXISTS season (
 
 CREATE TABLE IF NOT EXISTS episode (
         id INTEGER PRIMARY KEY NOT NULL, /*tvdb ep id*/
+        created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         ep_number INTEGER NOT NULL,
         extra_ep_number INTEGER,
         title VARCHAR NOT NULL,
