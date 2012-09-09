@@ -9,6 +9,7 @@ import dirscanner
 import parser
 import tvdbwrapper
 import config
+import localdbapi
 from texceptions import *
 import tutil
 
@@ -127,14 +128,17 @@ class EpisodeSource(dict):
             (value,)
             )
 
-    def get_seasons(self, column=None, value=None):
+
+    def get_seasons(self, **kwargs):
+        #TODO: Do same thing with get_seriess and episodes
         """
-        Returns all season where column matches value.
+        Takes column=value kwargs
         """
+        where = localdbapi.make_where_statement(dicta=kwargs)
         return self.run_query(
-            'SELECT * FROM season WHERE %s = ?' % column,
-            (value,)
-            )
+            'SELECT * FROM season '+where[0],
+            params = where[1]
+            )            
 
     def get_episodes(self, column=None, value=None):
         """

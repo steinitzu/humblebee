@@ -1,4 +1,5 @@
 /* This is the schema for the local tv database */
+-- TODO ADD time_added columns to things
 
 CREATE TABLE IF NOT EXISTS series (
         id INTEGER PRIMARY KEY NOT NULL, /* use the tvdb id */

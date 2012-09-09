@@ -3,7 +3,7 @@ import logging
 
 import fuse
 
-from tvunfucker import localdbapi, logger, thefuse
+from tvunfucker import localdbapi, logger, thefuse, chainwrapper
 
 log = logging.getLogger('tvunfucker')
 log.setLevel(logging.DEBUG)
@@ -18,8 +18,10 @@ db = localdbapi.Database(_dbfile)
 print db.get_rows("SELECT * FROM series;")
 print db.get_row("SELECT * FROM series WHERE id = 73255;")
 
+source = chainwrapper.EpisodeSource(os.path.dirname(_dbfile))
 
-fs = thefuse.FileSystem(_dbfile)
+
+fs = thefuse.FileSystem(source)
 
 mtpt = os.path.join(_currentdir, 'testmount')
 fuse = fuse.FUSE(fs, mtpt, foreground=True)

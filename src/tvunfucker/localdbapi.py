@@ -41,11 +41,33 @@ class Database(object):
 
     def get_rows(self, query):
         return self._get_row(query, 'many')
-
     
 
     def dict_factory(self, cursor, row):
         d = {}
         for idx, col in enumerate(cursor.description):
             d[col[0]] = row[idx]
-        return d            
+        return d
+
+
+
+def make_where_statement(dicta=None, operator='=', separator='AND', **kwargs):
+    """
+    make_where_statement(operator='=', separator='AND', **kwargs) -> ('', (,))
+    Makes a simple where statement, compatible with get_rows and get_row.\n
+    Default operator used between col and value is '=' (equals)\n
+    Available operators include everything supported by the dbms\n
+    e.g. '>', '<', '!=', 'LIKE' (text fields), 'ILIKE', etcetera\n\n
+    separator can be 'AND', 'OR' or anything else the dbms supports.
+
+    Takes any other named arg and intperpres as a column name:value pair.    
+    """
+    dicta=dicta if dicta else kwargs
+    sufstring = ''
+    sufparams = []
+    for key, value in dicta.iteritems():
+        pref = 'WHERE' if not sufstring else separator
+        sufstring += '%s %s %s ? ' % (pref, key, operator)
+        sufparams.append(value)
+
+    return (sufstring, sufparams)                
