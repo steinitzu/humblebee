@@ -56,6 +56,38 @@ class FileSystem(LoggingMixIn, Operations):
         if path == '/':
             rows = self.db.get_series_plural()
             return defret + [row['title'] for row in rows]
+        pathparts = self._split_path(path)
+        if pathparts['series']:
+            series = self.db.get_series_plural(
+                title=pathparts['series']
+                )[0]
+            rows = self.db.get_seasons(
+                series_id=series['id']
+                )
+            if not pathparts['season']:
+                return defret + [
+                    's'+str(row['season_number']) for row in rows
+                    ]
+            season = self.db.get_seasons(
+                series_id=series['id'],
+                season_number=pathparts['season']
+                )[0]
+            episodes = self.db.get_episodes(
+                season_id = season['id']
+                )
+            #hack
+            epfrm = '%(series)s-s%(season)se%(epnum)s-%(title)s%(ext)s'
+            ret = defret[:]
+            for ep in episodes:
+                data = {
+                    'title' : ep['title'].replace(' ', '.'),
+                    'season' : str(season['season_number']),
+                    'epnum' : str(ep['ep_number']),
+                    'series' : pathparts['series'],
+                    'ext' : os.path.splitext(ep['file_path'])[1]
+                    }
+                ret.append(epfrm % data)
+            return ret
 
 
     def getattr(self, path, fh=None):
