@@ -20,7 +20,7 @@ class Database(object):
         """
         Returns a connection to the sqlite database.
         """
-        conn = sqlite3.connect(self.db_file)
+        conn = sqlite3.connect(self.db_file, detect_types=True)
         conn.row_factory = sqlite3.Row
         return conn
 

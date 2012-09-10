@@ -4,6 +4,7 @@ import os
 from stat import S_IFDIR, S_IFLNK, S_IFREG
 from time import time
 from errno import ENOENT
+from time import mktime
 
 from fuse import FUSE, FuseOSError, Operations, LoggingMixIn
 
@@ -18,6 +19,28 @@ class FileSystem(LoggingMixIn, Operations):
         self.db = db
         pass
 
+    def _split_path(self, path):
+        ret = {
+            'series' : None,
+            'season' : None,
+            'episode' : None
+            }
+        if path == '/':
+            return ret
+        pathpcs = path.strip('/').split('/')
+        lenp = len(pathpcs)
+        if lenp == 1: #series
+            ret['series'] = pathpcs[0]
+            return ret
+        elif lenp == 2: #season
+            ret['series'] = pathpcs[0]
+            ret['season'] = int(pathpcs[1][1:])
+            return ret
+        elif lenp == 3: #episode
+            return ret #TODO: Do it later
+
+    def _datetime_to_timestamp(self, dt):
+        return mktime(dt.timetuple())
 
     def chmod(self, path, mode):
         return 0
@@ -27,22 +50,13 @@ class FileSystem(LoggingMixIn, Operations):
         return 0
 
     def readdir(self, path, fh):
-        now = time()
-        dirmode = {
-                'st_mode':(S_IFDIR | 0755),
-                'st_ctime' : now,
-                'st_mtime' : now,
-                'st_atime' : now,
-                'st_nlink' : 2
-                }
-        
+
+        defret = ['.','..']
+
         if path == '/':
             rows = self.db.get_series_plural()
-            ret = ['.', '..']
-            for row in rows:
-                ret.append(row['title'])
-            return ret
-                
+            return defret + [row['title'] for row in rows]
+
 
     def getattr(self, path, fh=None):
         """
@@ -62,88 +76,55 @@ class FileSystem(LoggingMixIn, Operations):
                time_t    st_ctime;   /* time of last status change */
            };
         """
-        iswhat = '' #season, series or episode        
-        log.debug(path)
-        pathpcs = path.strip('/').split('/')
         now = time()
-        if path == '/': #root
-            return {
+        dirmode = {
                 'st_mode':(S_IFDIR | 0755),
                 'st_ctime' : now,
                 'st_mtime' : now,
                 'st_atime' : now,
                 'st_nlink' : 2
-                }                        
-        elif len(pathpcs) ==  1: # series
-            log.debug('Getting series: %s', pathpcs[0])            
-            row = self.db.get_series_plural(title=pathpcs[0])
-            if not row:
-                raise FuseOSError(ENOENT)
-            return {
-                'st_mode' : (S_IFDIR | 0755),
-                'st_ctime' : now,
-                'st_mtime' : now,
-                'st_atime' : now,
-                'st_nlink' : 2
-                }
-        elif len(pathpcs) == 2:
-            log.debug(
-                'Getting season: %s of series: %s',
-                pathpcs[0], pathpcs[1]
-                )
-            seasid = self.db.get_series_plural(title=pathpcs[0])[0]['id']
-            row = self.db.get_seasons(
-                #TODO: Need to make sure dirname is 's##'
-                season_number=int(pathpcs[1][1:]), #first letter is 's', stripping it
-                series_id=seasid
-                )
-            if not row:
-                raise FuseOSError(ENOENT)
-            return {
-                'st_mode' : (S_IFDIR | 0755),
-                'st_ctime' : now,
-                'st_mtime' : now,
-                'st_atime' : now,
-                'st_nlink' : 2
                 }
 
-        elif len(pathpcs) == 3:
-            #TODO: return the properties of the real ep file
-            raise FuseOSError(ENOENT)
-            
-                
-            
-                
-            
-            """
-            This is bullshit.
-            I think I would actually create the directories
-            on instantiation.
-            I first make dirs for each series
-            then subdirs for each season
-            These are real dirs
-            Just named based on text from db
-            But then come the episodes
-            Thse will be symlinks (or maybe not symlinks)
-            maybe they are some kind of fake file thingy (probably symlink)
-            when it's attributes are changed, it changes the database
-            when filename is chantged, db is changed
-            when it's moved, db is changed
-
-            but it can only be moved into a a season directory
-
-            Also, some kind of incremental scanning from the tvdb
-            Also, option to submit user changes to tvdb
-
-            make some kind of distinction between user and tvdb changes
-
-            also there needs to be a virtual dir for unparsed eps
-            just show them in origininal dir structure
-            
-            """
-        elif path == '/_unparsed':
+        if path == '/': #root
+            return dirmode
+        
+        if path == '/_unparsed':
             #show some pile of unparseable shit
-            raise FuseOSError(ENOENT)
+            raise FuseOSError(ENOENT)        
+
+        pathparts = self._split_path(path)
+        if pathparts['series']:
+            rows = self.db.get_series_plural(
+                title=pathparts['series']
+                )
+            if not rows:
+                raise FuseOSError(ENOENT)
+            series = rows[0]
+            if not pathparts['season']:
+                dirmode['st_ctime'] = self._datetime_to_timestamp(
+                    series['created_time']
+                    )
+                dirmode['st_mtime'] = self._datetime_to_timestamp(
+                    series['modified_time']
+                    )
+                return dirmode
+            elif not pathparts['episode']:
+                rows = self.db.get_seasons(
+                    series_id=series['id'],
+                    season_number=pathparts['season']
+                    )
+                if not rows:
+                    raise FuseOSError(ENOENT)
+                season = rows[0]
+                dirmode['st_ctime'] = self._datetime_to_timestamp(
+                    season['created_time']
+                    )
+                dirmode['st_mtime'] = self._datetime_to_timestamp(
+                    season['modified_time']
+                    )
+                return dirmode
+            elif pathparts['episode']:
+                raise FuseOSError(ENOENT) #episodes not ready yet                
 
         else:
             raise FuseOSError(ENOENT)
