@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS series (
         id INTEGER PRIMARY KEY NOT NULL, /* use the tvdb id */
         created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         modified_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        title VARCHAR,
+        title VARCHAR UNIQUE NOT NULL,
         summary TEXT,
         start_date DATE,
         run_time_minutes INTEGER,
