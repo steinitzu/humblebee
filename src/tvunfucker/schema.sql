@@ -72,6 +72,19 @@ CREATE VIEW view_episode AS
     LEFT JOIN series as ser ON 
     (ser.id = seas.series_id);
 
+CREATE VIEW view_season AS 
+    SELECT
+        seas.id,
+        seas.created_time,
+        seas.modified_time,
+        seas.season_number,
+        seas.series_id,
+        ser.title AS series_title 
+    FROM season AS seas 
+        LEFT JOIN series AS ser ON 
+        (ser.id = seas.series_id);
+
+
 
 
 
