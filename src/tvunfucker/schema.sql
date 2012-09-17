@@ -51,6 +51,29 @@ CREATE TABLE IF NOT EXISTS actor_role_series (
 );
 
 
+CREATE VIEW view_episode AS 
+    SELECT 
+        e.id, 
+        e.created_time,
+        e.modified_time, 
+        e.ep_number,
+        e.extra_ep_number,
+        e.title,
+        e.summary,
+        e.air_date,
+        e.file_path,
+        e.season_id,
+        seas.season_number,
+        seas.series_id,
+        ser.title AS series_title
+    FROM episode AS e 
+    LEFT JOIN season as seas ON 
+    (seas.id = e.season_id) 
+    LEFT JOIN series as ser ON 
+    (ser.id = seas.series_id);
+
+
+
 
 -- triggerss
 CREATE TRIGGER update_series_time AFTER UPDATE on series 
