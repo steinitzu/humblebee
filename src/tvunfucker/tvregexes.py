@@ -234,6 +234,11 @@ tv_regexes = [
     [. _-]+((?P<extra_info>.+?)                 # Source_Quality_Etc-
     ((?<![. _-])-(?P<release_group>[^-]+))?)?$  # Group
     '''),          
+
+    Regex('just_season_dir',
+    '''
+    ^(season|s)(%(separator)s|)(?P<season_num>\d+)$
+    '''),
     
 ]
 
