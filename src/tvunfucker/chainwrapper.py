@@ -101,19 +101,19 @@ class EpisodeSource(dict):
 
     def get_series(self, series_id):
         return self.db.get_row(
-            'SELECT * FROM series WHERE id = ?',
+            'SELECT * FROM view_series WHERE id = ?',
             (int(series_id),)
             )
 
     def get_season(self, season_id):
         return self.db.get_row(
-            'SELECT * FROM season WHERE id = ?',
+            'SELECT * FROM view_season WHERE id = ?',
             (int(season_id),)
             )
 
     def get_episode(self, episode_id):
         return self.db.get_row(
-            'SELECT * FROM episode WHERE id = ?',
+            'SELECT * FROM view_episode WHERE id = ?',
             (int(season_id),)
             )
 
@@ -123,6 +123,7 @@ class EpisodeSource(dict):
         Accepts a variable number of arguments. This will be the where statement.
         """
         where = localdbapi.make_where_statement(dicta=kwargs)
+        e_type = 'view_'+e_type
         return self.db.get_rows(
             'SELECT * FROM %s %s' % (e_type, where[0]),
             params=where[1]
@@ -262,6 +263,7 @@ class EpisodeSource(dict):
         -> bool
         """
         pk = int(pk)
+        item_type = 'view_'+item_type
         q = 'SELECT id FROM %s WHERE id = ?;' % item_type
         result = self.run_query(q, (pk,), get_one=True)
         if result: return True
