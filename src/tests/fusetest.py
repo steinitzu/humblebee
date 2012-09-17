@@ -23,5 +23,5 @@ source = chainwrapper.EpisodeSource(os.path.dirname(_dbfile))
 
 fs = thefuse.FileSystem(source)
 
-mtpt = os.path.join(_currentdir, 'testmount')
+mtpt = os.path.join(_currentdir, 'mount')
 fuse = fuse.FUSE(fs, mtpt, foreground=True)
