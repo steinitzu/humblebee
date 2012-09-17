@@ -77,6 +77,13 @@ class FileSystem(LoggingMixIn, Operations):
                 'st_atime' : now,
                 'st_nlink' : 2
                 }
+        filemode = {
+                'st_mode':(S_IFREG | 0755),
+                'st_ctime' : now,
+                'st_mtime' : now,
+                'st_atime' : now,
+                'st_nlink' : 2
+                }
 
         pathpcs = self._split_path(path)
 
@@ -89,12 +96,13 @@ class FileSystem(LoggingMixIn, Operations):
                     )
             return rows[0]
             
-        def make_ret(row):
-            dirmode.update({
+        def make_ret(row, mode='dir'):
+            l = dirmode if mode=='dir' else filemode
+            l.update({
                     'st_ctime':timestamp(row['created_time']),
                     'st_mtime':timestamp(row['modified_time'])
                     })
-            return dirmode
+            return l
 
         if path == '/': #root
             return dirmode
@@ -126,7 +134,7 @@ class FileSystem(LoggingMixIn, Operations):
                 series_title=pathpcs[0],
                 ep_number=f['ep_num']
                 )
-            return make_ret(check_rows(rows))
+            return make_ret(check_rows(rows), 'file')
 
         
 
