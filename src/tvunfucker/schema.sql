@@ -50,6 +50,19 @@ CREATE TABLE IF NOT EXISTS actor_role_series (
         FOREIGN KEY(series_id) REFERENCES series(id) ON DELETE CASCADE
 );
 
+CREATE VIEW view_series AS 
+SELECT
+    s.id,
+    s.created_time,
+    s.modified_time,
+    s.title,
+    s.summary,
+    s.start_date,
+    s.run_time_minutes,
+    s.network
+FROM series AS s;
+
+
 
 CREATE VIEW view_episode AS 
     SELECT 
