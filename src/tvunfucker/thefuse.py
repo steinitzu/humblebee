@@ -37,6 +37,7 @@ class FileSystem(LoggingMixIn, Operations):
             ret['season'] = int(pathpcs[1][1:])
             return ret
         elif lenp == 3: #episode
+            
             return ret #TODO: Do it later
 
     def _datetime_to_timestamp(self, dt):
@@ -108,6 +109,7 @@ class FileSystem(LoggingMixIn, Operations):
                time_t    st_ctime;   /* time of last status change */
            };
         """
+
         now = time()
         dirmode = {
                 'st_mode':(S_IFDIR | 0755),
@@ -125,6 +127,9 @@ class FileSystem(LoggingMixIn, Operations):
             raise FuseOSError(ENOENT)        
 
         pathparts = self._split_path(path)
+        log.debug(path)
+        log.debug(pathparts)        
+
         if pathparts['series']:
             rows = self.db.get_series_plural(
                 title=pathparts['series']
@@ -132,6 +137,7 @@ class FileSystem(LoggingMixIn, Operations):
             if not rows:
                 raise FuseOSError(ENOENT)
             series = rows[0]
+            season = None            
             if not pathparts['season']:
                 dirmode['st_ctime'] = self._datetime_to_timestamp(
                     series['created_time']
@@ -156,8 +162,20 @@ class FileSystem(LoggingMixIn, Operations):
                     )
                 return dirmode
             elif pathparts['episode']:
-                raise FuseOSError(ENOENT) #episodes not ready yet                
-
+                #TODO: I need to parse the file name again, this is backwards and fucked
+                rows = self.db.get_episodes(
+                    season_id=season['id']                    
+                    )
+                if not rows:
+                    raise FuseOSError(ENOENT)
+                ep = rows[0]
+                dirmode['st_ctime'] = self._datetime_to_timestamp(
+                    ep['created_time']
+                    )
+                dirmode['st_mtime'] = self._datetime_to_timestamp(
+                    ep['modified_time']
+                    )
+                return dirmode
         else:
             raise FuseOSError(ENOENT)
 
