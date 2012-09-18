@@ -11,14 +11,20 @@ class IncompleteEpisodeError(TVUFError):
     Occurs when LocalEpisode information is not sufficient to complete
     an operation.
     """
-    def __init__(self, *args):
-        super(IncompleteEpisodeError, self).__init__(*args)
+    pass
 
 class InvalidArgumentError(TVUFError):
-    def __init__(self, *args):
-        super(InvalidArgumentError, self).__init__(*args)
+    pass
 
 #fuck this
 class NotADirectoryError(TVUFError):
+    """
     def __init__(self, *args):
         super(NotADirectoryError, self).__init__(*args)
+    """
+    pass
+
+class ShowNotFoundError(TVUFError):
+    def __init__(self, msg, *args, **kwargs):
+        msg = 'Show \'%s\' was not found on the TVDB' % msg
+        TVUFError.__init__(self, msg, *args, **kwargs)
