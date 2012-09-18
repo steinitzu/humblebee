@@ -3,7 +3,7 @@
 
 import os, re
 
-import tvregexes
+import tvregexes, util
 import tvunfucker
 
 log = tvunfucker.log
@@ -13,6 +13,7 @@ def ez_parse_episode(path):
     parse_episode(absolute path) -> dict\n
     Parses only the episode's filename.    
     """
+    log.info('Parsing path: %s', path)
     result = LocalEpisode(path)
     directory,filename = os.path.split(path)
     if os.path.isfile(path):
@@ -38,8 +39,8 @@ def _merge_episodes(eps, path_to_ep, backup_series_name=None):
     Also takes a backup_series_name which can be a string,
     in case no series name data is available in any of the eps.
     """
-    log.info(eps)
-    log.info(path_to_ep)
+    log.debug(eps)
+    log.debug(path_to_ep)
     resultep = LocalEpisode(path_to_ep)
     for ep in eps:
         resultep.safe_update(ep)
@@ -119,6 +120,7 @@ class LocalEpisode(dict):
     """
     
     def __init__(self, path):
+        path = util.ensure_utf8(path)
         super(LocalEpisode,self).__init__(
             season_num=None,
             series_name=None,
@@ -184,31 +186,16 @@ class LocalEpisode(dict):
                 '\'%s\' is not a valid key for a LocalEpisode.\nValid keys are: %s' %
                 (key, valid_keys)
                 )
+
+        def set_val(val):
+            super(LocalEpisode, self).__setitem__(key, val)
+
         if key in numerics and value is not None:
             #will raise an error if value is not a valid number
             return super(LocalEpisode, self).__setitem__(key,int(value))
-        elif key == 'series_name' and value is not None:
-            #Will just assume that values is utf8 cause character encodings are hard
-            #(so we most likely won't get unicode erros and shit)
-            if isinstance(value, unicode):
-                return super(LocalEpisode, self).__setitem__(key,value)
-            elif isinstance(value, basestring):
-                return super(LocalEpisode, self).__setitem__(key,unicode(value,'utf8'))
-            else:
-                raise ValueError(
-                    'Value for key \'%s\' must be a string type, got \'%s\' (value: \s)' %
-                    (key, type(value), value)
-                    )
-        #no more, please
-        return super(LocalEpisode,self).__setitem__(key,value)
-
-    def __repr__(self):
-        result = u''
-        for key,value in self.items():
-            try:
-                value = unicode(value)
-            except UnicodeDecodeError:
-                value = unicode(value.decode('utf8'))            
-            result+= u'%s : %s\n' % (key,value)
-        result = u'{%s}' % result
-        return result
+        #strings
+        if isinstance(value, basestring):
+            if value == '' or value is None:
+                return set_val(None)
+            return set_val(util.ensure_utf8(value))
+        return set_val(value)
