@@ -15,6 +15,7 @@ import config
 import localdbapi
 from texceptions import *
 import tutil
+import util
 
 
 
@@ -44,6 +45,7 @@ def tvdb_lookup(ep):
     if not ep.is_fully_parsed():
         return None
     series = tvdbwrapper.get_series(ep.clean_name(ep['series_name']), api)
+    log.info('series: %s', series)
     if not series:
         return None
     webep = series[ep['season_num']][ep['ep_num']]
@@ -193,7 +195,7 @@ class EpisodeSource(dict):
             exep,
             webep['episodename'],
             webep['overview'],
-            datetime.strptime(webep['firstaired'], '%Y-%m-%d').date(),
+            util.safe_strpdate(webep['firstaired']),
             ep['path'],
             season_id
             )
@@ -252,7 +254,7 @@ class EpisodeSource(dict):
             int(d['id']),
             d['seriesname'],
             d['overview'],
-            datetime.strptime(d['firstaired'], '%Y-%m-%d').date(),
+            util.safe_strpdate(d['firstaired']),
             int(d['runtime']),
             d['network']
             )
@@ -312,4 +314,4 @@ def main():
 
     log.info('\n***UNPARSED EPISODES***\n')
     log.info('count: %d\n' % len(unparsed))
-    log.info('\n'.join([e for e in unparsed])) #TODO: Exception here, expects string
+    log.info('\n'.join([e['path'] for e in unparsed])) #TODO: Exception here, expects string
