@@ -1,4 +1,4 @@
-import os
+import os, sqlite3
 import logging
 
 import tvdb_api
@@ -26,18 +26,19 @@ def run_this_shit(source):
         webep = None
         #print ep['path']
         try:
-            log.debug('gonna lookup the ep')
+            log.debug('gonna lookup the ep %s', ep)
+            webep = None
             webep = chainwrapper.tvdb_lookup(ep)
         except tvdb_api.tvdb_shownotfound as e:
-            raise
+            #raise
             log.error(e.message)
             unparsed.append(ep)
         except tvdb_api.tvdb_seasonnotfound as e:
-            raise
+            #raise
             log.error(e.message)
             unparsed.append(ep)
         except tvdb_api.tvdb_episodenotfound as e:
-            raise
+            #raise
             log.error(e.message)
             unparsed.append(ep)  
         else:
@@ -45,7 +46,21 @@ def run_this_shit(source):
             ep['tvdb_ep'] = webep
             source[ep['path']] = ep
             if webep:
-                source.add_episode_to_db(ep)
+                log.debug('adding ep to db %s', ep)
+                try:
+                    source.add_episode_to_db(ep)
+                except sqlite3.IntegrityError:
+                    log.error(
+                        'episode already exists in db: %s. Ignoring.',
+                        ep['path']
+                        )
+                """
+                except sqlite3.OperationalError as e:
+                    log.info('db_file: %s', source.
+                """
+                        
+                    
+                    
 
     log.info('\n***UNPARSED EPISODES***\n')
     log.info('count: %d\n' % len(unparsed))
