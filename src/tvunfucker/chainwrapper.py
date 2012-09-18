@@ -13,7 +13,7 @@ from texceptions import *
 
 
 log = tvunfucker.log
-api = tvdb_api.Tvdb(apikey=tvunfucker.tvdb_key, actors=True)
+api = tvdbwrapper.get_api()
 
 
 def get_parsed_episodes(source):
@@ -37,7 +37,7 @@ def tvdb_lookup(ep):
     """
     if not ep.is_fully_parsed():
         return None
-    series = tvdbwrapper.get_series(ep.clean_name(ep['series_name']), api)
+    series = tvdbwrapper.get_series(ep.clean_name(ep['series_name']))
     log.info('series: %s', series)
     if not series:
         return None
