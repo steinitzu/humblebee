@@ -6,6 +6,9 @@ from time import mktime
 
 from texceptions import InvalidArgumentError
 
+#should be in __init__
+program_name = 'tvunfucker'
+
 
 def zero_prefix_int(num):
     """
