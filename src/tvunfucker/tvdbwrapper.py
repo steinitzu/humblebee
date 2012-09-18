@@ -14,8 +14,6 @@ def get_series(series_name, api):
         try:
             series = api[series_name]
             break
-        except tvdb_api.tvdb_shownotfound as e:
-            break
         except tvdb_api.tvdb_error as e:
             #probably couldn't connect
             if retrycount >= config.tvdb_retry_limit:
