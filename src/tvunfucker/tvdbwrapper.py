@@ -1,35 +1,56 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+#builtin
 import time
+import logging
+import sys
 
-import tvdb_api
+#3dparty
+from tvdb_api import tvdb_error, Tvdb, tvdb_shownotfound, tvdb_seasonnotfound, tvdb_episodenotfound
 
-import config
+#this pkg
+from texceptions import ShowNotFoundError
+import tvunfucker
+import cfg
 
-def get_series(series_name, api):
-    retrycount = 0
+log = logging.getLogger('tvunfucker')
+
+#tiss a ssingleton
+_api = None
+
+def get_api():
+    #THERE Can be only one.... api
+    global _api
+    _api = Tvdb(apikey=tvunfucker.tvdb_key, actors=True)
+    return _api
+
+def get_series(series_name):
+    """
+    get_series(str) -> tvdb_api.Show\n
+    raises tvdb_error or ShowNotFoundError on failure
+    """
+    api = get_api()
+    rtrc = 0
     series = None
+    rtlimit = cfg.get('tvdb', 'retry_limit', int)
+    rtinterval = cfg.get('tvdb', 'retry_interval', int)    
+
     while True:
         try:
             series = api[series_name]
-            break
-        except tvdb_api.tvdb_error as e:
-            #probably couldn't connect
-            if retrycount >= config.tvdb_retry_limit:
-                raise #no way hose
-            time.sleep(config.tvdb_retry_interval)
+        except tvdb_error as e:
+            #probably means no connection
+            if rtrc >= config.tvdb_retry_limit:
+                raise
+            log.warning(
+                'Failed to connect to the tvdb. Retrying in %s seconds.',
+                rtlimit
+                )            
+            time.sleep(rtlimit)
+        except tvdb_shownotfound as e:
+            #raise ShowNotFoundError(series_name)
+            raise ShowNotFoundError(series_name), None, sys.exc_info()[2]
         else:
             break
     return series
-
-
-#bullshittest
-def _test_get_series():
-    tvdb_key = '29E8EC8DF23A5918'
-    api = tvdb_api.Tvdb(apikey=tvdb_key)    
-    shows = ('friends','house','seinfeld','my name is earl', 'scrubs', 'cheers', 'dr who')
-    for i in range(100):
-        for  s in shows:
-            print get_series(s)
-            
