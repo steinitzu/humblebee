@@ -8,15 +8,8 @@ import tvdb_api
 
 import tvunfucker
 
-import dirscanner
-import parser
-import tvdbwrapper
-import config
-import localdbapi
+import dirscanner, parser, tvdbwrapper, config, localdbapi, util
 from texceptions import *
-import tutil
-import util
-
 
 
 log = tvunfucker.log
@@ -163,7 +156,7 @@ class EpisodeSource(dict):
         """
         add_episode_to_db(parser.LocalEpisode)
         """
-        tutil.type_safe(
+        util.type_safe(
             ep, parser.LocalEpisode,
             arg_num=1
             )
@@ -206,7 +199,7 @@ class EpisodeSource(dict):
         """
         add_season_to_db(parser.LocalEpisode)
         """
-        tutil.type_safe(
+        util.type_safe(
             ep, parser.LocalEpisode,
             arg_num=1
             )
@@ -230,7 +223,7 @@ class EpisodeSource(dict):
         """
         add_series_to_db(parser.LocalEpisode)
         """
-        tutil.type_safe(
+        util.type_safe(
             ep,
             parser.LocalEpisode,
             arg_num=1
