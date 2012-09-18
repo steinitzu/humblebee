@@ -94,13 +94,17 @@ class EpisodeSource(dict):
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
         log.debug('Query: %s\nParams: %s', query, params)
-        cur.execute(query, params)
         ret = None
-        if get_one: ret = cur.fetchone()
-        elif get_none: ret = cur.lastrowid
-        else: ret = cur.fetchall()
-        conn.commit()
-        conn.close()
+        try:
+            cur.execute(query, params)
+            if get_one: ret = cur.fetchone()
+            elif get_none: ret = cur.lastrowid
+            else: ret = cur.fetchall()
+            conn.commit()
+        except sqlite3.OperationalError, sqlite3.IntegrityError:
+            raise
+        finally:
+            conn.close()            
         return ret
 
     def get_series(self, series_id):
