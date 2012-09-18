@@ -28,7 +28,8 @@ def run_this_shit(source):
         try:
             log.debug('gonna lookup the ep %s', ep)
             webep = None
-            webep = chainwrapper.tvdb_lookup(ep)
+            webep = tvdbwrapper.lookup(ep)
+            #TODO: catch the right exceptions
         except tvdb_api.tvdb_shownotfound as e:
             #raise
             log.error(e.message)
