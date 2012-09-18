@@ -64,7 +64,7 @@ def run_this_shit(source):
 
     log.info('\n***UNPARSED EPISODES***\n')
     log.info('count: %d\n' % len(unparsed))
-    log.info('\n'.join([e for e in unparsed])) #TODO: Exception here, expects string
+    log.info('\n'.join([e['path'] for e in unparsed])) #TODO: Exception here, expects string
 
 
 run_this_shit(source)
