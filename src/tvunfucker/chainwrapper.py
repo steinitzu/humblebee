@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import os, sqlite3
 from datetime import datetime
 
@@ -90,6 +93,7 @@ class EpisodeSource(dict):
         conn = sqlite3.connect(self.db_file)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
+        log.debug('Query: %s\nParams: %s', query, params)
         cur.execute(query, params)
         ret = None
         if get_one: ret = cur.fetchone()
