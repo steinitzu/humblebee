@@ -80,7 +80,6 @@ def main():
     a = scanner.get_episodes(scanner.source_dir)
     l = [i for i in a]
     #print '\n'.join([i for i in l])
-    print len(l)    
     #print '\n'.join([a for a in scanner.get_episodes(scanner.source_dir)])
 
 
