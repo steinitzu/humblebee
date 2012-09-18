@@ -17,3 +17,15 @@ def zero_prefix_int(num):
 
 def timestamp(dt):
     return mktime(dt.timetuple())
+
+def ensure_utf8(value):
+    if not isinstance(value, basestring):
+        raise ValueError(
+            'Arg 0 must be a string type. You gave \'%s\' (type %s)' %
+            (value, type(value)
+             ))
+    if value == '':
+        return u''
+    if isinstance(value, unicode):
+        return value
+    return value.decode('utf-8')
