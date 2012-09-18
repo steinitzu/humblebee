@@ -35,9 +35,10 @@ def tvdb_lookup(ep):
     Look up the given ep with the tvdb api and attach the resulting
     tvdb_api.Episode object to it's 'tvdb_eop' key.    
     """
+    raise DeprecationWarning()
     if not ep.is_fully_parsed():
         return None
-    series = tvdbwrapper.get_series(ep.clean_name(ep['series_name']))
+    series = tvdbwrapper.get_series(ep.clean_name(ep['series_name']),)
     log.info('series: %s', series)
     if not series:
         return None
@@ -284,27 +285,3 @@ class EpisodeSource(dict):
         return self._item_exists(series_id, 'series')
         
 
-def main():
-    unparsed = []
-    source = EpisodeSource('/home/steini/tvtesttree')
-    for ep in get_parsed_episodes(source.source_dir):
-        webep = None
-        #print ep['path']
-        try:
-            tvdb_lookup(ep)
-        except tvdb_api.tvdb_shownotfound as e:
-            log.error(e.message)
-            unparsed.append(ep)
-        except tvdb_api.tvdb_seasonnotfound as e:
-            log.error(e.message)
-            unparsed.append(ep)
-        except tvdb_api.tvdb_episodenotfound as e:
-            log.error(e.message)
-            unparsed.append(ep)  
-        else:
-            log.info(ep)
-            source[ep['path']] = ep
-
-    log.info('\n***UNPARSED EPISODES***\n')
-    log.info('count: %d\n' % len(unparsed))
-    log.info('\n'.join([e['path'] for e in unparsed])) #TODO: Exception here, expects string
