@@ -1,7 +1,7 @@
 import os, sqlite3
 import logging
 
-import tvdb_api
+#import tvdb_api
 
 import tvunfucker
 
