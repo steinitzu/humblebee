@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import logging
+from decimal import Decimal
+from time import time
 
 #romlog
 log = logging.getLogger('tvunfucker')
@@ -21,4 +23,16 @@ test_log = logging.getLogger('testlog')
 file_handler = logging.FileHandler('testlog.log',  mode='a')
 file_handler.setFormatter(logging.Formatter(formatter))
 test_log.addHandler(file_handler)
-test_log.setLevel(logging.DEBUG)
+#test_log.setLevel(logging.DEBUG)
+
+
+def log_time(func):
+    def caller(*args, **kwargs):
+        starttime = Decimal(time())
+        ret = func(*args, **kwargs)
+        log.debug(
+            '%s finished in %s seconds.' % (
+            func.__name__, Decimal(time())-starttime)
+            )
+        return ret
+    return caller
