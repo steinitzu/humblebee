@@ -30,8 +30,32 @@ class FileSystem(LoggingMixIn, Operations):
         #files will be taken straight from db, no stupid shit
         self.db = db
         self.symlinks = {} #source : target
-        pass
+        self.files = {}
+        for ep in self.db.get_episodes():
+            self.files[self.make_filename(ep, 'episode')] = ep
+        for series in self.db.get_series_plural():
+            self.files[self.make_filename(series, 'series')] = series
+        for season in self.db.get_seasons():
+            self.files[self.make_filename(season, 'season')] = season            
 
+    def make_filename(self, row, etype='episode'):
+        mask = None
+        row = dict(row)
+        if etype == 'episode':
+            mask = self.filename_mask_ep
+            nums = ('season_number', 'ep_number', 'extra_ep_number')
+            for num in nums:
+                row[num]=zero_prefix_int(row[num])                
+            row['ext'] = os.path.splitext(row['file_path'])[1]
+            if not row['extra_ep_number']:
+                row['extra_ep_number'] = ''
+        elif etype == 'season' :
+            mask = self.filename_mask_season
+        elif etype == 'series':
+            return row['title']
+        return mask % row
+
+    @logger.log_time
     def readdir(self, path, fh):
         log.debug('path: %s', path)
 
