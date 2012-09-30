@@ -12,7 +12,6 @@ from errno import ENOENT
 from fuse import FUSE, FuseOSError, Operations, LoggingMixIn
 
 from util import zero_prefix_int, timestamp
-from tverror import WTFException
 from parser import ez_parse_episode as parse_file
 
 
