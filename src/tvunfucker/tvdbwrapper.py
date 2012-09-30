@@ -7,7 +7,7 @@ import logging
 import sys
 
 #3dparty
-from tvdb_api import tvdb_error, Tvdb, tvdb_shownotfound, tvdb_seasonnotfound, tvdb_episodenotfound
+from tvdb_api.tvdb_api import tvdb_error, Tvdb, tvdb_shownotfound, tvdb_seasonnotfound, tvdb_episodenotfound
 
 #this pkg
 from texceptions import ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError
