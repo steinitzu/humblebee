@@ -190,7 +190,7 @@ class EpisodeSource(dict):
             webep['episodename'],
             webep['overview'],
             util.safe_strpdate(webep['firstaired']),
-            ep['path'],
+            os.path.abspath(ep['path']),
             season_id
             )
 
