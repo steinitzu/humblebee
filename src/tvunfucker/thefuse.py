@@ -13,6 +13,7 @@ from fuse import FUSE, FuseOSError, Operations, LoggingMixIn
 
 from util import zero_prefix_int, timestamp
 from parser import ez_parse_episode as parse_file
+import logger
 
 
 
@@ -78,6 +79,7 @@ class FileSystem(LoggingMixIn, Operations):
         log.debug('Real path of %s = %s', path, realpath)
         return realpath        
 
+    @logger.log_time
     def get_metadata(self, path):
         """
         Returns the episode from the given path, season or series info
