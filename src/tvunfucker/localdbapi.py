@@ -8,6 +8,7 @@ import logger
 #TODO: separate dbapi from EpisodeSource and put it here
 
 log = logging.getLogger('tvunfucker')
+sqlite3.enable_shared_cache(True)
 
 """
 Connection pool make sense with sqlite/
@@ -17,15 +18,32 @@ class Database(object):
 
     def __init__(self, dbfile):
         self.db_file = dbfile
+        self.conn = self.db_to_ram()
 
     @logger.log_time
     def get_connection(self):
         """
         Returns a connection to the sqlite database.
         """
+        return self.conn
+        """
         conn = sqlite3.connect(self.db_file, detect_types=True)
         conn.row_factory = sqlite3.Row
         return conn
+        """
+
+    def db_to_ram(self):
+        memdb = sqlite3.connect(':memory:', detect_types=True)
+        memdb.row_factory = sqlite3.Row        
+        disk = sqlite3.connect(self.db_file, detect_types=True)
+
+        a = ''
+        for line in disk.iterdump():
+            log.debug(line)
+            a+=line
+
+        memdb.executescript(q)
+        return memdb
 
     @logger.log_time
     def _get_row(self, query, params=(), oneormany='one'):
