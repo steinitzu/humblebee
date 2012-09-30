@@ -6,7 +6,8 @@ import tvdb_api
 import tvunfucker
 
 from tvunfucker import logger
-from tvunfucker import chainwrapper, parser
+from tvunfucker import chainwrapper, parser, tvdbwrapper
+from tvunfucker.texceptions import ShowNotFoundError, EpisodeNotFoundError, SeasonNotFoundError
 
 log = logging.getLogger('tvunfucker')
 
@@ -30,15 +31,15 @@ def run_this_shit(source):
             webep = None
             webep = tvdbwrapper.lookup(ep)
             #TODO: catch the right exceptions
-        except tvdb_api.tvdb_shownotfound as e:
+        except ShowNotFoundError  as e:
             #raise
             log.error(e.message)
             unparsed.append(ep)
-        except tvdb_api.tvdb_seasonnotfound as e:
+        except SeasonNotFoundError as e:
             #raise
             log.error(e.message)
             unparsed.append(ep)
-        except tvdb_api.tvdb_episodenotfound as e:
+        except EpisodeNotFoundError as e:
             #raise
             log.error(e.message)
             unparsed.append(ep)  
