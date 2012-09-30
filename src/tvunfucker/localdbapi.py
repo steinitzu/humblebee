@@ -18,19 +18,19 @@ class Database(object):
 
     def __init__(self, dbfile):
         self.db_file = dbfile
-        self.conn = self.db_to_ram()
+        #self.conn = self.db_to_ram()
 
     @logger.log_time
     def get_connection(self):
         """
         Returns a connection to the sqlite database.
         """
-        return self.conn
-        """
+        #return self.conn
+
         conn = sqlite3.connect(self.db_file, detect_types=True)
         conn.row_factory = sqlite3.Row
         return conn
-        """
+
 
     def db_to_ram(self):
         memdb = sqlite3.connect(':memory:', detect_types=True)
