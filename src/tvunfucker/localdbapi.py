@@ -18,7 +18,7 @@ class Database(object):
     def __init__(self, dbfile):
         self.db_file = dbfile
 
-
+    @logger.log_time
     def get_connection(self):
         """
         Returns a connection to the sqlite database.
@@ -27,6 +27,7 @@ class Database(object):
         conn.row_factory = sqlite3.Row
         return conn
 
+    @logger.log_time
     def _get_row(self, query, params=(), oneormany='one'):
         conn = self.get_connection()
         cur = conn.cursor()
