@@ -35,6 +35,11 @@ CREATE TABLE IF NOT EXISTS episode (
         FOREIGN KEY(season_id) REFERENCES season(id) ON DELETE CASCADE
 );
 
+CREATE INDEX ep_number_idx ON episode (ep_number);
+CREATE INDEX season_number_idx ON season (season_number);
+CREATE INDEX series_title_idx ON series (title);
+
+
 CREATE TABLE IF NOT EXISTS actor (
         id INTEGER PRIMARY KEY NOT NULL,
         actor_name VARCHAR,
@@ -96,8 +101,6 @@ CREATE VIEW view_season AS
     FROM season AS seas 
         LEFT JOIN series AS ser ON 
         (ser.id = seas.series_id);
-
-
 
 
 
