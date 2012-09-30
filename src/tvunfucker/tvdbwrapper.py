@@ -10,7 +10,7 @@ import sys
 from tvdb_api import tvdb_error, Tvdb, tvdb_shownotfound, tvdb_seasonnotfound, tvdb_episodenotfound
 
 #this pkg
-from texceptions import ShowNotFoundError
+from texceptions import ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError
 import tvunfucker
 import cfg
 
@@ -65,17 +65,17 @@ def lookup(ep):
     """
     if not ep.is_fully_parsed():
         return None
-    series = get_series(e.clean_name(ep['series_name']))
+    series = get_series(ep.clean_name(ep['series_name']))
     log.info('Looking up series: %s', series)
     webep = None
     try:
         webep = series[ep['season_num']][ep['ep_num']]
     except tvdb_seasonnotfound as e:
         raise SeasonNotFoundError(
-            series['seriesname'], ep['season_num']), None, sys.exec_info()[2]
+            series['seriesname'], ep['season_num']), None, sys.exc_info()[2]
     except tvdb_episodenotfound as e:
         raise EpisodeNotFoundError(
-            series['seriesname'], ep['season_num'], ep['ep_num']), None, sys.exec_info()[2]
+            series['seriesname'], ep['season_num'], ep['ep_num']), None, sys.exc_info()[2]
     else:
         return webep
     
