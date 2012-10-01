@@ -30,14 +30,7 @@ class FileSystem(LoggingMixIn, Operations):
         #files will be taken straight from db, no stupid shit
         self.db = db
         self.symlinks = {} #source : target
-        self.files = {}
-        for ep in self.db.get_episodes():
-            self.files[self.make_filename(ep, 'episode')] = ep
-        for series in self.db.get_series_plural():
-            self.files[self.make_filename(series, 'series')] = series
-        for season in self.db.get_seasons():
-            self.files[self.make_filename(season, 'season')] = season            
-
+        
     def make_filename(self, row, etype='episode'):
         mask = None
         row = dict(row)
@@ -181,19 +174,6 @@ class FileSystem(LoggingMixIn, Operations):
             'st_nlink' : 2
             }
             
-        """
-        pathpcs = self._split_path(path)
-
-        def check_rows(rows):
-            if not rows:
-                raise FuseOSError(ENOENT)
-            elif len(rows) > 1:
-                raise WTFException(
-                    'filename %s has more than one candidate' % pathpcs[0]
-                    )
-            return rows[0]
-        """
-            
         def make_ret(row, mode='dir'):
             l = None
             if mode == 'dir' : l = dirmode
@@ -204,39 +184,7 @@ class FileSystem(LoggingMixIn, Operations):
                     'st_mtime':timestamp(row['modified_time'])
                     })
             return l
-        """
-        if path == '/': #root
-            return dirmode
 
-        elif path == '/_unparsed':
-            raise FuseOSError(ENOENT)
-
-        elif len(pathpcs) == 1: #series_dir
-            rows = self.db.get_series_plural(
-                title=pathpcs[0]
-                )
-            row = check_rows(rows)
-            return make_ret(row)
-        elif len(pathpcs) == 2: #season dir
-            f = parse_file(path)
-
-            log.debug('Prased ep: %s', f)
-            rows = self.db.get_seasons(
-                series_title = pathpcs[0],
-                season_number = f['season_num']
-                )
-            log.debug('Found seasons: %s', rows)
-            return make_ret(check_rows(rows))
-        elif len(pathpcs) == 3: #episode file
-            f = parse_file(path)
-            log.debug('Prased ep: %s', f)
-            rows = self.db.get_episodes(
-                season_number=f['season_num'],
-                series_title=pathpcs[0],
-                ep_number=f['ep_num']
-                )
-            return make_ret(check_rows(rows), 'symlink')
-        """
         if path == '/': return dirmode
         data = self.get_metadata(path)
         if data[1] == 'series' or data[1] == 'season':
