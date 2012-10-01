@@ -29,25 +29,6 @@ def get_parsed_episodes(source):
         yield parser.reverse_parse_episode(eppath, source)
 
 
-def tvdb_lookup(ep):
-    """
-    LocalEpisode -> LocalEpisode (the same one)\n
-    Look up the given ep with the tvdb api and attach the resulting
-    tvdb_api.Episode object to it's 'tvdb_eop' key.    
-    """
-    raise DeprecationWarning()
-    if not ep.is_fully_parsed():
-        return None
-    series = tvdbwrapper.get_series(ep.clean_name(ep['series_name']),)
-    log.info('series: %s', series)
-    if not series:
-        return None
-    webep = series[ep['season_num']][ep['ep_num']]
-    #ep['tvdb_ep'] = webep
-    return webep
-    #return ep
-
-
 def dict_factory(cursor, row):
     d = {}
     for idx, col in enumerate(cursor.description):
@@ -153,6 +134,19 @@ class EpisodeSource(dict):
         """
         return self._get_entities('episode', **kwargs)
 
+    def get_unparsed_children(self, parent_path):
+        where = localdbapi.make_where_statement(parent_path=parent_path)
+        return self.db.get_rows(
+            'SELECT child_path FROM unparsed_episodes '+where[0],
+            params=where[1]
+            )
+
+    def add_unparsed_child(self, child_path):
+        """
+        Will automatically determine the parent path based on child path.
+        """
+        
+
     def add_episode_to_db(self, ep):
         """
         add_episode_to_db(parser.LocalEpisode)
@@ -190,7 +184,7 @@ class EpisodeSource(dict):
             webep['episodename'],
             webep['overview'],
             util.safe_strpdate(webep['firstaired']),
-            os.path.abspath(ep['path']),
+            ep['path'],
             season_id
             )
 
