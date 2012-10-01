@@ -9,7 +9,10 @@ from tvunfucker import logger
 from tvunfucker import chainwrapper, parser, tvdbwrapper
 from tvunfucker.texceptions import ShowNotFoundError, EpisodeNotFoundError, SeasonNotFoundError
 
+
+
 log = logging.getLogger('tvunfucker')
+log.setLevel(logging.DEBUG)
 
 source_dir = os.path.join(os.path.dirname(__file__), 'testdata/testfs')
 source = chainwrapper.EpisodeSource(source_dir)
