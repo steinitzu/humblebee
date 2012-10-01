@@ -34,21 +34,18 @@ def run_this_shit(source):
             webep = None
             webep = tvdbwrapper.lookup(ep)
             #TODO: catch the right exceptions
-        except ShowNotFoundError  as e:
+        except (ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError) as e:
             #raise
             log.error(e.message)
+            log.debug('unparsed episode')
+            ep['path'] = os.path.relpath(ep['path'], source_dir)
+            source.add_unparsed_child(ep['path'])
             unparsed.append(ep)
-        except SeasonNotFoundError as e:
-            #raise
-            log.error(e.message)
-            unparsed.append(ep)
-        except EpisodeNotFoundError as e:
-            #raise
-            log.error(e.message)
-            unparsed.append(ep)  
         else:
             log.debug(ep)
             ep['tvdb_ep'] = webep
+            #TODO: ugly hack, tackle this when eps are spawned
+            ep['path'] = os.path.relpath(ep['path'], source_dir)
             source[ep['path']] = ep
             log.info('Adding episode at: %s', ep['path'])
             if webep:
@@ -60,13 +57,6 @@ def run_this_shit(source):
                         'episode already exists in db: %s. Ignoring.',
                         ep['path']
                         )
-                """
-                except sqlite3.OperationalError as e:
-                    log.info('db_file: %s', source.
-                """
-                        
-                    
-                    
 
     log.info('\n***UNPARSED EPISODES***\n')
     log.info('count: %d\n' % len(unparsed))
