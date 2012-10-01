@@ -14,7 +14,7 @@ from tvunfucker.texceptions import ShowNotFoundError, EpisodeNotFoundError, Seas
 log = logging.getLogger('tvunfucker')
 log.setLevel(logging.DEBUG)
 
-source_dir = os.path.join(os.path.dirname(__file__), 'testdata/testfs')
+source_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'testdata/testfs'))
 source = chainwrapper.EpisodeSource(source_dir)
 
 db_file = os.path.join(source_dir, '.tvunfucker.sqlite')
@@ -50,6 +50,7 @@ def run_this_shit(source):
             log.debug(ep)
             ep['tvdb_ep'] = webep
             source[ep['path']] = ep
+            log.info('Adding episode at: %s', ep['path'])
             if webep:
                 log.debug('adding ep to db %s', ep)
                 try:
