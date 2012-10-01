@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS episode (
 CREATE TABLE IF NOT EXISTS unparsed_episode (
         child_path VARCHAR PRIMARY KEY NOT NULL,
         parent_path VARCHAR DEFAULT NULL,
+        filename VARCHAR NOT NULL, -- for displaying shit
         FOREIGN KEY (parent_path) REFERENCES unparsed_episode(path) ON DELETE CASCADE
 );
 
