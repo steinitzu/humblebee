@@ -135,9 +135,10 @@ class EpisodeSource(dict):
         return self._get_entities('episode', **kwargs)
 
     def get_unparsed_children(self, parent_path):
-        where = localdbapi.make_where_statement(parent_path=parent_path)
+        op = 'is' if parent_path is None else '='
+        where = localdbapi.make_where_statement(operator=op, parent_path=parent_path)
         return self.db.get_rows(
-            'SELECT child_path FROM unparsed_episodes '+where[0],
+            'SELECT * FROM unparsed_episode '+where[0],
             params=where[1]
             )
 
@@ -145,7 +146,27 @@ class EpisodeSource(dict):
         """
         Will automatically determine the parent path based on child path.
         """
-        
+        log.debug('adding unparsed child: %s', child_path)
+        while True:
+            q = '''
+            INSERT INTO unparsed_episode (child_path, parent_path, filename) VALUES (?, ?, ?);
+            '''
+            splitted = os.path.split(child_path)            
+            parent = None if not splitted[0] else splitted[0]
+            filename = util.split_path(child_path).pop()
+            params = (child_path, parent, filename)
+            try:
+                self.db.insert(q, params)
+            except sqlite3.IntegrityError as e:
+                #probable means child_path is not unique, should probly check for that
+                log.error(
+                    'Error while adding unparsed child: %s\nmessage: %s',
+                    child_path, e.message
+                    )
+                pass
+            #new path
+            if parent == None: break            
+            child_path = parent
 
     def add_episode_to_db(self, ep):
         """
