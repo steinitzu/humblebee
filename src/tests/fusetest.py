@@ -6,7 +6,7 @@ import fuse
 from tvunfucker import localdbapi, logger, thefuse, chainwrapper
 
 log = logging.getLogger('tvunfucker')
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.WARNING)
 
 _currentdir = os.path.dirname(__file__)
 
