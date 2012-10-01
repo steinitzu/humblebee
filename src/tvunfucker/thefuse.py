@@ -11,7 +11,7 @@ from errno import ENOENT
 
 from fuse import FUSE, FuseOSError, Operations, LoggingMixIn
 
-from util import zero_prefix_int, timestamp
+from util import zero_prefix_int, timestamp, split_path
 from parser import ez_parse_episode as parse_file
 import logger
 
@@ -53,12 +53,18 @@ class FileSystem(LoggingMixIn, Operations):
         log.debug('path: %s', path)
 
         defret = ['.', '..']
-        pathpcs = self._split_path(path)
+        pathpcs = split_path(path)
 
         if path == '/':
             rows = self.db.get_series_plural()
-            return defret+[row['title'] for row in rows]
-        elif len(pathpcs) == 1: #series
+            return defret+['_unparsed']+[row['title'] for row in rows]
+        elif pathpcs[0] == '_unparsed':
+            parent = None
+            if len(pathpcs) > 1:
+                parent = os.path.join(*pathpcs[1:])
+            children = self.db.get_unparsed_children(parent_path=parent)
+            return defret+[c['filename'] for c in children]
+        elif len(pathpcs) == 1: #series or unparsed
             rows = self.db.get_seasons(series_title=pathpcs[0])
 
             ret = defret
@@ -94,57 +100,7 @@ class FileSystem(LoggingMixIn, Operations):
         #a keyerror here should NEVER happen, if it does, you made programming error derp
         realpath = data[0]['file_path']
         log.debug('Real path of %s = %s', path, realpath)
-        return realpath        
-
-    @logger.log_time
-    def get_metadata(self, path):
-        """
-        Returns the episode from the given path, season or series info
-        as a dict. See the db schema for column info.
-        """
-        pathpcs = self._split_path(path)        
-
-        def check_rows(rows):
-            if not rows:
-                raise FuseOSError(ENOENT)
-            elif len(rows) > 1:
-                raise WTFException(
-                    'filename %s has more than one candidate' % pathpcs[0]
-                    )
-            return rows[0]        
-
-        if path == '/': #root
-            return None
-
-        elif path == '/_unparsed':
-            raise FuseOSError(ENOENT)
-
-        elif len(pathpcs) == 1: #series_dir
-            rows = self.db.get_series_plural(
-                title=pathpcs[0]
-                )
-            row = check_rows(rows)
-            return row, 'series'
-        elif len(pathpcs) == 2: #season dir
-            f = parse_file(path)
-
-            log.debug('Prased ep: %s', f)
-            rows = self.db.get_seasons(
-                series_title = pathpcs[0],
-                season_number = f['season_num']
-                )
-            log.debug('Found seasons: %s', rows)
-            return check_rows(rows), 'season'
-        elif len(pathpcs) == 3: #episode file
-            f = parse_file(path)
-            log.debug('Prased ep: %s', f)
-            rows = self.db.get_episodes(
-                season_number=f['season_num'],
-                series_title=pathpcs[0],
-                ep_number=f['ep_num']
-                )
-            return check_rows(rows), 'episode'        
-        
+        return os.path.join(self.db.source_dir,realpath)
 
     def getattr(self, path, fh=None):
         log.debug('path: %s', path)
@@ -186,13 +142,13 @@ class FileSystem(LoggingMixIn, Operations):
             return l
 
         if path == '/': return dirmode
+        elif split_path(path)[0] == '_unparsed': return dirmode
         data = self.get_metadata(path)
         if data[1] == 'series' or data[1] == 'season':
             return make_ret(data[0], 'dir')
         elif data[1] == 'episode':
             return make_ret(data[0], 'symlink')
-        raise FuseOSError(ENOENT)
-        
+        raise FuseOSError(ENOENT)        
 
     def chmod(self, path, mode):
         return 0
@@ -200,11 +156,53 @@ class FileSystem(LoggingMixIn, Operations):
     def chown(self, path, mode):
         return 0
 
-    def _split_path(self, path):
-        return path.strip('/').split('/')
 
     
+    @logger.log_time
+    def get_metadata(self, path):
+        """
+        Returns the episode from the given path, season or series info
+        as a dict. See the db schema for column info.
+        """
+        pathpcs = split_path(path)        
 
-    
+        def check_rows(rows):
+            if not rows:
+                raise FuseOSError(ENOENT)
+            elif len(rows) > 1:
+                raise WTFException(
+                    'filename %s has more than one candidate' % pathpcs[0]
+                    )
+            return rows[0]        
 
-    
+        if path == '/': #root
+            return None
+
+        elif path == '/_unparsed':
+            raise FuseOSError(ENOENT)
+
+        elif len(pathpcs) == 1: #series_dir
+            rows = self.db.get_series_plural(
+                title=pathpcs[0]
+                )
+            row = check_rows(rows)
+            return row, 'series'
+        elif len(pathpcs) == 2: #season dir
+            f = parse_file(path)
+
+            log.debug('Prased ep: %s', f)
+            rows = self.db.get_seasons(
+                series_title = pathpcs[0],
+                season_number = f['season_num']
+                )
+            log.debug('Found seasons: %s', rows)
+            return check_rows(rows), 'season'
+        elif len(pathpcs) == 3: #episode file
+            f = parse_file(path)
+            log.debug('Prased ep: %s', f)
+            rows = self.db.get_episodes(
+                season_number=f['season_num'],
+                series_title=pathpcs[0],
+                ep_number=f['ep_num']
+                )
+            return check_rows(rows), 'episode'        
