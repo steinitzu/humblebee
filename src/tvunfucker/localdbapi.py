@@ -49,28 +49,38 @@ class Database(object):
     def _get_row(self, query, params=(), oneormany='one'):
         conn = self.get_connection()
         cur = conn.cursor()
-        cur.execute(query, params)
-        #TODO: error handling, conn doesn't close if error        
-        if oneormany == 'one':
-            result = cur.fetchone()
-        elif oneormany == 'many':
-            result = cur.fetchall()
-        else:
-            raise ValueError(
-                'last argument must be either "one" or "many"'
-                )
-        conn.close()
+        try:
+            cur.execute(query, params)
+            #TODO: error handling, conn doesn't close if error        
+            if oneormany == 'one':
+                result = cur.fetchone()
+            elif oneormany == 'many':
+                result = cur.fetchall()
+            elif oneormany == 'none':
+                result = None
+            else:
+                raise ValueError(
+                    'last argument must be either "one" or "many"'
+                    )
+        except sqlite3.Error as e:
+            raise
+        finally:
+            conn.commit()
+            conn.close()            
         return result
 
     def get_row(self, query, params=()):
-        #TODO: make it take params too
-        
         return self._get_row(query, params, 'one')
 
     def get_rows(self, query, params=()):
         log.debug('query: %s', query)
         log.debug('params: %s', params)        
         return self._get_row(query, params, 'many')
+
+    def insert(self, query, params=()):
+        log.debug('query: %s', query)
+        log.debug('params: %s', params)                
+        return self._get_row(query, params, oneormany='none')
 
 def make_where_statement(dicta=None, operator='=', separator='AND', **kwargs):
     """
