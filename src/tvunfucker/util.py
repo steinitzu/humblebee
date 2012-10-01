@@ -44,7 +44,7 @@ def ensure_utf8(value):
         return value
     return value.decode('utf-8')
 
-def split_path(self, path):
+def split_path(path):
     return path.strip('/').split('/')
 
 
