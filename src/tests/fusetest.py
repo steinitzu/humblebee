@@ -8,7 +8,7 @@ from tvunfucker import localdbapi, logger, thefuse, chainwrapper
 log = logging.getLogger('tvunfucker')
 log.setLevel(logging.DEBUG)
 
-_currentdir = os.path.dirname(__file__)
+_currentdir = os.path.abspath(os.path.dirname(__file__))
 
 
 _dbfile =  os.path.join(_currentdir, 'testdata/testfs/.tvunfucker.sqlite')
