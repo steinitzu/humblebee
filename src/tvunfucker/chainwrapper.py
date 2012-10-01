@@ -142,6 +142,13 @@ class EpisodeSource(dict):
             params=where[1]
             )
 
+    def get_unparsed_entity(self, child_path):
+        where = localdbapi.make_where_statement(child_path=child_path)
+        return self.db.get_rows(
+            'SELECT * FROM unparsed_episode '+where[0],
+            params=where[1]
+            )
+    
     def add_unparsed_child(self, child_path):
         """
         Will automatically determine the parent path based on child path.
