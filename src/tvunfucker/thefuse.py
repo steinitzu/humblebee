@@ -96,9 +96,14 @@ class FileSystem(LoggingMixIn, Operations):
         target = 1
 
     def readlink(self, path):
+        pathpcs = split_path(path)
         data = self.get_metadata(path)
         #a keyerror here should NEVER happen, if it does, you made programming error derp
-        realpath = data[0]['file_path']
+        log.debug('Source dir = %s', self.db.source_dir)
+        if pathpcs[0] == '_unparsed':
+            realpath = os.path.join(self.db.source_dir,data['child_path'])
+        else:
+            realpath = os.path.join(self.db.source_dir,data[0]['file_path'])
         log.debug('Real path of %s = %s', path, realpath)
         return os.path.join(self.db.source_dir,realpath)
 
@@ -140,15 +145,26 @@ class FileSystem(LoggingMixIn, Operations):
                     'st_mtime':timestamp(row['modified_time'])
                     })
             return l
-
+        pathpcs = split_path(path)
         if path == '/': return dirmode
-        elif split_path(path)[0] == '_unparsed': return dirmode
-        data = self.get_metadata(path)
-        if data[1] == 'series' or data[1] == 'season':
+        data = self.get_metadata(path)        
+        if pathpcs[0] == '_unparsed':
+            #data is the metadata for this path as child_path
+            if not  data:
+                return dirmode            
+            parent = None
+            if len(pathpcs) > 1:
+                parent = os.path.join(*pathpcs[1:])            
+            kids = self.db.get_unparsed_children(parent)
+            if kids:
+                return dirmode
+            else:
+                return symlinkmode
+        elif data[1] == 'series' or data[1] == 'season':
             return make_ret(data[0], 'dir')
         elif data[1] == 'episode':
             return make_ret(data[0], 'symlink')
-        raise FuseOSError(ENOENT)        
+        raise FuseOSError(ENOENT)
 
     def chmod(self, path, mode):
         return 0
@@ -177,10 +193,10 @@ class FileSystem(LoggingMixIn, Operations):
 
         if path == '/': #root
             return None
-
-        elif path == '/_unparsed':
-            raise FuseOSError(ENOENT)
-
+        elif pathpcs[0] == '_unparsed':
+            if len(pathpcs) == 1: return None
+            rows = self.db.get_unparsed_entity(os.path.join(*pathpcs[1:]))
+            return check_rows(rows)
         elif len(pathpcs) == 1: #series_dir
             rows = self.db.get_series_plural(
                 title=pathpcs[0]
