@@ -30,7 +30,7 @@ def run_this_shit(source):
         webep = None
         #print ep['path']
         try:
-            log.debug('gonna lookup the ep %s', ep)
+            log.info('looking up file at %s', ep['path'])
             webep = None
             webep = tvdbwrapper.lookup(ep)
             #TODO: catch the right exceptions
