@@ -42,7 +42,7 @@ def get_series(series_name, api=None):
             series = api[series_name]
         except tvdb_error as e:
             #probably means no connection
-            if rtrc >= config.tvdb_retry_limit:
+            if rtrc >= rtlimit:
                 raise
             log.warning(
                 'Failed to connect to the tvdb. Retrying in %s seconds.',

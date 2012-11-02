@@ -29,25 +29,6 @@ def get_parsed_episodes(source):
         yield parser.reverse_parse_episode(eppath, source)
 
 
-def tvdb_lookup(ep):
-    """
-    LocalEpisode -> LocalEpisode (the same one)\n
-    Look up the given ep with the tvdb api and attach the resulting
-    tvdb_api.Episode object to it's 'tvdb_eop' key.    
-    """
-    raise DeprecationWarning()
-    if not ep.is_fully_parsed():
-        return None
-    series = tvdbwrapper.get_series(ep.clean_name(ep['series_name']),)
-    log.info('series: %s', series)
-    if not series:
-        return None
-    webep = series[ep['season_num']][ep['ep_num']]
-    #ep['tvdb_ep'] = webep
-    return webep
-    #return ep
-
-
 def dict_factory(cursor, row):
     d = {}
     for idx, col in enumerate(cursor.description):
@@ -64,7 +45,9 @@ class EpisodeSource(dict):
     def __init__(self, sourcedir):
         self.source_dir = sourcedir
         super(EpisodeSource, self).__init__()
-        self.db_file = os.path.join(self.source_dir, config.local_database_filename)
+        self.db_file = os.path.join(
+            self.source_dir, config.local_database_filename
+            )
         self.db = localdbapi.Database(self.db_file)
 
     def initialize_database(self):
@@ -72,7 +55,10 @@ class EpisodeSource(dict):
         """
         Use when you want to create a new database.
         """
-        schema = open(os.path.join(os.path.dirname(tvunfucker.__file__), 'schema.sql')).read()
+        schema = open(
+            os.path.join(
+                os.path.dirname(tvunfucker.__file__), 'schema.sql')
+                ).read()
         conn = sqlite3.connect(self.db_file)
         cur = conn.cursor()
         cur.executescript(schema)
@@ -153,6 +139,49 @@ class EpisodeSource(dict):
         """
         return self._get_entities('episode', **kwargs)
 
+    def get_unparsed_children(self, parent_path):
+        op = 'is' if parent_path is None else '='
+        where = localdbapi.make_where_statement(operator=op, parent_path=parent_path)
+        return self.db.get_rows(
+            'SELECT * FROM unparsed_episode '+where[0],
+            params=where[1]
+            )
+
+    def get_unparsed_entity(self, child_path):
+        where = localdbapi.make_where_statement(child_path=child_path)
+        return self.db.get_rows(
+            'SELECT * FROM unparsed_episode '+where[0],
+            params=where[1]
+            )
+    
+    def add_unparsed_child(self, child_path):
+        """
+        Will automatically determine the parent path based on child path.
+        """
+        log.debug('adding unparsed child: %s', child_path)
+        while True:
+            q = '''
+            INSERT INTO unparsed_episode (
+            child_path, parent_path, filename) 
+            VALUES (?, ?, ?);
+            '''
+            splitted = os.path.split(child_path)            
+            parent = None if not splitted[0] else splitted[0]
+            filename = util.split_path(child_path).pop()
+            params = (child_path, parent, filename)
+            try:
+                self.db.insert(q, params)
+            except sqlite3.IntegrityError as e:
+                #probable means child_path is not unique, should probly check for that
+                log.error(
+                    'Error while adding unparsed child: %s\nmessage: %s',
+                    child_path, e.message
+                    )
+                pass
+            #new path
+            if parent == None: break            
+            child_path = parent
+
     def add_episode_to_db(self, ep):
         """
         add_episode_to_db(parser.LocalEpisode)
@@ -190,7 +219,7 @@ class EpisodeSource(dict):
             webep['episodename'],
             webep['overview'],
             util.safe_strpdate(webep['firstaired']),
-            os.path.abspath(ep['path']),
+            ep['path'],
             season_id
             )
 
