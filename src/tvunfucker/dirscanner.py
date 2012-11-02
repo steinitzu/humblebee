@@ -72,19 +72,3 @@ def get_episodes(dir_):
             yield file_
         for result in get_episodes(subdir):
             yield result            
-
-
-def main():
-
-    scanner = SourceScanner('/home/steini/tvtesttree')
-    a = scanner.get_episodes(scanner.source_dir)
-    l = [i for i in a]
-    #print '\n'.join([i for i in l])
-    #print '\n'.join([a for a in scanner.get_episodes(scanner.source_dir)])
-
-
-
-if __name__ == '__main__':
-    main()
-    
-    

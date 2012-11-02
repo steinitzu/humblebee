@@ -1,0 +1,1 @@
+* TODO Use configparser (wrapper from tundi) instead of config.py

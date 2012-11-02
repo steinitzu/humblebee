@@ -32,7 +32,7 @@ def ez_parse_episode(path):
 def _merge_episodes(eps, path_to_ep, backup_series_name=None):
     """
     Accepts a sequence of LocalEpisode objects.\n    
-    Merges their data intelligently into one LocalEpisode object
+    Merges their data into one LocalEpisode object
     and returns it.\n
     Also takes path_to_ep, which should be a path to the actual episode file
     in question.\n
@@ -68,11 +68,7 @@ def reverse_parse_episode(path, source):
     regex it will remain unparsed.
     """
 
-    #what is the goal?
-    #to get ONE fully parsed episode (series_name, ep_num, season_num)
-
-    #step3
-    #parse path, get a LocalEpisode object
+    #get ONE fully parsed episode (series_name, ep_num, season_num)
 
     #step 1
     #parse directory one up from path, get a LocalEpisode object
@@ -81,7 +77,7 @@ def reverse_parse_episode(path, source):
     #parse directory two up from path, get a LocalEpisode object
 
     #step3
-    #intelligently merge all 3 LocalEpisode objects into one ep and return it
+    #merge all 3 LocalEpisode objects into one ep and return it
 
     ep = ez_parse_episode(path)
 

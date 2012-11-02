@@ -45,7 +45,9 @@ class EpisodeSource(dict):
     def __init__(self, sourcedir):
         self.source_dir = sourcedir
         super(EpisodeSource, self).__init__()
-        self.db_file = os.path.join(self.source_dir, config.local_database_filename)
+        self.db_file = os.path.join(
+            self.source_dir, config.local_database_filename
+            )
         self.db = localdbapi.Database(self.db_file)
 
     def initialize_database(self):
@@ -53,7 +55,10 @@ class EpisodeSource(dict):
         """
         Use when you want to create a new database.
         """
-        schema = open(os.path.join(os.path.dirname(tvunfucker.__file__), 'schema.sql')).read()
+        schema = open(
+            os.path.join(
+                os.path.dirname(tvunfucker.__file__), 'schema.sql')
+                ).read()
         conn = sqlite3.connect(self.db_file)
         cur = conn.cursor()
         cur.executescript(schema)
@@ -156,7 +161,9 @@ class EpisodeSource(dict):
         log.debug('adding unparsed child: %s', child_path)
         while True:
             q = '''
-            INSERT INTO unparsed_episode (child_path, parent_path, filename) VALUES (?, ?, ?);
+            INSERT INTO unparsed_episode (
+            child_path, parent_path, filename) 
+            VALUES (?, ?, ?);
             '''
             splitted = os.path.split(child_path)            
             parent = None if not splitted[0] else splitted[0]
