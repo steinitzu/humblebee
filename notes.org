@@ -5,11 +5,9 @@
 * TODO A simple cli
 * TODO Less redundant logging
 * TODO Less redundant code
+* TODO Fall back on the bing api and get imdb id when tvdb api search fails
 
 
-* Forever
-** TODO Smarter scraping 
-*** TODO Use google or sum
 
 * Later
 ** TODO Make a gui
