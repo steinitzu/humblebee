@@ -40,3 +40,7 @@ class SeasonNotFoundError(TVUFError):
         msg = 'Series \'%s\', season %s was not found on the TVDB' % (
             show, season)
         TVUFError.__init__(self, msg, *args, **kwargs)        
+
+
+class DatabaseAlreadyExistsError(TVUFError):
+    pass        

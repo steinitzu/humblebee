@@ -16,6 +16,49 @@ log = tvunfucker.log
 api = tvdbwrapper.get_api()
 
 
+def create_database(source_dir):
+    unparsed = []
+    source = EpisodeSource(source_dir)
+    source.initialize_database()
+    for ep in get_parsed_episodes(source.source_dir):
+        webep = None
+        #print ep['path']
+        try:
+            log.info('looking up file at %s', ep['path'])
+            webep = None
+            webep = tvdbwrapper.lookup(ep)
+            #TODO: catch the right exceptions
+        except (ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError) as e:
+            #raise
+            log.error(e.message)
+            log.debug('unparsed episode')
+            ep['path'] = os.path.relpath(ep['path'], source_dir)
+            source.add_unparsed_child(ep['path'])
+            unparsed.append(ep)
+        else:
+            log.debug(ep)
+            ep['tvdb_ep'] = webep
+            #TODO: ugly hack, tackle this when eps are spawned
+            ep['path'] = os.path.relpath(ep['path'], source_dir)
+            source[ep['path']] = ep
+            log.info('Adding episode at: %s', ep['path'])
+            if webep:
+                log.debug('adding ep to db %s', ep)
+                try:
+                    source.add_episode_to_db(ep)
+                except sqlite3.IntegrityError:
+                    log.error(
+                        'episode already exists in db: %s. Ignoring.',
+                        ep['path']
+                        )
+
+    log.info('Failed to scrape %s episodes', len(unparsed))
+    log.debug('\n'.join([e['path'] for e in unparsed])) #TODO: Exception here, expects string
+
+def delete_database(source_dir):
+    os.unlink(os.path.join(source_dir, db_file))
+
+
 def get_parsed_episodes(source):
     """
     Yields LocalEpisode objects in given source directory
