@@ -1,12 +1,9 @@
 * TODO Use configparser (wrapper from tundi) instead of config.py
 * TODO Handle rar files and such
-* TODO Single ep dirs should be presented as single media files
 * TODO Make the db about 100x faster
-* TODO A simple cli
 * TODO Less redundant logging
 * TODO Less redundant code
 * TODO Fall back on the bing api and get imdb id when tvdb api search fails
-
 
 
 * Later

@@ -1,8 +1,9 @@
 from optparse import OptionParser
-import logging
+import logging, os
 
-from tvunfucker.chainwrapper import create_database
+from tvunfucker.chainwrapper import get_database
 from tvunfucker.texceptions import *
+from tvunfucker.thefuse import mount_db_filesystem
 
 
 
@@ -15,14 +16,14 @@ def main():
         '--source-directory', 
         dest='source_directory',
         help='A directory with TV shows you want to scrape.',
-        metavar='PATH'
+        metavar='DIRECTORY'
         )
     pa(
         '-m',
         '--mount-point',
         dest='mount_point',
         help='Mountpoint for the virtual filesystem. (Any empty directory you have write access to).',
-        metavar='PATH'
+        metavar='DIRECTORY'
         )
     pa(
         '-r',
@@ -31,30 +32,35 @@ def main():
         help='Pre-existing database file in given --source-directory will be deleted and the database will be re-created from scratch.'
         )
     pa(
-        '-v',
-        '--verbose',
-        action='store_true',
-        dest='verbose',
-        help='verbose output (log level INFO), this prints lots of details.'
-        )
-    pa(
-        '-V',
-        '--very-verbose',
-        action='store_true',
-        dest='very_verbose',
-        help='even more verbose (log level DEBUG). This is intended for developers and people who like to read irrelevant shit.'
+        '-l',
+        '--log-level',
+        dest='log_level',
+        help='Log level. Available options in order of least verbose to most verbose: CRITICAL, ERROR, WARNING, INFO, DEBUG. (Default: WARNING)',
+        metavar='STRING'
         )
     (options, args) = parser.parse_args()
 
     log = logging.getLogger('tvunfucker')
+    if options.log_level:
+        log.setLevel(
+            logging.__getattribute__(options.log_level.upper())
+            )
+    else:
+        log.setLevel(logging.WARNING)
 
-    if options.verbose:
-        log.setLevel(logging.INFO)
-    elif options.very_verbose:
-        log.setLevel(logging.DEBUG)
-
+    dbfile = os.path.join(options.source_directory, '.tvunfucker.sqlite')
+    source = None
     if options.source_directory:
-        create_database(options.source_directory)
+        if not os.path.exists(dbfile) or options.reset_database:
+            source = get_database(options.source_directory)            
+        else:
+            source = get_database(options.source_directory, create=False)
+
+    if options.mount_point:
+        mount_db_filesystem(source, options.mount_point, foreground=True)
+        
+        
+        
                 
         
         

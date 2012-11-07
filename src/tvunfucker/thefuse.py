@@ -222,3 +222,10 @@ class FileSystem(LoggingMixIn, Operations):
                 ep_number=f['ep_num']
                 )
             return check_rows(rows), 'episode'        
+
+
+def mount_db_filesystem(db_file, mount_point, **kwargs):
+    fs = FileSystem(db_file)
+    return FUSE(fs, mount_point, **kwargs)
+    
+        

@@ -16,9 +16,15 @@ log = tvunfucker.log
 api = tvdbwrapper.get_api()
 
 
-def create_database(source_dir):
+def get_database(source_dir, create=True):
+    """
+    Creates a new sqlite tv database in the given source_dir.\n
+    If kwarg |create| is False, only an existing database source will be returned.
+    """
     unparsed = []
     source = EpisodeSource(source_dir)
+    if not create:
+        return source
     source.initialize_database()
     for ep in get_parsed_episodes(source.source_dir):
         webep = None
@@ -54,6 +60,7 @@ def create_database(source_dir):
 
     log.info('Failed to scrape %s episodes', len(unparsed))
     log.debug('\n'.join([e['path'] for e in unparsed])) #TODO: Exception here, expects string
+    return source
 
 def delete_database(source_dir):
     os.unlink(os.path.join(source_dir, db_file))
