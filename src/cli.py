@@ -66,7 +66,8 @@ def main():
                 else: raise            
         source = get_database(options.source_directory)
     if options.mount_point:
-        mount_db_filesystem(source, options.mount_point, foreground=True)
+        fg = options.log_level.upper() == 'DEBUG'
+        mount_db_filesystem(source, options.mount_point, foreground=fg)
         
         
         
