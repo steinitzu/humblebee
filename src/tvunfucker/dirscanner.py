@@ -4,10 +4,12 @@
 import os
 from glob import glob
 
-import config, parser #from this package
+import parser #from this package
+import cfg
 from logger import *
 from texceptions import *
 
+FILE_EXTENSIONS = cfg.get('scanner', 'match-extensions').split(',')
 
 #these functions belong to the world
 
@@ -22,7 +24,7 @@ def _get_sub_directories(dir_):
         abspath = os.path.join(dir_,name)
         if os.path.isfile(abspath):
             continue
-        if name in config.ignored_dirs:            
+        if name in cfg.get('scanner', 'ignored-dirs').split(','):            
             log.info('ignored dir in ignore list \'%s\'' % abspath)
             continue
         yield abspath
@@ -36,11 +38,11 @@ def _get_video_files(dir_):
         abspath = os.path.join(dir_,name)
         if not os.path.isfile(abspath):
             continue
-        if name in config.ignored_files:
+        if name in cfg.get('scanner', 'ignored-files').split(','):
             log.info('ignored file in ignore list \'%s\'' % abspath)
             continue
         ext = os.path.splitext(name)[1]
-        if not ext in config.video_files:
+        if not ext in FILE_EXTENSIONS:
             #TODO: do something about rar files
             continue
         yield abspath

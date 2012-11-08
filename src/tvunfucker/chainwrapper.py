@@ -8,7 +8,7 @@ import tvdb_api
 
 import tvunfucker
 
-import dirscanner, parser, tvdbwrapper, config, localdbapi, util
+import dirscanner, parser, tvdbwrapper, cfg, localdbapi, util
 from texceptions import *
 
 
@@ -95,7 +95,7 @@ class EpisodeSource(dict):
         self.source_dir = sourcedir
         super(EpisodeSource, self).__init__()
         self.db_file = os.path.join(
-            self.source_dir, config.local_database_filename
+            self.source_dir, cfg.get('database','local-database-filename')
             )
         self.db = localdbapi.Database(self.db_file)
 

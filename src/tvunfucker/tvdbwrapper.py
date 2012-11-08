@@ -34,8 +34,8 @@ def get_series(series_name, api=None):
     api = get_api()
     rtrc = 0
     series = None
-    rtlimit = cfg.get('tvdb', 'retry_limit', int)
-    rtinterval = cfg.get('tvdb', 'retry_interval', int)    
+    rtlimit = cfg.get('tvdb', 'retry-limit', int)
+    rtinterval = cfg.get('tvdb', 'retry-interval', int)    
 
     while True:
         try:

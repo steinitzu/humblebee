@@ -41,11 +41,9 @@ def get_user_config():
 
 
 default_config = ConfigParser.RawConfigParser()
+default_config_path = os.path.join(os.path.dirname(__file__), 'default.cfg')
 #find the default config file
-default_config.read(os.path.join(
-    os.path.dirname(__file__),
-    'default.cfg')
-    )
+default_config.read(default_config_path)
 
 cfg_path = get_user_config()
 user_config = ConfigParser.RawConfigParser()
@@ -117,10 +115,11 @@ def write_user_config():
         user_config.write(cfgfile)
     read_user_config()
 
-def read_user_config():
+def read_config():
     """
     Updates the user_config object from file.
     """
     user_config.read(cfg_path)    
+    default_config.read(default_config_path)
 
-read_user_config()
+read_config()
