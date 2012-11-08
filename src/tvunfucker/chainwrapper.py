@@ -62,7 +62,14 @@ def get_database(source_dir):
     return source
 
 def delete_database(source_dir):
-    os.unlink(os.path.join(source_dir, db_file))
+    """
+    Deletes the tvunfucker database file from given directory.
+    """
+    os.unlink(os.path.join(
+        source_dir, cfg.get(
+            'database', 
+            'local-database-filename')
+            )
 
 
 def get_parsed_episodes(source):

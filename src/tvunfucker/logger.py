@@ -7,12 +7,17 @@ from time import time
 
 #romlog
 log = logging.getLogger('tvunfucker')
-formatter = logging.Formatter('%(levelname)s %(asctime)s %(module)s.%(funcName)s: %(message)s')
+formatter = logging.Formatter(
+    '%(levelname)s %(asctime)s %(module)s.%(funcName)s: %(message)s'
+    )
 streamhdlr = logging.StreamHandler()
 streamhdlr.setFormatter(formatter)
 
 file_handler = logging.FileHandler('romlog.log',  mode='a')
-file_handler.setFormatter(logging.Formatter('%(levelname)s %(asctime)s %(module)s.%(funcName)s: %(message)s'))
+file_handler.setFormatter(
+    logging.Formatter(
+        '%(levelname)s %(asctime)s %(module)s.%(funcName)s: %(message)s')
+        )
 
 log.addHandler(file_handler)
 log.addHandler(streamhdlr)
