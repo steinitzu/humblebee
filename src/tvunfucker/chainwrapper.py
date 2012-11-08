@@ -16,16 +16,15 @@ log = tvunfucker.log
 api = tvdbwrapper.get_api()
 
 
-def get_database(source_dir, create=True):
+def get_database(source_dir):
     """
     Creates a new sqlite tv database in the given source_dir.\n
     If kwarg |create| is False, only an existing database source will be returned.
     """
     unparsed = []
     source = EpisodeSource(source_dir)
-    if not create:
-        return source
-    source.initialize_database()
+    if not os.path.exists(source.db_file):
+        source.initialize_database()
     for ep in get_parsed_episodes(source.source_dir):
         webep = None
         #print ep['path']

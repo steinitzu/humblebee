@@ -51,11 +51,18 @@ def main():
     dbfile = os.path.join(options.source_directory, '.tvunfucker.sqlite')
     source = None
     if options.source_directory:
-        if not os.path.exists(dbfile) or options.reset_database:
-            source = get_database(options.source_directory)            
-        else:
-            source = get_database(options.source_directory, create=False)
-
+        if os.path.exists(dbfile) and options.reset_database:
+            try:
+                os.unlink(dbfile)
+            except OSError as e:
+                if e.errno == 2:
+                    log.warning(
+                        'Attempt to delete non-existing database '\
+                        +'file \'%s\' was suppressed.', 
+                        dbfile
+                        )
+                else: raise            
+        source = get_database(options.source_directory)
     if options.mount_point:
         mount_db_filesystem(source, options.mount_point, foreground=True)
         
