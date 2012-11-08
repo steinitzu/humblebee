@@ -29,7 +29,9 @@ def main():
         '-r',
         '--reset-database',
         dest='reset_database',
-        help='Pre-existing database file in given --source-directory will be deleted and the database will be re-created from scratch.'
+        help='Pre-existing database file in given --source-directory will be deleted and the database will be re-created from scratch.',
+        action='store_true', 
+        default=False
         )
     pa(
         '-l',
