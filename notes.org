@@ -1,10 +1,11 @@
-* TODO Use configparser (wrapper from tundi) instead of config.py
 * TODO Handle rar files and such
 * TODO Make the db about 100x faster
 * TODO Less redundant logging
 * TODO Less redundant code
 * TODO Fall back on the bing api and get imdb id when tvdb api search fails
 
+
+* TODO mount the fuse before you start scanning the database
 
 * Later
 ** TODO Make a gui
