@@ -68,7 +68,7 @@ def delete_database(source_dir):
     os.unlink(os.path.join(
         source_dir, cfg.get(
             'database', 
-            'local-database-filename')
+            'local-database-filename'))
             )
 
 
