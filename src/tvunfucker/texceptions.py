@@ -6,6 +6,10 @@
 class TVUFError(Exception):
     pass
 
+class WTFException(TVUFError):
+    #special exception, for special occasions
+    pass
+
 class IncompleteEpisodeError(TVUFError):
     """
     Occurs when LocalEpisode information is not sufficient to complete

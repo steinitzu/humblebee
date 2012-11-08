@@ -11,20 +11,46 @@ import tvunfucker
 import dirscanner, parser, tvdbwrapper, cfg, localdbapi, util
 from texceptions import *
 
+osp = os.path
+
 
 log = tvunfucker.log
 api = tvdbwrapper.get_api()
 
-
-def get_database(source_dir):
+def create_database(directory, force=False):
     """
+    Creates a new, empty database in given |directory| if it does 
+    not already exist.
+    If force==True, the existing database will be deleted and a new one created instead.
+
+    Raises DatabaseAlreadyExistsError if database exists and |force==False|
+
+    Returns EpisodeSource instance
+    """
+    dbfile = osp.join(directory, cfg.get('database', 'local-database-filename'))
+    if osp.exists(dbfile):
+        if force:
+            delete_database(directory)
+        else:
+            raise DatabaseAlreadyExistsError(
+                'Database file at \'%s\' already exists.'
+                )
+    source = EpisodeSource(directory)
+    source.initialize_database()
+    return source
+
+
+def scrape_source(source):
+    """
+    Scan the given EpisodeSource instance for tv shows.    
     Creates a new sqlite tv database in the given source_dir.\n
     If kwarg |create| is False, only an existing database source will be returned.
     """
     unparsed = []
-    source = EpisodeSource(source_dir)
-    if not os.path.exists(source.db_file):
-        source.initialize_database()
+    try:
+        source = create_database(source.source_dir)
+    except DatabaseAlreadyExistsError:
+        pass
     for ep in get_parsed_episodes(source.source_dir):
         webep = None
         #print ep['path']
@@ -37,14 +63,14 @@ def get_database(source_dir):
             #raise
             log.error(e.message)
             log.debug('unparsed episode')
-            ep['path'] = os.path.relpath(ep['path'], source_dir)
+            ep['path'] = os.path.relpath(ep['path'], source.source_dir)
             source.add_unparsed_child(ep['path'])
             unparsed.append(ep)
         else:
             log.debug(ep)
             ep['tvdb_ep'] = webep
             #TODO: ugly hack, tackle this when eps are spawned
-            ep['path'] = os.path.relpath(ep['path'], source_dir)
+            ep['path'] = os.path.relpath(ep['path'], source.source_dir)
             source[ep['path']] = ep
             log.info('Adding episode at: %s', ep['path'])
             if webep:

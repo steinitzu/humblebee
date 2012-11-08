@@ -1,7 +1,8 @@
 from optparse import OptionParser
 import logging, os
+from threading import Thread
 
-from tvunfucker.chainwrapper import get_database
+from tvunfucker.chainwrapper import create_database, scrape_source, EpisodeSource
 from tvunfucker.texceptions import *
 from tvunfucker.thefuse import mount_db_filesystem
 
@@ -50,28 +51,31 @@ def main():
     else:
         log.setLevel(logging.WARNING)
 
-    dbfile = os.path.join(options.source_directory, '.tvunfucker.sqlite')
     source = None
     if options.source_directory:
-        if os.path.exists(dbfile) and options.reset_database:
-            try:
-                os.unlink(dbfile)
-            except OSError as e:
-                if e.errno == 2:
-                    log.warning(
-                        'Attempt to delete non-existing database '\
-                        +'file \'%s\' was suppressed.', 
-                        dbfile
-                        )
-                else: raise            
-        source = get_database(options.source_directory)
-    if options.mount_point:
-        fg = options.log_level.upper() == 'DEBUG'
-        mount_db_filesystem(source, options.mount_point, foreground=fg)
+        try:
+            source = create_database(
+                options.source_directory,
+                force=options.reset_database
+                )
+        except DatabaseAlreadyExistsError:
+            source = EpisodeSource(
+                options.source_directory
+                )
+        t = Thread(target=scrape_source, args=(source,))
+        t.start()
         
-        
-        
-                
+        if options.mount_point:
+            fg = options.log_level.upper() == 'DEBUG'
+            mount_db_filesystem(
+                source, 
+                options.mount_point, 
+                foreground=fg
+                )
+    elif options.mount_point:
+        raise InvalidArgumentError(
+            'You must specify a source directory ( -s )'
+            )
         
         
 if __name__ == '__main__':
