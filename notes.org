@@ -5,8 +5,13 @@
 * TODO Fall back on the bing api and get imdb id when tvdb api search fails
 
 
-* TODO mount the fuse before you start scanning the database
+* TODO Chainwrapper.EpisodeSource is doing too many things
+* TODO Need to handle sqlite locks with concurrent access 
+(so scraper doesn't crash when filesystem is active)
+Either that or just use postgres or some
 
+* TODO sqlite can't share conns between threads
+Must make a conn pool which gives persistent connections per thread.
 * Later
 ** TODO Make a gui
 ** TODO Renaming and moving of actual files 

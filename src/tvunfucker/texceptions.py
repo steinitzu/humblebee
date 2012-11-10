@@ -48,3 +48,13 @@ class SeasonNotFoundError(TVUFError):
 
 class DatabaseAlreadyExistsError(TVUFError):
     pass        
+
+
+class PoolError(TVUFError):
+    pass
+
+class PoolExhaustedError(PoolError):
+    pass
+
+class PutUnkeyedConnectionError(PoolError):
+    pass

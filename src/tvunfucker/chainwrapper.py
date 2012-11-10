@@ -111,18 +111,11 @@ def get_parsed_episodes(source):
         yield parser.reverse_parse_episode(eppath, source)
 
 
-def dict_factory(cursor, row):
-    d = {}
-    for idx, col in enumerate(cursor.description):
-        d[col[0]] = row[idx]
-    return d
-    
-
 #TODO: Move this somewhere more appropriate
 class EpisodeSource(dict):
     """
     Holds together a whole tv source.\n
-    This would represent a single tv directory.
+    This would represent a single tv directory and database.
     """
     def __init__(self, sourcedir):
         self.source_dir = sourcedir
@@ -146,30 +139,6 @@ class EpisodeSource(dict):
         cur.executescript(schema)
         conn.commit()
         conn.close()
-
-    def run_query(self, query, params=(), get_one=False, get_none=False):
-        """
-        run_query(query, params) -> []\n
-        run_query(query, params,get_one=True) -> object\n
-        If get one, returns the first row in the result set.\n
-        If get_none, it will return the last row id
-        """        
-        conn = sqlite3.connect(self.db_file)
-        conn.row_factory = sqlite3.Row
-        cur = conn.cursor()
-        log.debug('Query: %s\nParams: %s', query, params)
-        ret = None
-        try:
-            cur.execute(query, params)
-            if get_one: ret = cur.fetchone()
-            elif get_none: ret = cur.lastrowid
-            else: ret = cur.fetchall()
-            conn.commit()
-        except sqlite3.OperationalError, sqlite3.IntegrityError:
-            raise
-        finally:
-            conn.close()            
-        return ret
 
     def get_series(self, series_id):
         return self.db.get_row(
@@ -305,7 +274,7 @@ class EpisodeSource(dict):
             season_id
             )
 
-        self.run_query(q, params, get_none=True)        
+        self.db.insert(q, params)        
 
     def add_season_to_db(self, ep):
         """
@@ -327,7 +296,7 @@ class EpisodeSource(dict):
             show_id
             )
 
-        self.run_query(q, params, get_none=True)
+        self.db.insert(q, params)
 
         #TODO: upsert if season exists
 
@@ -364,7 +333,7 @@ class EpisodeSource(dict):
             d['network']
             )
         try:
-            self.run_query(query, params)
+            self.db.insert(query, params)
         except sqlite3.IntegrityError:
             #this usually means the series with this id already exists.
             #we should make a column with 'lastupdate' (tvdb ep has that too)
@@ -380,7 +349,7 @@ class EpisodeSource(dict):
         pk = int(pk)
         item_type = 'view_'+item_type
         q = 'SELECT id FROM %s WHERE id = ?;' % item_type
-        result = self.run_query(q, (pk,), get_one=True)
+        result = self.db.get_row(q, (pk,))
         if result: return True
         return False        
         
