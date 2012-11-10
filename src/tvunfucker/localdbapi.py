@@ -5,7 +5,7 @@ import sqlite3, logging
 from threading import Lock
 
 import logger, cfg
-from texceptions import ConnectionPoolExhaustedError
+from texceptions import PoolExhaustedError, PutUnkeyedConnectionError
 
 #TODO: separate dbapi from EpisodeSource and put it here
 
@@ -114,7 +114,7 @@ class Database(object):
         Returns a connection to the sqlite database.
         """
         #return self.conn
-        return self.pool.get_conn()
+        return self.pool._connect(to_pool=False)
         
     @logger.log_time
     def _get_row(self, query, params=(), oneormany='one'):
@@ -134,8 +134,8 @@ class Database(object):
                     'last argument must be either "one" or "many"'
                     )
             conn.commit()
-        finally:
-            self.pool.put_conn(conn)
+        finally: conn.close()
+            #self.pool.put_conn(conn)
         return result
 
     def get_row(self, query, params=()):
