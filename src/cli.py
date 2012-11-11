@@ -46,7 +46,8 @@ def main():
         '--log-level',
         dest='log_level',
         help='Log level. Available options in order of least verbose to most verbose: CRITICAL, ERROR, WARNING, INFO, DEBUG. (Default: WARNING).\nKeep in mind that DEBUG will create a massive log with large collections.',
-        metavar='STRING'
+        metavar='STRING',
+        default='WARNING'
         )
     pa(
         '-a',
