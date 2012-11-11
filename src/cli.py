@@ -38,8 +38,16 @@ def main():
         '-l',
         '--log-level',
         dest='log_level',
-        help='Log level. Available options in order of least verbose to most verbose: CRITICAL, ERROR, WARNING, INFO, DEBUG. (Default: WARNING)',
+        help='Log level. Available options in order of least verbose to most verbose: CRITICAL, ERROR, WARNING, INFO, DEBUG. (Default: WARNING).\nKeep in mind that DEBUG will create a massive log with large collections.',
         metavar='STRING'
+        )
+    pa(
+        '-a',
+        '--allow-other',
+        dest='allow_other',
+        help='Pass "allow_other" options to the fuse virtual filesystem. This means that other users than the one who mounted it can access the filesystem (if you mount as root, or want to share the fs using samba, you probably want this).\n This requires the "allow_other_user" option to be enabled in /etc/fuse.conf.',
+        action='store_true',
+        default=False
         )
     (options, args) = parser.parse_args()
 
@@ -66,11 +74,12 @@ def main():
         t.start()
         
         if options.mount_point:
-            fg = options.log_level.upper() == 'DEBUG'
+            fg = options.log_level.upper() == 'DEBUG'            
             mount_db_filesystem(
                 source, 
                 options.mount_point, 
-                foreground=fg
+                foreground=fg,
+                allow_other=options.allow_other
                 )
     elif options.mount_point:
         raise InvalidArgumentError(
