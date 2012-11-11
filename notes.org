@@ -1,12 +1,10 @@
+* TODO Doesn't work without DEBUG?
 * TODO Handle rar files and such
 * TODO Make the db about 100x faster
 * TODO Less redundant logging
 * TODO Less redundant code
 * TODO Chainwrapper.EpisodeSource is doing too many things
-* TODO sqlite can't share conns between threads
-Must make a conn pool which gives persistent connections per thread.
 * TODO log unhandled exceptions
-
 * TODO Maybe strip numbers from front of series name (e.g. '19The king of queens') (though that might be too much of a special case)
 Or maybe just try the folder parse AFTER failed lookup
 * Later
