@@ -14,11 +14,9 @@ from urllib import quote, urlencode
 import os
 from tempfile import gettempdir
 import logging
+from json import JSONDecoder
 
 from tvdb_cache import CacheHandler
-
-#temporary, don't keep it here
-API_KEY = '3cgOZAjtF9AGYtQedrKJlIC8p0Q8ScM2eOHGfZ4zT6A='
 
 TOP_LEVEL_URL = '''
 https://api.datamarket.azure.com/Data.ashx/Bing/Search/v1/Web
@@ -62,6 +60,10 @@ class Bing(object):
             )
 
     def search(self, query, recache=False):
+        """
+        Searches the given query on bing and returns results as a list of dicts.
+        Refreshes the local cache (if any) if rechache == False.
+        """
         url = SEARCH_URL % {'qstring' : quote(query.encode('utf-8'))}
         req = Request(url)
         bsixfour = base64.encodestring(
@@ -81,27 +83,6 @@ class Bing(object):
             if recache:
                 log.debug('attempting to recache url: %s', url)
                 response.recache()
-        return response.read()            
-                               
 
-class Result(object):
-    pass
-
-
-def main():
-    turl = 'https://api.datamarket.azure.com/Data.ashx/Bing/Search/v1/Web?Query=%27what%27&$top=50&$format=json'
-    hndlr = logging.StreamHandler()
-    frmtr = logging.Formatter(
-        '%(levelname)s:%(module)s.%(funcName)s: %(message)s'
-        )
-    hndlr.setFormatter(frmtr)
-    log.addHandler(hndlr)
-    log.setLevel(logging.DEBUG)
-    b = Bing(api_key=API_KEY, caching=True)
-    b.search('cake fart')
-    b.search('cake fart')
-
-if __name__ == '__main__':
-    main()
-    
-
+        decod = JSONDecoder()
+        return decod.decode(response.read())['d']['results']                               

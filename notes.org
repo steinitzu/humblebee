@@ -2,16 +2,13 @@
 * TODO Make the db about 100x faster
 * TODO Less redundant logging
 * TODO Less redundant code
-* TODO Fall back on the bing api and get imdb id when tvdb api search fails
-
-
 * TODO Chainwrapper.EpisodeSource is doing too many things
-* TODO Need to handle sqlite locks with concurrent access 
-(so scraper doesn't crash when filesystem is active)
-Either that or just use postgres or some
-
 * TODO sqlite can't share conns between threads
 Must make a conn pool which gives persistent connections per thread.
+* TODO log unhandled exceptions
+
+* TODO Maybe strip numbers from front of series name (e.g. '19The king of queens') (though that might be too much of a special case)
+Or maybe just try the folder parse AFTER failed lookup
 * Later
 ** TODO Make a gui
 ** TODO Renaming and moving of actual files 
@@ -19,4 +16,7 @@ Must make a conn pool which gives persistent connections per thread.
 
 * Unparsed at Fri Nov  2 22:27:40 GMT 2012
 ** 428
+* Unparsed at Sun Nov 11 03:57:54 GMT 2012
+** 258
+
 

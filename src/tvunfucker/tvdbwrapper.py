@@ -2,17 +2,17 @@
 # -*- coding: utf-8 -*-
 
 #builtin
-import time
-import logging
-import sys
+import time, logging, sys, re
 
 #3dparty
 from tvdb_api.tvdb_api import tvdb_error, Tvdb, tvdb_shownotfound, tvdb_seasonnotfound, tvdb_episodenotfound
 
 #this pkg
 from texceptions import ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError
+from texceptions import NoIdInURLError, NoResultsError
 import tvunfucker
 import cfg
+from bingapi.bingapi import Bing
 
 log = logging.getLogger('tvunfucker')
 
@@ -24,6 +24,52 @@ def get_api():
     global _api
     _api = Tvdb(apikey=tvunfucker.tvdb_key, actors=True)
     return _api
+
+
+def _imdb_id_from_url(url):
+    """
+    Parse the imdb id from an url like 'imdb.com/title/tt0092455'.
+    """
+    log.debug('URL: %s', url)
+    m = re.search('title/(?P<id>tt\d{7})', url)  
+    if not m:
+        raise NoIdInURLError('No imdb id in url: %s' % url)
+    return m.groupdict()['id']
+
+def bing_lookup(series_name, api_key=None):
+    """
+    Uses bing to find the imdb id of the series.
+    Accepts kwarg api_key, if None it will use the one from cfg.
+    """
+    if not api_key:
+        api_key = cfg.get('bing', 'api-key')
+    query = 'site:imdb.com %s' % series_name
+    b = Bing(api_key, caching=True)
+    sres = b.search(query)
+    if not sres:
+        raise ShowNotFoundError(
+            'Series: \'%s\' was not found using bing',
+            series_name, 
+            )
+    try:
+        imdbid = _imdb_id_from_url(sres[0]['Url'])
+    except NoIdInURLError as e:
+        log.warning(e.message)
+        raise ShowNotFoundError(
+            'Series: \'%s\' was not found using bing',
+            series_name, 
+            ), None, sys.exc_info()[2]    
+    api = get_api()
+    try:
+        series = api.getSeriesByIMDBId(imdbid)
+    except tvdb_shownotfound:
+        raise ShowNotFoundError(
+            'Series: \'%s\' (imdb id: \'%s\' was not found.',
+            series_name, 
+            imdbid
+            ), None, sys.exc_info()[2]    
+    else:
+        return series
 
 def get_series(series_name, api=None):
     """
@@ -50,8 +96,14 @@ def get_series(series_name, api=None):
                 )            
             time.sleep(rtlimit)
         except tvdb_shownotfound as e:
+            log.info(
+                'Series \'%s\' was not found on tvdb, falling back on bing/imdb search',
+                series_name
+                )
+            series = bing_lookup(series_name)
+            break
             #raise ShowNotFoundError(series_name)
-            raise ShowNotFoundError(series_name), None, sys.exc_info()[2]
+            #raise ShowNotFoundError(series_name), None, sys.exc_info()[2]
         else:
             break
     return series

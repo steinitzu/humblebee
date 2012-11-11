@@ -130,6 +130,10 @@ class EpisodeSource(dict):
         """
         Use when you want to create a new database.
         """
+        log.debug(
+            'going to import schema into db file at: %s',
+            self.db_file
+            )
         schema = open(
             os.path.join(
                 os.path.dirname(tvunfucker.__file__), 'schema.sql')
