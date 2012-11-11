@@ -22,7 +22,8 @@ _api = None
 def get_api():
     #THERE Can be only one.... api
     global _api
-    _api = Tvdb(apikey=tvunfucker.tvdb_key, actors=True)
+    if not _api:
+        _api = Tvdb(apikey=tvunfucker.tvdb_key, actors=True)
     return _api
 
 
