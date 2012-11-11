@@ -30,3 +30,5 @@ pip-log.txt
 sdist
 src/tests/mount
 var
+src/tests/testdata/testfs/.tvunfucker.sqlite
+src/romlog.log
