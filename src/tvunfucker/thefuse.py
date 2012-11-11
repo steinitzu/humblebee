@@ -25,15 +25,29 @@ class FileSystem(LoggingMixIn, Operations):
        ' %(series_title)s s%(season_number)se%(ep_number)s%(extra_ep_number)s %(title)s%(ext)s'
        )
     filename_mask_season = 's%(season_number)s'    
+    def replace_bad_chars(self, string):
+        """
+        Remove chars that can cause problems in filenames
+        with some platforms and file managers.
+        """
+        chars = ('?', ':', '/', '\\', '|', '<', '>')
+        nstring = string
+        for ch in chars:
+            nstring = nstring.replace(ch, '')
+        self.original_name[nstring] = string
+        return nstring
     
     def __init__(self, db):
         #files will be taken straight from db, no stupid shit
         self.db = db
         self.symlinks = {} #source : target
+        #to preserve db names after 'replace_bad_chars'
+        self.original_name = {}
         
     def make_filename(self, row, etype='episode'):
         mask = None
         row = dict(row)
+        log.debug('Etype: %s', etype)
         if etype == 'episode':
             mask = self.filename_mask_ep
             nums = ('season_number', 'ep_number', 'extra_ep_number')
@@ -45,8 +59,8 @@ class FileSystem(LoggingMixIn, Operations):
         elif etype == 'season' :
             mask = self.filename_mask_season
         elif etype == 'series':
-            return row['title']
-        return mask % row
+            return self.replace_bad_chars(row['title'])
+        return self.replace_bad_chars(mask % row)
 
     @logger.log_time
     def readdir(self, path, fh):
@@ -57,28 +71,33 @@ class FileSystem(LoggingMixIn, Operations):
 
         if path == '/':
             rows = self.db.get_series_plural()
-            return defret+['_unparsed']+[row['title'] for row in rows]
+            return defret+['_unparsed']+[
+                self.make_filename(row, etype='series') 
+                for row in rows
+                ]
         elif pathpcs[0] == '_unparsed':
             parent = None
             if len(pathpcs) > 1:
                 parent = os.path.join(*pathpcs[1:])
             children = self.db.get_unparsed_children(parent_path=parent)
             return defret+[c['filename'] for c in children]
-        elif len(pathpcs) == 1: #series or unparsed
-            rows = self.db.get_seasons(series_title=pathpcs[0])
+        elif len(pathpcs) == 1: #series
+            rows = self.db.get_seasons(
+                series_title=self.get_orig_name(pathpcs[0])
+                )
 
             ret = defret
 
             for row in rows:
                 row = dict(row)
                 row['season_number'] = zero_prefix_int(row['season_number'])
-                ret.append(self.filename_mask_season % row)
+                ret.append(self.make_filename(row, etype='season'))
             return ret
         elif len(pathpcs) == 2: #season, get eps
             f = parse_file(path)            
             rows = self.db.get_episodes(
                 season_number=f['season_num'],
-                series_title=pathpcs[0]
+                series_title=self.get_orig_name(pathpcs[0])
                 )
             ret = defret
             for row in rows:
@@ -89,7 +108,7 @@ class FileSystem(LoggingMixIn, Operations):
                 row['ext'] = os.path.splitext(row['file_path'])[1]
                 if not row['extra_ep_number']:
                     row['extra_ep_number'] = ''
-                ret.append(self.filename_mask_ep % row)
+                ret.append(self.make_filename(row, etype='episode'))
             return ret
 
     def symlink(self, target, name):
@@ -199,7 +218,9 @@ class FileSystem(LoggingMixIn, Operations):
             return check_rows(rows)
         elif len(pathpcs) == 1: #series_dir
             rows = self.db.get_series_plural(
-                title=pathpcs[0]
+                title=self.get_orig_name(
+                    pathpcs[0]
+                    )
                 )
             row = check_rows(rows)
             return row, 'series'
@@ -208,7 +229,7 @@ class FileSystem(LoggingMixIn, Operations):
 
             log.debug('Prased ep: %s', f)
             rows = self.db.get_seasons(
-                series_title = pathpcs[0],
+                series_title=self.get_orig_name(pathpcs[0]),
                 season_number = f['season_num']
                 )
             log.debug('Found seasons: %s', rows)
@@ -218,10 +239,18 @@ class FileSystem(LoggingMixIn, Operations):
             log.debug('Prased ep: %s', f)
             rows = self.db.get_episodes(
                 season_number=f['season_num'],
-                series_title=pathpcs[0],
+                series_title=self.get_orig_name(pathpcs[0]),
                 ep_number=f['ep_num']
                 )
             return check_rows(rows), 'episode'        
+        
+    def get_orig_name(self, name):
+        log.debug('getting original name for: %s', name)
+        try:
+            return self.original_name[name]
+        except KeyError:
+            log.debug('no original name for; %s', name)
+            return name
 
 
 def mount_db_filesystem(db_file, mount_point, **kwargs):
