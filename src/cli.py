@@ -27,6 +27,13 @@ def main():
         metavar='DIRECTORY'
         )
     pa(
+        '-n',
+        '--no-scan',
+        help='Do not scan the given source directory (-s) but only mount its database (if any). Use with -m',
+        action='store_true',
+        default=False
+        )
+    pa(
         '-r',
         '--reset-database',
         dest='reset_database',
@@ -70,9 +77,9 @@ def main():
             source = EpisodeSource(
                 options.source_directory
                 )
-        t = Thread(target=scrape_source, args=(source,))
-        t.start()
-        
+        if not options.no_scan:
+            t = Thread(target=scrape_source, args=(source,))
+            t.start()        
         if options.mount_point:
             fg = options.log_level.upper() == 'DEBUG'            
             mount_db_filesystem(
