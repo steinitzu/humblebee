@@ -1,3 +1,0 @@
-[submodule "src/tvunfucker/tvdb_api"]
-	path = src/tvunfucker/tvdb_api
-	url = git@github.com:steinitzu/tvdb_api.git
