@@ -30,11 +30,12 @@ def create_database(directory, force=False):
     dbfile = osp.join(directory, cfg.get('database', 'local-database-filename'))
     if osp.exists(dbfile):
         if force:
-            delete_database(directory)
+            try:
+                delete_database(directory)
+            except NoSuchDatabaseError:
+                pass #don't care
         else:
-            raise DatabaseAlreadyExistsError(
-                'Database file at \'%s\' already exists.'
-                )
+            raise DatabaseAlreadyExistsError(dbfile)
     source = EpisodeSource(directory)
     source.initialize_database()
     return source
@@ -91,11 +92,17 @@ def delete_database(source_dir):
     """
     Deletes the tvunfucker database file from given directory.
     """
-    os.unlink(os.path.join(
+    dbfile = os.path.join(
         source_dir, cfg.get(
-            'database', 
-            'local-database-filename'))
-            )
+        'database', 
+        'local-database-filename')
+        )
+    try:
+        os.unlink(dbfile)
+    except OSError as e:
+        if e.errno == 2: #file no exist
+            raise NoSuchDatabaseError(dbfile), None, sys.exc_info()[2]
+        else: raise
 
 
 def get_parsed_episodes(source):
@@ -228,8 +235,8 @@ class EpisodeSource(dict):
                 self.db.insert(q, params)
             except sqlite3.IntegrityError as e:
                 #probable means child_path is not unique, should probly check for that
-                log.error(
-                    'Error while adding unparsed child: %s\nmessage: %s',
+                log.warning(
+                    'Error while adding unparsed child (usually nothing to worry about): %s\nmessage: %s',
                     child_path, e.message
                     )
                 pass
