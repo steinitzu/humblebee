@@ -7,10 +7,13 @@
 * TODO log unhandled exceptions
 * TODO Maybe strip numbers from front of series name (e.g. '19The king of queens') (though that might be too much of a special case)
 Or maybe just try the folder parse AFTER failed lookup
+* TODO Allow language options for tvdb
+* TODO Make separate mounter thingy
 * Later
 ** TODO Make a gui
 ** TODO Renaming and moving of actual files 
 
+** TODO Make the scraper a daemon
 
 * Unparsed at Fri Nov  2 22:27:40 GMT 2012
 ** 428
