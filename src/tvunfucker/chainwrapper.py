@@ -83,6 +83,11 @@ def scrape_source(source):
                         'episode already exists in db: %s. Ignoring.',
                         ep['path']
                         )
+            else: 
+                log.info('Ep is going to unparsed: %s', ep['path'])                
+                source.add_unparsed_child(ep['path'])
+                unparsed.append(ep)
+                
 
     log.info('Failed to scrape %s episodes', len(unparsed))
     log.debug('\n'.join([e['path'] for e in unparsed])) #TODO: Exception here, expects string

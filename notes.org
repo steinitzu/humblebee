@@ -1,4 +1,3 @@
-* TODO Doesn't work without DEBUG?
 * TODO Handle rar files and such
 * TODO Make the db about 100x faster
 * TODO Less redundant logging
@@ -9,6 +8,10 @@
 Or maybe just try the folder parse AFTER failed lookup
 * TODO Allow language options for tvdb
 * TODO Make separate mounter thingy
+* TODO Mounting does not work without DEBUG (bad address) (is it foreground?)
+
+
+* TODO After failed lookup, do a dir parse
 * Later
 ** TODO Make a gui
 ** TODO Renaming and moving of actual files 
