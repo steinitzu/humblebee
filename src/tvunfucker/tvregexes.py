@@ -241,6 +241,18 @@ tv_regexes = [
     '''
     ^(season|s)(%(separator)s|)(?P<season_num>\d+)$
     '''),
+
+    
+    #Hold on
+    Regex('standardish_weird',
+    #shownames01e02somecrap
+    #showname[separator(or not)]s01e02
+    '''
+    ^(?P<series_name>.+?)%(separator)s?  #showname can be whatever
+    (s|S)(?P<season_num>\d+)               #s01 || S01
+    (e|E)(?P<ep_num>\d+)                   #e02 || E02    
+    ''')
+    
     
 ]
 
