@@ -123,14 +123,17 @@ tv_regexes = [
     
 
     Regex('verbose',
-    # Show Name Season 1 Episode 2 Ep Name
+    # Show Name Season 01 Episode 02 Ep Name
+    # Show name Season 01 ep 02 ep name
+    # separator
+    #separators and anything after 'ep 02' is optional
     '''
-    ^(?P<series_name>.+?)[. _-]+                # Show Name and separator
-    season[. _-]+                               # season and separator
-    (?P<season_num>\d+)[. _-]+                  # 1
-    episode[. _-]+                              # episode and separator
-    (?P<ep_num>\d+)[. _-]+                      # 02 and separator
-    (?P<extra_info>.+)$                         # Source_Quality_Etc-
+    ^(?P<series_name>.+)%(separator)s?                # Show Name and separator
+    season%(separator)s?                               # season and separator
+    (?P<season_num>\d+)%(separator)s?
+    (episode|ep)%(separator)s?                  # episode and separator
+    (?P<ep_num>\d+)%(separator)s?                      # 02 and separator
+    (((?P<extra_info>.+)$)|$)                         # Source_Quality_Etc-
     '''),
 
 
@@ -141,7 +144,7 @@ tv_regexes = [
     '''
     (s|season)%(separator)s*
     (?P<season_num>\d+)(%(separator)s|x)*
-    (e|episode)%(separator)s*
+    (e|episode|ep)%(separator)s*
     (?P<ep_num>\d+)
     '''),
     

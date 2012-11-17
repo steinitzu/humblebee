@@ -11,6 +11,8 @@ Or maybe just try the folder parse AFTER failed lookup
 * TODO Mounting does not work without DEBUG (bad address) (is it foreground?)
 
 
+* DONE star_trek_deep_space_nine_-_season_3_ep_01_-_the_search,_part_i
+
 * TODO After failed lookup, do a dir parse
 * Later
 ** TODO Make a gui
