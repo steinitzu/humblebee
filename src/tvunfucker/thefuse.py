@@ -41,7 +41,7 @@ class FileSystem(LoggingMixIn, Operations):
         #files will be taken straight from db, no stupid shit
         self.db = db
         self.current_handle = 0
-        self.file_handle = {} #int fh : realpath
+        self.file_handle = {} #int fh : file handle to the real file (open(path))
         self.symlinks = {} #source : target
         #to preserve db names after 'replace_bad_chars'
         self.original_name = {}
@@ -118,23 +118,23 @@ class FileSystem(LoggingMixIn, Operations):
 
     def open(self, path, flags):
         self.current_handle+=1
-        self.file_handle[self.current_handle] = self._readlink(path)
+        self.file_handle[self.current_handle] = open(self._readlink(path), 'rb')
         return self.current_handle
 
     def release(self, path, fh):
-        del self.file_handle[fh]
+        try:
+            self.file_handle[fh].close()
+        finally:
+            del self.file_handle[fh]
         return 0
 
     @logger.log_time
     def read(self, path, size, offset, fh):
-        realpath = self.file_handle[fh]
-        f = open(realpath, 'rb')                
-        try:
-            log.debug('Reading %s bytes, offset %s, realpath: %s', size, offset, realpath)
-            f.seek(offset)
-            return f.read(size)
-        finally:
-            f.close()
+        #realpath = self.file_handle[fh]
+        handle = self.file_handle[fh]
+        log.debug('Reading %s bytes, offset %s, handle: %s', size, offset, handle)
+        handle.seek(offset)
+        return handle.read(size)
 
     def _readlink(self, path):
         pathpcs = split_path(path)
