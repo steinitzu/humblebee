@@ -125,6 +125,7 @@ class FileSystem(LoggingMixIn, Operations):
         del self.file_handle[fh]
         return 0
 
+    @logger.log_time
     def read(self, path, size, offset, fh):
         realpath = self.file_handle[fh]
         f = open(realpath, 'rb')                
