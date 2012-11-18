@@ -122,6 +122,7 @@ class FileSystem(LoggingMixIn, Operations):
         return self.current_handle
 
     def release(self, path, fh):
+        log.debug('releasing filehandle: %s, path: %s', fh, path)
         try:
             self.file_handle[fh].close()
         finally:
