@@ -129,6 +129,7 @@ class FileSystem(LoggingMixIn, Operations):
         realpath = self.file_handle[fh]
         f = open(realpath, 'rb')                
         try:
+            log.debug('Reading %s bytes, offset %s, realpath: %s', size, offset, realpath)
             f.seek(offset)
             return f.read(size)
         finally:
