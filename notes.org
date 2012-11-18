@@ -10,6 +10,7 @@ Or maybe just try the folder parse AFTER failed lookup
 
 
 * TODO After failed lookup, do a dir parse
+* TODO Something smart when there are >1 shows with the same name on tvdb
 * Later
 ** TODO Make a gui
 ** TODO Renaming and moving of actual files 

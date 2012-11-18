@@ -40,6 +40,8 @@ class FileSystem(LoggingMixIn, Operations):
     def __init__(self, db):
         #files will be taken straight from db, no stupid shit
         self.db = db
+        self.current_handle = 0
+        self.file_handle = {} #int fh : realpath
         self.symlinks = {} #source : target
         #to preserve db names after 'replace_bad_chars'
         self.original_name = {}
@@ -114,7 +116,25 @@ class FileSystem(LoggingMixIn, Operations):
     def symlink(self, target, name):
         target = 1
 
-    def readlink(self, path):
+    def open(self, path, flags):
+        self.current_handle+=1
+        self.file_handle[self.current_handle] = self._readlink(path)
+        return self.current_handle
+
+    def release(self, path, fh):
+        del self.file_handle[fh]
+        return 0
+
+    def read(self, path, size, offset, fh):
+        realpath = self.file_handle[fh]
+        f = open(realpath, 'rb')                
+        try:
+            f.seek(offset)
+            return f.read(size)
+        finally:
+            f.close()
+
+    def _readlink(self, path):
         pathpcs = split_path(path)
         data = self.get_metadata(path)
         #a keyerror here should NEVER happen, if it does, you made programming error derp
@@ -157,7 +177,10 @@ class FileSystem(LoggingMixIn, Operations):
         def make_ret(row, mode='dir'):
             l = None
             if mode == 'dir' : l = dirmode
-            elif mode == 'file': l = filemode
+            elif mode == 'file': 
+                l = filemode
+                rpath = self._readlink(path)
+                l['st_size'] = os.path.getsize(rpath)
             elif mode == 'symlink' : l = symlinkmode
             l.update({
                     'st_ctime':timestamp(row['created_time']),
@@ -182,7 +205,7 @@ class FileSystem(LoggingMixIn, Operations):
         elif data[1] == 'series' or data[1] == 'season':
             return make_ret(data[0], 'dir')
         elif data[1] == 'episode':
-            return make_ret(data[0], 'symlink')
+            return make_ret(data[0], 'file')
         raise FuseOSError(ENOENT)
 
     def chmod(self, path, mode):
