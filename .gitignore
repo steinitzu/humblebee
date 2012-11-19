@@ -1,1 +1,34 @@
-*.pyc
+
+
+
+
+
+
+# Installer logs
+# Packages
+# Unit test / coverage reports
+#Mr Developer
+#Translations
+*.egg
+*.egg-info
+*.log
+*.mo
+*.py[co]
+.coverage
+.installed.cfg
+.mr.developer.cfg
+.tox
+/.emacs.desktop
+/.emacs.desktop.lock
+bin
+build
+develop-eggs
+dist
+eggs
+parts
+pip-log.txt
+sdist
+src/tests/mount
+var
+src/tests/testdata/testfs/.tvunfucker.sqlite
+src/romlog.log
