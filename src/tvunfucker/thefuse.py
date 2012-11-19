@@ -153,6 +153,7 @@ class FileSystem(LoggingMixIn, Operations):
             'st_atime' : now,
             'st_nlink' : 2
             }
+
             
         def make_ret(row, mode='dir'):
             l = None
@@ -165,7 +166,21 @@ class FileSystem(LoggingMixIn, Operations):
                     })
             return l
         pathpcs = split_path(path)
-        if path == '/': return dirmode
+
+        if pathpcs[0] == '' and len(pathpcs) == 1: #root dir
+            return dirmode
+        elif len(pathpcs) == 1 and pathpcs[0] == '_unparsed':
+            return dirmode
+        elif len(pathpcs) > 1 and pathpcs[0] == '_unparsed':
+            return dirmode #todo: implement
+        elif len(pathpcs) == 1: #series dir
+            return dirmode
+        elif len(pathpcs) == 2: #season dir
+            return dirmode
+        elif len(pathpcs) == 3: #episode file
+            return symlinkmode
+        raise FuseOSError(ENOENT)
+        
         data = self.get_metadata(path)        
         if pathpcs[0] == '_unparsed':
             #data is the metadata for this path as child_path
