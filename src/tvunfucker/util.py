@@ -10,6 +10,19 @@ from texceptions import InvalidArgumentError
 program_name = 'tvunfucker'
 
 
+def replace_bad_chars(self, string):
+    """
+    Remove chars that can cause problems in filenames
+    with some platforms and file managers.
+    """
+    chars = ('?', ':', '/', '\\', '|', '<', '>')
+    nstring = string
+    for ch in chars:
+        nstring = nstring.replace(ch, '')
+    self.original_name[nstring] = string
+    return nstring
+
+
 def zero_prefix_int(num):
     """
     zero_prefix_number(int) -> str\n

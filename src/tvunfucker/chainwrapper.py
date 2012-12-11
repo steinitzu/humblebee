@@ -41,6 +41,16 @@ def create_database(directory, force=False):
     return source
 
 
+def get_database(directory):
+    """
+    Returns an EpisodeSource for an existing 
+    database in given directory.
+    """
+    dbfile = osp.join(directory, cfg.get('database', 'local-database-filename'))
+    if not osp.exists(dbfile):
+        raise NoSuchDatabaseError
+    return EpisodeSource(directory)
+
 def scrape_source(source):
     """
     Scan the given EpisodeSource instance for tv shows.    

@@ -90,7 +90,8 @@ CREATE VIEW view_episode AS
         e.season_id,
         seas.season_number,
         seas.series_id,
-        ser.title AS series_title
+        ser.title AS series_title,
+        ser.start_date AS series_start_date
     FROM episode AS e 
     LEFT JOIN season as seas ON 
     (seas.id = e.season_id) 
