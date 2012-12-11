@@ -10,7 +10,7 @@ from texceptions import InvalidArgumentError
 program_name = 'tvunfucker'
 
 
-def replace_bad_chars(self, string):
+def replace_bad_chars(string):
     """
     Remove chars that can cause problems in filenames
     with some platforms and file managers.
@@ -19,9 +19,17 @@ def replace_bad_chars(self, string):
     nstring = string
     for ch in chars:
         nstring = nstring.replace(ch, '')
-    self.original_name[nstring] = string
     return nstring
 
+
+def fndotify(string, keep_bad_chars=False):
+    """
+    Lower case and replace spaces with dots.
+    Also does a 'replace_bad_chars'.
+    Use keep_bad_chars=True if you don't want that.
+    """
+    string = replace_bad_chars(string)
+    return string.lower().replace(' ', '.')
 
 def zero_prefix_int(num):
     """
