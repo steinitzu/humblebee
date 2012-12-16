@@ -48,6 +48,8 @@ class SeasonNotFoundError(TVUFError):
 class FileExistsError(TVUFError):
     pass
 
+class InitExistingDatabaseError(TVUFError):
+    pass
 
 class DatabaseAlreadyExistsError(TVUFError):
     pass        
