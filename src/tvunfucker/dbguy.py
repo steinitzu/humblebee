@@ -57,7 +57,10 @@ class Database(object):
         cur = conn.cursor()
         execmth = cur.executescript if isscript else cur.execute
         try:
-            execmth(query, params)
+            if isscript:
+                cur.executescript(query)
+            else:
+                cur.execute(query, params)                
             if fetch < 0:
                 result = cur.fetchall()
             elif fetch == 1:
@@ -77,7 +80,7 @@ class TVDatabase(Database):
             directory,
             cfg.get('database', 'local-database-filename')
             )
-        super(TVDatabase).__init__(self, dbfile)
+        super(TVDatabase, self).__init__(dbfile)
 
     def create_database(self):
         """
@@ -90,6 +93,13 @@ class TVDatabase(Database):
             os.path.join(
                 os.path.dirname(__file__), 'schema.sql')).read()
         self.execute_query(schema, isscript=True)
+
+    def _exists(self, id_, mode='episode'):
+        """
+        _exists(id_, mode='episode') -> sqlite3.Row
+        Check if row with given id_ exists in |mode| table.                
+        """
+        q = 'SELECT * FROM  WHERE id = ?;'
 
     def _ep_to_db(self, epobj, mode='episode'):
         """
@@ -124,7 +134,9 @@ class TVDatabase(Database):
             'file_path':str,
             'season_id': int
             }
-        
+
+        #add series
+        tvseries = epobj['tvdb_ep'].season.show                
         pass
 
     
