@@ -34,22 +34,22 @@ class Regex(object):
 tv_regexes = [
     Regex('standard_repeat',
     '''
-    ^(?P<series_name>.+?)%(separator)s+                 #series name and sep
-    s(?P<season_num>\d+)%(separator)s*                  #s01 and optional sep
-    e(?P<ep_num>\d+)                                    #e01 and sep
-    (%(separator)s+s(?P=season_num)%(separator)s*       #s01 and optional sep
-    e(?P<extra_ep_num>\d+))+                            #e02 and sep
+    ^(?P<series_title>.+?)%(separator)s+                 #series name and sep
+    s(?P<season_number>\d+)%(separator)s*                  #s01 and optional sep
+    e(?P<ep_number>\d+)                                    #e01 and sep
+    (%(separator)s+s(?P=season_number)%(separator)s*       #s01 and optional sep
+    e(?P<extra_ep_number>\d+))+                            #e02 and sep
     %(separator)s*((?P<extra_info>.+?)                  #source/quality/etc
     ((?<!%(separator)s)-(?P<release_group>[^-]+))?)?$   #group
     '''),
 
     Regex('fov_repeat',
     '''
-    ^(?P<series_name>.+?)%(separator)s+                # Show_Name and separator
-    (?P<season_num>\d+)x                               # 1x
-    (?P<ep_num>\d+)                                    # 02 and separator
-    (%(separator)s+(?P=season_num)x                    # 1x
-    (?P<extra_ep_num>\d+))+                            # 03/etc and separator
+    ^(?P<series_title>.+?)%(separator)s+                # Show_Name and separator
+    (?P<season_number>\d+)x                               # 1x
+    (?P<ep_number>\d+)                                    # 02 and separator
+    (%(separator)s+(?P=season_number)x                    # 1x
+    (?P<extra_ep_number>\d+))+                            # 03/etc and separator
     %(separator)s*((?P<extra_info>.+?)                 # Source_Quality_Etc-
     ((?<!%(separator)s)-(?P<release_group>[^-]+))?)?$  # Group
     '''),
@@ -57,7 +57,7 @@ tv_regexes = [
     Regex('stupid_acronyms',
     '''
     (?P<release_group>.+?)-\w+?[\.]?
-    s(?P<season_num>\d+)e(?P<ep_num>\d+)
+    s(?P<season_number>\d+)e(?P<ep_number>\d+)
     '''),    
 
     Regex('standard',
@@ -68,11 +68,11 @@ tv_regexes = [
     # Show Name - S01E02-03 - My Ep Name
     # Show.Name.S01.E02.E03
     '''
-    ^((?P<series_name>.+?)%(separator)s+)?             # Show_Name and separator
-    s(?P<season_num>\d+)%(separator)s*                 # S01 and optional separator
-    e(?P<ep_num>\d+)                                   # E02 and separator
+    ^((?P<series_title>.+?)%(separator)s+)?             # Show_Name and separator
+    s(?P<season_number>\d+)%(separator)s*                 # S01 and optional separator
+    e(?P<ep_number>\d+)                                   # E02 and separator
     ((%(separator)s*e|-)                               # linking e/- char
-    (?P<extra_ep_num>(?!(1080|720)[pi])\d+))*          # additional E03/etc
+    (?P<extra_ep_number>(?!(1080|720)[pi])\d+))*          # additional E03/etc
     %(separator)s*((?P<extra_info>.+?)                 # Source_Quality_Etc-
     ((?<!%(separator)s)-(?P<release_group>[^-]+))?)?$  # Group
     '''),
@@ -83,11 +83,11 @@ tv_regexes = [
     # Show_Name.1x02x03x04.Source_Quality_Etc-Group
     # Show Name - 1x02-03-04 - My Ep Name
     '''
-    ^((?P<series_name>.+?)[\[. _-]+)?           # Show_Name and separator
-    (?P<season_num>\d+)x                        # 1x
-    (?P<ep_num>\d+)                             # 02 and separator
+    ^((?P<series_title>.+?)[\[. _-]+)?           # Show_Name and separator
+    (?P<season_number>\d+)x                        # 1x
+    (?P<ep_number>\d+)                             # 02 and separator
     (([. _-]*x|-)                               # linking x/- char
-    (?P<extra_ep_num>
+    (?P<extra_ep_number>
     (?!(1080|720)[pi])(?!(?<=x)264)             # ignore obviously wrong multi-eps
     \d+))*                                      # additional x03/etc
     [\]. _-]*((?P<extra_info>.+?)               # Source_Quality_Etc-
@@ -100,7 +100,7 @@ tv_regexes = [
     # Show.Name.2010.11.23.Source.Quality.Etc-Group
     # Show Name - 2010-11-23 - Ep Name
     '''
-    ^((?P<series_name>.+?)[. _-]+)?             # Show_Name and separator
+    ^((?P<series_title>.+?)[. _-]+)?             # Show_Name and separator
     (?P<air_year>\d{4})[. _-]+                  # 2010 and separator
     (?P<air_month>\d{2})[. _-]+                 # 11 and separator
     (?P<air_day>\d{2})                          # 23 and separator
@@ -115,8 +115,8 @@ tv_regexes = [
     '''
     (?P<release_group>.+?)-\w+?[\. ]?           # tpz-abc
     (?!264)                                     # dont count x264
-    (?P<season_num>\d{1,2})                     # 1
-    (?P<ep_num>\d{2})$                          # 02
+    (?P<season_number>\d{1,2})                     # 1
+    (?P<ep_number>\d{2})$                          # 02
     '''),
 
 
@@ -128,11 +128,11 @@ tv_regexes = [
     # separator
     #separators and anything after 'ep 02' is optional
     '''
-    ^(?P<series_name>.+)%(separator)s?                # Show Name and separator
+    ^(?P<series_title>.+)%(separator)s?                # Show Name and separator
     season%(separator)s?                               # season and separator
-    (?P<season_num>\d+)%(separator)s?
+    (?P<season_number>\d+)%(separator)s?
     (episode|ep)%(separator)s?                  # episode and separator
-    (?P<ep_num>\d+)%(separator)s?                      # 02 and separator
+    (?P<ep_number>\d+)%(separator)s?                      # 02 and separator
     (((?P<extra_info>.+)$)|$)                         # Source_Quality_Etc-
     '''),
 
@@ -143,18 +143,18 @@ tv_regexes = [
     # s01xe02
     '''
     (s|season)%(separator)s*
-    (?P<season_num>\d+)(%(separator)s|x)*
+    (?P<season_number>\d+)(%(separator)s|x)*
     (e|episode|ep)%(separator)s*
-    (?P<ep_num>\d+)
+    (?P<ep_number>\d+)
     '''),
     
 
     Regex('season_only',
     # Show.Name.S01.Source.Quality.Etc-Group
     '''
-    ^((?P<series_name>.+?)[. _-]+)?             # Show_Name and separator
+    ^((?P<series_title>.+?)[. _-]+)?             # Show_Name and separator
     s(eason[. _-])?                             # S01/Season 01
-    (?P<season_num>\d+)[. _-]*                  # S01 and optional separator
+    (?P<season_number>\d+)[. _-]*                  # S01 and optional separator
     [. _-]*((?P<extra_info>.+?)                 # Source_Quality_Etc-
     ((?<![. _-])-(?P<release_group>[^-]+))?)?$  # Group
     '''),
@@ -163,11 +163,11 @@ tv_regexes = [
     # Show.Name.E02-03
     # Show.Name.E02.2010
     '''
-    ^((?P<series_name>.+?)[. _-]+)?             # Show_Name and separator
+    ^((?P<series_title>.+?)[. _-]+)?             # Show_Name and separator
     (e(p(isode)?)?|part|pt)[. _-]?              # e, ep, episode, or part
-    (?P<ep_num>(\d+|[ivx]+))                    # first ep num
+    (?P<ep_number>(\d+|[ivx]+))                    # first ep num
     ((([. _-]+(and|&|to)[. _-]+)|-)                # and/&/to joiner
-    (?P<extra_ep_num>(?!(1080|720)[pi])(\d+|[ivx]+))[. _-])            # second ep num
+    (?P<extra_ep_number>(?!(1080|720)[pi])(\d+|[ivx]+))[. _-])            # second ep num
     ([. _-]*(?P<extra_info>.+?)                 # Source_Quality_Etc-
     ((?<![. _-])-(?P<release_group>[^-]+))?)?$  # Group
     '''),
@@ -177,8 +177,8 @@ tv_regexes = [
     #1x02
     #1-02
     '''
-    ^(?P<season_num>\d{1,2})(%(separator)s|x)*
-    (?P<ep_num>\d{2})
+    ^(?P<season_number>\d{1,2})(%(separator)s|x)*
+    (?P<ep_number>\d{2})
     (%(separator)s+(?P<extra_info>(?!\d{3}%(separator)s+)[^-]+)
     (-(?P<release_group>.+))?)?$
     '''),
@@ -189,12 +189,12 @@ tv_regexes = [
     # Show.Name.Part.3.Source.Quality.Etc-Group
     # Show.Name.Part.1.and.Part.2.Blah-Group
     '''
-    ^((?P<series_name>.+?)[. _-]+)?             # Show_Name and separator
+    ^((?P<series_title>.+?)[. _-]+)?             # Show_Name and separator
     (e(p(isode)?)?|part|pt)[. _-]?              # e, ep, episode, or part
-    (?P<ep_num>(\d+|([ivx]+(?=[. _-]))))        # first ep num
+    (?P<ep_number>(\d+|([ivx]+(?=[. _-]))))        # first ep num
     ([. _-]+((and|&|to)[. _-]+)?                # and/&/to joiner
     ((e(p(isode)?)?|part|pt)[. _-]?)            # e, ep, episode, or part
-    (?P<extra_ep_num>(?!(1080|720)[pi])
+    (?P<extra_ep_number>(?!(1080|720)[pi])
     (\d+|([ivx]+(?=[. _-]))))[. _-])*           # second ep num
     ([. _-]*(?P<extra_info>.+?)                 # Source_Quality_Etc-
     ((?<![. _-])-(?P<release_group>[^-]+))?)?$  # Group
@@ -203,9 +203,9 @@ tv_regexes = [
     Regex('bare',
     # Show.Name.102.Source.Quality.Etc-Group
     '''
-    ^(?P<series_name>.+?)[. _-]+                        # Show_Name and separator
-    (?P<season_num>\d{1,2})                             # 1     
-    (?P<ep_num>\d{2})                                   # 02 and separator
+    ^(?P<series_title>.+?)[. _-]+                        # Show_Name and separator
+    (?P<season_number>\d{1,2})                             # 1     
+    (?P<ep_number>\d{2})                                   # 02 and separator
     ([. _-]+(?P<extra_info>(?!\d{3}[. _-]+)[^-]+)       # Source_Quality_Etc-
     (-(?P<release_group>.+))?)?$                        # Group
     '''),
@@ -215,8 +215,8 @@ tv_regexes = [
     #1x02
     #1-02
     '''
-    ^(?P<season_num>\d{1,2})(%(separator)s|x)*
-    (?P<ep_num>\d{2})
+    ^(?P<season_number>\d{1,2})(%(separator)s|x)*
+    (?P<ep_number>\d{2})
     (%(separator)s+(?P<extra_info>(?!\d{3}%(separator)s+)[^-]+)
     (-(?P<release_group>.+))?)?$
     '''),
@@ -224,8 +224,8 @@ tv_regexes = [
     Regex('bare_no_series',
     # 102.ep.name.Etc-Group
     '''
-    ^(?P<season_num>\d{1,2})                    
-    (?P<ep_num>\d{2})
+    ^(?P<season_number>\d{1,2})                    
+    (?P<ep_number>\d{2})
     (%(separator)s+(?P<extra_info>(?!\d{3}%(separator)s+)[^-]+)
     (-(?P<release_group>.+))?)?$    
     '''),
@@ -234,15 +234,15 @@ tv_regexes = [
     # Show Name - 01 - Ep Name
     # 01 - Ep Name
     '''
-    ^((?P<series_name>.+?)[. _-]+)?             # Show_Name and separator
-    (?P<ep_num>\d{2})                           # 02
+    ^((?P<series_title>.+?)[. _-]+)?             # Show_Name and separator
+    (?P<ep_number>\d{2})                           # 02
     [. _-]+((?P<extra_info>.+?)                 # Source_Quality_Etc-
     ((?<![. _-])-(?P<release_group>[^-]+))?)?$  # Group
     '''),          
 
     Regex('just_season_dir',
     '''
-    ^(season|s)(%(separator)s|)(?P<season_num>\d+)$
+    ^(season|s)(%(separator)s|)(?P<season_number>\d+)$
     '''),
 
     
@@ -251,9 +251,9 @@ tv_regexes = [
     #shownames01e02somecrap
     #showname[separator(or not)]s01e02
     '''
-    ^(?P<series_name>.+?)%(separator)s?  #showname can be whatever
-    (s|S)(?P<season_num>\d+)               #s01 || S01
-    (e|E)(?P<ep_num>\d+)                   #e02 || E02    
+    ^(?P<series_title>.+?)%(separator)s?  #showname can be whatever
+    (s|S)(?P<season_number>\d+)               #s01 || S01
+    (e|E)(?P<ep_number>\d+)                   #e02 || E02    
     ''')
     
     

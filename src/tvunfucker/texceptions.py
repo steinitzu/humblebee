@@ -22,10 +22,6 @@ class InvalidArgumentError(TVUFError):
 
 #fuck this
 class NotADirectoryError(TVUFError):
-    """
-    def __init__(self, *args):
-        super(NotADirectoryError, self).__init__(*args)
-    """
     pass
 
 class ShowNotFoundError(TVUFError):

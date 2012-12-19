@@ -47,4 +47,8 @@ class test_Database(unittest.TestCase):
         """
         self.db.create_database()
 
+    def test_upsert_episode(self):
+        self.db.create_database()
+        raise NotImplementedError
+
 unittest.main(verbosity=2)

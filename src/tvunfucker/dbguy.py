@@ -9,7 +9,7 @@ import sqlite3, logging, os
 from datetime import date
 
 from . import cfg
-from .texceptions import InitExistingDatabaseError
+from .texceptions import InitExistingDatabaseError, IncompleteEpisodeError
 
 
 log = logging.getLogger('tvunfucker')
@@ -55,7 +55,6 @@ class Database(object):
         #TODO: wrap errors into some friendly packages.
         conn = self._get_connection()
         cur = conn.cursor()
-        execmth = cur.executescript if isscript else cur.execute
         try:
             if isscript:
                 cur.executescript(query)
@@ -94,52 +93,41 @@ class TVDatabase(Database):
                 os.path.dirname(__file__), 'schema.sql')).read()
         self.execute_query(schema, isscript=True)
 
-    def _exists(self, id_, mode='episode'):
+    def _exists(self, id_):
         """
-        _exists(id_, mode='episode') -> sqlite3.Row
-        Check if row with given id_ exists in |mode| table.                
+        _exists(id_) -> True or False
+        Check if row with given id_ exists in episode table.                
         """
-        q = 'SELECT * FROM  WHERE id = ?;'
+        q = 'SELECT * FROM episode WHERE id = ?;'
+        res = self.execute_query(q, (id_,), fetch=1)
+        if res: return True
+        else: return False
 
-    def _ep_to_db(self, epobj, mode='episode'):
+    def upsert_episode(self, epobj):
         """
+        upsert_episode(LocalEpisode) -> int episode id
         database upsert function.
-        epobj should be a |parser.LocalEpisode| object.
-        mode='episode' (treat as episode)
-        mode='season' (treat as season)
-        mode='series' (treat as series)
         """
-        #TODO: dynamic shit with these columns
-        series_cols = {
-            'id':int,
-            'title':str,
-            'summary':str,
-            'start_date':date,
-            'run_time_minutes':int,
-            'network':str
-            }
 
-        season_cols = {
-            'season_number' : int,
-            'series_id' : int,
-            }
-
-        episode_cols = {
-            'id':int,
-            'ep_number':int,
-            'extra_ep_number':int,
-            'title':str,
-            'summary':str,
-            'air_date':date,
-            'file_path':str,
-            'season_id': int
-            }
-
-        #add series
-        tvseries = epobj['tvdb_ep'].season.show                
-        pass
-
-    
+        if not epobj['id']:
+            raise IncompleteEpisodeError(
+                'Unable to add id-less episode to the database: %s' % epobj
+                )        
+        params = []
+        if self._exists(epobj['id']):
+            q = 'UPDATE episode SET %s WHERE id = ?;'
+            updfields = ','.join(['%s=?' % (key) for key in epobj.iterkeys()])
+            q = q % updfields
+            params = epobj.values()+[epobj['id']]        
+        else:
+            q = 'INSERT INTO episode (%s) VALUES (%s);'
+            insfields = ','.join(epobj.keys())
+            insvals = ','.join(['?' for x in xrange(len(epobj))])
+            q = q % (insfields, insvals)
+            params = epobj.values()
+        self.execute_query(q, params, fetch=0)
+        return epobj['id']            
+            
 
 def make_where_statement(dicta=None, operator='=', separator='AND', **kwargs):
     """
@@ -163,3 +151,4 @@ def make_where_statement(dicta=None, operator='=', separator='AND', **kwargs):
         sufparams.append(value)
 
     return (sufstring, sufparams)                
+
