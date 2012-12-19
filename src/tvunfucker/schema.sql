@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS episode (
         file_path TEXT NOT NULL,
         season_id INTEGER NOT NULL,
         season_number INTEGER,
+        series_id INTEGER NOT NULL,
         series_title VARCHAR,
         series_summary TEXT,
         series_start_date DATE,
