@@ -47,15 +47,38 @@ class test_Parser(unittest.TestCase):
         self.assertEqual(ep['ep_number'], 6)
         self.assertEqual(ep['season_number'], 1)
 
-    def test_basic_lookup(self):
-        ename = '30.Rock.S06E06E07.HDTV.XviD-LOL'
-        ep = parser.ez_parse_episode(ename)
-        epp = tvdbwrapper.lookup(ep)
-        print '\n'.join(
-            ['%s : %s' % (k,v) for k,v in epp.iteritems()]
-            )
         
     def test_reverse_parse(self):
         raise NotImplementedError
+
+
+class test_TVDBLookup(unittest.TestCase):
+    @classmethod
+    def setUp(self):
+        ename = '30.Rock.S06E06E07.HDTV.XviD-LOL'
+        self.ep = parser.ez_parse_episode(ename)
+
+    def tearDown(self):
+        pass
+
+    def test_basic_lookup(self):
+        #test accuracy (poorly) and functionality of basic episode lookup
+        ename = '30.Rock.S06E06E07.HDTV.XviD-LOL'
+        ep = parser.ez_parse_episode(ename)
+        epp = tvdbwrapper.lookup(ep)
+        self.assertEqual(
+            ep['series_title'].lower().replace('.',' '), epp['series_title'].lower()
+            )
+        self.assertEqual(ep['ep_number'], epp['ep_number'])
+        self.assertEqual(ep['season_number'], epp['season_number'])
+        #print '\n'.join(
+        #    ['%s : %s' % (k,v) for k,v in epp.iteritems()]
+        #    )
+    
+    def test_bing_lookup(self):
+        raise NotImplementedError
+
+
+
 
 unittest.main()

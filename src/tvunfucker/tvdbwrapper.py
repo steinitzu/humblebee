@@ -34,7 +34,7 @@ def _imdb_id_from_url(url):
     Parse the imdb id from an url like 'imdb.com/title/tt0092455'.
     """
     log.debug('URL: %s', url)
-    m = re.search('title/(?P<id>tt\d{7})', url)  
+    m = re.search(r'title/(?P<id>tt\d{7})', url)  
     if not m:
         raise NoIdInURLError('No imdb id in url: %s' % url)
     return m.groupdict()['id']
