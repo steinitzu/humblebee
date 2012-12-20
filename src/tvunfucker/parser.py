@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 import os, re
 from collections import OrderedDict
 
-from . import  tvregexes, util
+from . import  tvregexes, util, dbguy
 import tvunfucker
 
 log = tvunfucker.log
@@ -15,7 +14,7 @@ def ez_parse_episode(path):
     Parses only the episode's filename.    
     """
     log.info('Parsing path: %s', path)
-    result = LocalEpisode(path)
+    result = dbguy.Episode(path)
     directory,filename = os.path.split(path)
     if os.path.isfile(path):
         filename = os.path.splitext(filename)[0]
@@ -32,8 +31,8 @@ def ez_parse_episode(path):
 
 def _merge_episodes(eps, path_to_ep, backup_series_title=None):
     """
-    Accepts a sequence of LocalEpisode objects.\n    
-    Merges their data into one LocalEpisode object
+    Accepts a sequence of Episode objects.\n    
+    Merges their data into one Episode object
     and returns it.\n
     Also takes path_to_ep, which should be a path to the actual episode file
     in question.\n
@@ -42,7 +41,7 @@ def _merge_episodes(eps, path_to_ep, backup_series_title=None):
     """
     log.debug(eps)
     log.debug(path_to_ep)
-    resultep = LocalEpisode(path_to_ep)
+    resultep = dbguy.Episode(path_to_ep)
     for ep in eps:
         resultep.safe_update(ep)
     if resultep.is_fully_parsed:
@@ -62,7 +61,7 @@ def reverse_parse_episode(path, source):
     For example,\n
         if path is: '/media/tv/breaking bad/season 2/episode 4.avi'\n
         and source is: '/media/tv'\n
-        then the result will be a LocalEpisode with the following:\n
+        then the result will be a Episode with the following:\n
         {'series_title' : 'breaking bad', 'season_num':2, 'ep_num':4}\n
 
     If the episode file is in the root of source and can't be parsed by any
@@ -72,13 +71,13 @@ def reverse_parse_episode(path, source):
     #get ONE fully parsed episode (series_title, ep_num, season_num)
 
     #step 1
-    #parse directory one up from path, get a LocalEpisode object
+    #parse directory one up from path, get a Episode object
 
     #step 2
-    #parse directory two up from path, get a LocalEpisode object
+    #parse directory two up from path, get a Episode object
 
     #step3
-    #merge all 3 LocalEpisode objects into one ep and return it
+    #merge all 3 Episode objects into one ep and return it
 
     ep = ez_parse_episode(path)
 
@@ -101,112 +100,3 @@ def reverse_parse_episode(path, source):
     
     
 
-class LocalEpisode(OrderedDict):
-    """
-    keys\n
-    --------\n
-    season_num: the season number (int)\n
-    series_title: the series name (string(unicode))\n
-    ep_num: episode number (int)\n
-    extra_ep_num: for 2 parter episodes\n
-    extra_info: some extra gunk from the filename\n
-    release_group: the media (scene) release group\n
-    which_regex: which regex parsed this filename\n
-    path: absolute path to the episode object\n
-    tvdb_ep: Episode object from the tvdb_api\n    
-    """
-    preset_keys = (
-        'id',
-        'created_at',
-        'modified_at',
-        'title',
-        'ep_number',
-        'extra_ep_number',
-        'ep_summary',
-        'air_date',
-        'file_path',
-        'season_id',
-        'season_number',
-        'series_id',
-        'series_title',
-        'series_summary',
-        'series_start_date',
-        'run_time_minutes',
-        'network',
-        #parser keys
-        'release_group',
-        'which_regex',
-        'extra_info',
-        )
-    numeric_keys = (
-        'id',
-        'ep_number',
-        'extra_ep_number',
-        'season_id',
-        'season_number',
-        'series_id',
-        'run_time_minutes'
-        )
-    
-    def __init__(self, path):
-        path = util.ensure_utf8(path)
-        super(LocalEpisode, self).__init__()
-        for key in self.preset_keys:
-            super(LocalEpisode, self).__setitem__(
-                key, None
-                )
-
-    def safe_update(self, otherep):
-        """
-        safe_update(dict) -> None\n
-        otherep can be an Episode object or any dict like
-        object with the same keys.\n
-        Unlike dict.update(), this will only update
-        'None' values in the destination dict.        
-        """
-        for key in otherep.keys():
-            if self[key] is not None: continue
-            self[key] = otherep[key]
-            
-    def is_fully_parsed(self):
-        """
-        Ep is fully parsed, true or false.\n
-        Will throw key exceptions if self is not a good ep dict.    
-        """
-        return self['series_title'] and self['season_num'] is not None and self['ep_num'] is not None
-
-    def clean_name(self, name):
-        #TODO: find junk
-        """
-        Strips all kinds of junk from a name.
-        """
-        junk = tvregexes.junk
-        if name is None: return None
-        name = re.sub(junk, ' ', name)
-        name = name.strip()
-        name = name.title()
-        return name
-
-    def __setitem__(self, key, value):
-        """
-        Introducing some type safety and stuff to this dict.\n
-        Will implicitly convert any value put in 
-        a key in numerics to int.\n
-        """
-        if key not in self.preset_keys:
-            raise KeyError(
-                '''\'%s\' is not a valid key for a LocalEpisode.
-                \nValid keys are: %s''' % (key, self.preset_keys))
-        def set_val(val):
-            #really set the value to key
-            super(LocalEpisode, self).__setitem__(key, val)
-
-        if key in self.numeric_keys and value is not None:
-            #will raise an error if value is not a valid number
-            return set_val(int(value))
-        #strings
-        if isinstance(value, basestring):
-            if value == '' or value is None:
-                return set_val(None)
-            return set_val(util.ensure_utf8(value))
-        return set_val(value)

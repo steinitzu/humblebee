@@ -8,11 +8,11 @@ import time, logging, sys, re
 from tvdb_api.tvdb_api import tvdb_error, Tvdb, tvdb_shownotfound, tvdb_seasonnotfound, tvdb_episodenotfound
 
 #this pkg
-from texceptions import ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError
-from texceptions import NoIdInURLError, NoResultsError
+from .texceptions import ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError
+from .texceptions import NoIdInURLError
 import tvunfucker
-import cfg
-from bingapi.bingapi import Bing
+from . import cfg
+from .bingapi.bingapi import Bing
 
 log = logging.getLogger('tvunfucker')
 

@@ -4,17 +4,128 @@
 """
 A portal to the tv database.
 """
-
 import sqlite3, logging, os
 from datetime import date
 
-from . import cfg
+from . import cfg, tvregexes, util
 from .texceptions import InitExistingDatabaseError, IncompleteEpisodeError
-
+import re
+from collections import OrderedDict
 
 log = logging.getLogger('tvunfucker')
 
-        
+class Episode(OrderedDict):
+    """
+    #TODO: docstring is out of date
+    keys\n
+    --------\n
+    season_num: the season number (int)\n
+    series_title: the series name (string(unicode))\n
+    ep_num: episode number (int)\n
+    extra_ep_num: for 2 parter episodes\n
+    extra_info: some extra gunk from the filename\n
+    release_group: the media (scene) release group\n
+    which_regex: which regex parsed this filename\n
+    path: absolute path to the episode object\n
+    tvdb_ep: Episode object from the tvdb_api\n    
+    """
+    preset_keys = (
+        'id',
+        'created_at',
+        'modified_at',
+        'title',
+        'ep_number',
+        'extra_ep_number',
+        'ep_summary',
+        'air_date',
+        'file_path',
+        'season_id',
+        'season_number',
+        'series_id',
+        'series_title',
+        'series_summary',
+        'series_start_date',
+        'run_time_minutes',
+        'network',
+        #parser keys
+        'release_group',
+        'which_regex',
+        'extra_info',
+        )
+    numeric_keys = (
+        'id',
+        'ep_number',
+        'extra_ep_number',
+        'season_id',
+        'season_number',
+        'series_id',
+        'run_time_minutes'
+        )
+    
+    def __init__(self, path):
+        path = util.ensure_utf8(path)
+        super(Episode, self).__init__()
+        for key in self.preset_keys:
+            super(Episode, self).__setitem__(
+                key, None
+                )
+
+    def safe_update(self, otherep):
+        """
+        safe_update(dict) -> None\n
+        otherep can be an Episode object or any dict like
+        object with the same keys.\n
+        Unlike dict.update(), this will only update
+        'None' values in the destination dict.        
+        """
+        for key in otherep.keys():
+            if self[key] is not None: continue
+            self[key] = otherep[key]
+            
+    def is_fully_parsed(self):
+        """
+        Ep is fully parsed, true or false.\n
+        Will throw key exceptions if self is not a good ep dict.    
+        """
+        return self['series_title'] and self['season_num'] is not None and self['ep_num'] is not None
+
+    def clean_name(self, name):
+        #TODO: find junk
+        """
+        Strips all kinds of junk from a name.
+        """
+        junk = tvregexes.junk
+        if name is None: return None
+        name = re.sub(junk, ' ', name)
+        name = name.strip()
+        name = name.title()
+        return name
+
+    def __setitem__(self, key, value):
+        """
+        Introducing some type safety and stuff to this dict.\n
+        Will implicitly convert any value put in 
+        a key in numerics to int.\n
+        """
+        if key not in self.preset_keys:
+            raise KeyError(
+                '''\'%s\' is not a valid key for a Episode.
+                \nValid keys are: %s''' % (key, self.preset_keys))
+        def set_val(val):
+            #really set the value to key
+            super(Episode, self).__setitem__(key, val)
+
+        if key in self.numeric_keys and value is not None:
+            #will raise an error if value is not a valid number
+            return set_val(int(value))
+        #strings
+        if isinstance(value, basestring):
+            if value == '' or value is None:
+                return set_val(None)
+            return set_val(util.ensure_utf8(value))
+        return set_val(value)
+
+
 
 class Database(object):
     """
