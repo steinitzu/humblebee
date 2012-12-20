@@ -9,7 +9,7 @@
 
 import unittest, os
 
-from tvunfucker import parser
+from tvunfucker import parser, tvdbwrapper, dbguy
 
 class test_Parser(unittest.TestCase):
     @classmethod
@@ -22,7 +22,7 @@ class test_Parser(unittest.TestCase):
         pass
 
     def test_localepisode_setitem(self):
-        ep = parser.LocalEpisode('')
+        ep = dbguy.Episode('')
         tnum = 23451
         for key in ep.numeric_keys:
             with self.assertRaises(ValueError):
@@ -46,6 +46,14 @@ class test_Parser(unittest.TestCase):
         self.assertEqual(ep['series_title'], 'reaper')
         self.assertEqual(ep['ep_number'], 6)
         self.assertEqual(ep['season_number'], 1)
+
+    def test_basic_lookup(self):
+        ename = '30.Rock.S06E06E07.HDTV.XviD-LOL'
+        ep = parser.ez_parse_episode(ename)
+        epp = tvdbwrapper.lookup(ep)
+        print '\n'.join(
+            ['%s : %s' % (k,v) for k,v in epp.iteritems()]
+            )
         
     def test_reverse_parse(self):
         raise NotImplementedError

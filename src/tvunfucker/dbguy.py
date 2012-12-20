@@ -60,6 +60,14 @@ class Episode(OrderedDict):
         'season_number',
         'series_id',
         'run_time_minutes'
+        )    
+    #keys which matter only in local context
+    local_keys = (
+        'file_path',
+        'release_group',
+        'extra_ep_number',
+        'which_regex',
+        'extra_info'
         )
     
     def __init__(self, path):
@@ -69,6 +77,7 @@ class Episode(OrderedDict):
             super(Episode, self).__setitem__(
                 key, None
                 )
+        self['file_path'] = path
 
     def safe_update(self, otherep):
         """
@@ -87,7 +96,7 @@ class Episode(OrderedDict):
         Ep is fully parsed, true or false.\n
         Will throw key exceptions if self is not a good ep dict.    
         """
-        return self['series_title'] and self['season_num'] is not None and self['ep_num'] is not None
+        return self['series_title'] and self['season_number'] is not None and self['ep_number'] is not None
 
     def clean_name(self, name):
         #TODO: find junk
