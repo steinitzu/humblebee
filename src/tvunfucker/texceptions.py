@@ -22,10 +22,6 @@ class InvalidArgumentError(TVUFError):
 
 #fuck this
 class NotADirectoryError(TVUFError):
-    """
-    def __init__(self, *args):
-        super(NotADirectoryError, self).__init__(*args)
-    """
     pass
 
 class ShowNotFoundError(TVUFError):
@@ -45,6 +41,11 @@ class SeasonNotFoundError(TVUFError):
             show, season)
         TVUFError.__init__(self, msg, *args, **kwargs)        
 
+class FileExistsError(TVUFError):
+    pass
+
+class InitExistingDatabaseError(TVUFError):
+    pass
 
 class DatabaseAlreadyExistsError(TVUFError):
     pass        

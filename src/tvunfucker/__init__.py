@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+from . import logger
 
 log = logging.getLogger('tvunfucker')
 log.setLevel(logging.WARNING)

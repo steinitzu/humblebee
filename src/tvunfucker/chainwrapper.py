@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 import os, sqlite3
 from datetime import datetime
 
@@ -8,8 +7,9 @@ import tvdb_api
 
 import tvunfucker
 
-import dirscanner, parser, tvdbwrapper, cfg, localdbapi, util
-from texceptions import *
+from . import dirscanner, parser, tvdbwrapper, cfg, localdbapi, util
+from .texceptions import *
+import dbguy
 
 osp = os.path
 
@@ -40,6 +40,16 @@ def create_database(directory, force=False):
     source.initialize_database()
     return source
 
+
+def get_database(directory):
+    """
+    Returns an EpisodeSource for an existing 
+    database in given directory.
+    """
+    dbfile = osp.join(directory, cfg.get('database', 'local-database-filename'))
+    if not osp.exists(dbfile):
+        raise NoSuchDatabaseError
+    return EpisodeSource(directory)
 
 def scrape_source(source):
     """
@@ -251,10 +261,10 @@ class EpisodeSource(dict):
 
     def add_episode_to_db(self, ep):
         """
-        add_episode_to_db(parser.LocalEpisode)
+        add_episode_to_db(parser.Episode)
         """
         util.type_safe(
-            ep, parser.LocalEpisode,
+            ep, dbguy.Episode,
             arg_num=1
             )
         webep = ep['tvdb_ep']
@@ -294,10 +304,10 @@ class EpisodeSource(dict):
 
     def add_season_to_db(self, ep):
         """
-        add_season_to_db(parser.LocalEpisode)
+        add_season_to_db(parser.Episode)
         """
         util.type_safe(
-            ep, parser.LocalEpisode,
+            ep, dbguy.Episode,
             arg_num=1
             )
         webep = ep['tvdb_ep']
@@ -318,11 +328,11 @@ class EpisodeSource(dict):
 
     def add_series_to_db(self, ep):
         """
-        add_series_to_db(parser.LocalEpisode)
+        add_series_to_db(parser.Episode)
         """
         util.type_safe(
             ep,
-            parser.LocalEpisode,
+            dbguy.Episode,
             arg_num=1
             )
         if not ep['tvdb_ep']:

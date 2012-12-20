@@ -3,16 +3,18 @@
 
 #builtin
 import time, logging, sys, re
+from datetime import datetime
 
 #3dparty
 from tvdb_api.tvdb_api import tvdb_error, Tvdb, tvdb_shownotfound, tvdb_seasonnotfound, tvdb_episodenotfound
 
 #this pkg
-from texceptions import ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError
-from texceptions import NoIdInURLError, NoResultsError
+from .texceptions import ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError
+from .texceptions import NoIdInURLError, IncompleteEpisodeError
 import tvunfucker
-import cfg
-from bingapi.bingapi import Bing
+from . import cfg
+from .bingapi.bingapi import Bing
+from .dbguy import Episode
 
 log = logging.getLogger('tvunfucker')
 
@@ -32,7 +34,7 @@ def _imdb_id_from_url(url):
     Parse the imdb id from an url like 'imdb.com/title/tt0092455'.
     """
     log.debug('URL: %s', url)
-    m = re.search('title/(?P<id>tt\d{7})', url)  
+    m = re.search(r'title/(?P<id>tt\d{7})', url)  
     if not m:
         raise NoIdInURLError('No imdb id in url: %s' % url)
     return m.groupdict()['id']
@@ -62,7 +64,7 @@ def bing_lookup(series_name, api_key=None):
             ), None, sys.exc_info()[2]    
     api = get_api()
     try:
-        series = api.getSeriesByIMDBId(imdbid)
+        series = api[imdbid, 'imdb']
     except tvdb_shownotfound:
         raise ShowNotFoundError(
             'Series: \'%s\' (imdb id: \'%s\' was not found.',
@@ -112,25 +114,64 @@ def get_series(series_name, api=None):
 
 def lookup(ep):
     """
-    lookup(parser.LocalEpisode) -> The same LocalEpisode (just for fun)\n
-    Finds the local ep more online, for more info.\n
+    lookup(Episode) -> Episode with same path as input
+    Looks up given episode at tvdb and returns a new one with full info.
     Raises SeasonNotFoundError and EpisodeNotFoundError
     """
     if not ep.is_fully_parsed():
-        return None
-    series = get_series(ep.clean_name(ep['series_name']))
+        raise IncompleteEpisodeError(
+            'Episode does not have sufficient info for lookup\n%s' % ep
+            )
+    series = get_series(ep.clean_name(ep['series_title']))
     log.info('Looking up series: %s', series)
+    newep = Episode(ep['file_path'])
+    #put base info in new ep
+    for key in newep.local_keys:
+        newep[key] = ep[key]
     webep = None
     try:
-        webep = series[ep['season_num']][ep['ep_num']]
+        webep = series[ep['season_number']][ep['ep_number']]
     except tvdb_seasonnotfound as e:
         raise SeasonNotFoundError(
-            series['seriesname'], ep['season_num']), None, sys.exc_info()[2]
+            series['seriesname'], ep['season_number']), None, sys.exc_info()[2]
     except tvdb_episodenotfound as e:
         raise EpisodeNotFoundError(
-            series['seriesname'], ep['season_num'], ep['ep_num']), None, sys.exc_info()[2]
+            series['seriesname'], ep['season_number'], ep['ep_number']), None, sys.exc_info()[2]
     else:
-        return webep
-    
-    
-    
+        return _update_ep_with_tvdb_ep(newep, webep)
+
+def _safe_string_to_date(dstring):
+    """
+    tvdb format date '2004-11-12' to python datetime.date
+    Returns None in case of failure.
+    """
+    try:        
+        dt = datetime.strptime(dstring, '%Y-%m-%d')
+    except ValueError, TypeError:
+        return None
+    else:
+        return dt.date()
+
+def _update_ep_with_tvdb_ep(ep, webep):
+    """
+    _update_ep_with_tvdb_ep(ep, webep) -> same ep
+    Updates the given ep with info from webep.
+    webep is a tvdb_api.Episode in this context.
+    """
+    show = webep.season.show
+    ep['id'] = webep['id']
+    ep['title'] = webep['episodename']
+    ep['ep_number'] = webep['episodenumber']
+    ep['ep_summary'] = webep['overview']
+    ep['air_date'] = _safe_string_to_date(webep['firstaired'])
+    ep['season_id'] = webep['seasonid']
+    ep['season_number'] = webep['seasonnumber']
+    ep['series_id'] = webep['seriesid']
+    ep['series_title'] = show['seriesname']
+    ep['series_summary'] = show['overview']
+    ep['series_start_date'] = _safe_string_to_date(
+        show['firstaired']
+        )
+    ep['run_time_minutes'] = show['runtime']
+    ep['network'] = show['network']
+    return ep
