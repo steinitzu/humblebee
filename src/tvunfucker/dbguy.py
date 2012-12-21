@@ -201,13 +201,17 @@ class TVDatabase(Database):
             )
         super(TVDatabase, self).__init__(dbfile)
 
-    def create_database(self):
+    def create_database(self, force=False):
         """
         Import the database schema to a new database.
         This will raise a InitExistingDatabaseError if db already exists.
+        If force==True: delete existing dbfile before creating.
         """
         if self.db_file_exists():
-            raise InitExistingDatabaseError(self.dbfile)
+            if force:
+                os.unlink(self.dbfile)
+            else:
+                raise InitExistingDatabaseError(self.dbfile)
         schema = open(
             os.path.join(
                 os.path.dirname(__file__), 'schema.sql')).read()
@@ -228,7 +232,6 @@ class TVDatabase(Database):
         upsert_episode(LocalEpisode) -> int episode id
         database upsert function.
         """
-
         if not epobj['id']:
             raise IncompleteEpisodeError(
                 'Unable to add id-less episode to the database: %s' % epobj

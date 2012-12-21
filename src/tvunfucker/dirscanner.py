@@ -4,10 +4,10 @@
 import os
 from glob import glob
 
-import parser #from this package
-import cfg
-from logger import *
-from texceptions import *
+from . import parser
+from . import cfg
+from .logger import *
+from .texceptions import *
 
 FILE_EXTENSIONS = cfg.get('scanner', 'match-extensions').split(',')
 

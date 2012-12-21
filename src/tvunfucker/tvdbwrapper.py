@@ -97,7 +97,7 @@ def get_series(series_name, api=None):
                 'Failed to connect to the tvdb. Retrying in %s seconds.',
                 rtlimit
                 )            
-            time.sleep(rtlimit)
+            time.sleep(rtinterval)
         except tvdb_shownotfound as e:
             log.info(
                 'Series \'%s\' was not found on tvdb, falling back on bing/imdb search',
