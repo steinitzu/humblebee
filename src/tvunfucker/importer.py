@@ -71,3 +71,6 @@ class Importer(object):
                 continue
             else:
                 self.db.upsert_episode(ep)
+        log.warning(
+            '%s "episodes" were not fully parsed or not found the tvdb' % len(self._not_found)
+            )

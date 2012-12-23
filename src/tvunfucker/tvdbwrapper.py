@@ -85,6 +85,10 @@ def get_series(series_name, api=None):
     series = None
     rtlimit = cfg.get('tvdb', 'retry-limit', int)
     rtinterval = cfg.get('tvdb', 'retry-interval', int)    
+    series = bing_lookup(series_name)
+    return series
+
+    """
 
     while True:
         try:
@@ -111,6 +115,7 @@ def get_series(series_name, api=None):
             #raise ShowNotFoundError(series_name), None, sys.exc_info()[2]
         else:
             break
+    """
     return series
 
 
