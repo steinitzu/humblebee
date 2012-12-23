@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS episode (
         modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         title VARCHAR,
         ep_number INTEGER NOT NULL,
-        extra_ep_number INTEGER NOT NULL,
+        extra_ep_number INTEGER,
         ep_summary TEXT,
         air_date DATE,
         file_path TEXT NOT NULL,

@@ -93,9 +93,11 @@ def get_series(series_name, api=None):
             #probably means no connection
             if rtrc >= rtlimit:
                 raise
+            rtrc+=1
             log.warning(
-                'Failed to connect to the tvdb. Retrying in %s seconds.',
-                rtlimit
+                'Failed to connect to the tvdb. Retrying in %s seconds. '\
+                +'On retry attempt no. %s',
+                rtlimit, rtrc
                 )            
             time.sleep(rtinterval)
         except tvdb_shownotfound as e:
@@ -147,7 +149,7 @@ def _safe_string_to_date(dstring):
     """
     try:        
         dt = datetime.strptime(dstring, '%Y-%m-%d')
-    except ValueError, TypeError:
+    except (ValueError, TypeError):
         return None
     else:
         return dt.date()

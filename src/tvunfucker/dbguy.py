@@ -69,6 +69,24 @@ class Episode(OrderedDict):
         'which_regex',
         'extra_info'
         )
+
+    db_keys = (
+        'id',
+        'title',
+        'ep_number',
+        'extra_ep_number',
+        'ep_summary',
+        'air_date',
+        'file_path',
+        'season_id',
+        'season_number',
+        'series_id',
+        'series_title',
+        'series_summary',
+        'series_start_date',
+        'run_time_minutes',
+        'network'
+        )
     
     def __init__(self, path):
         path = util.ensure_utf8(path)
@@ -227,29 +245,68 @@ class TVDatabase(Database):
         if res: return True
         else: return False
 
+    def _insert_episode(self, epobj):
+        q = 'INSERT INTO episode (%s) VALUES (%s);'
+        insfields = ','.join(epobj.db_keys)
+        insvals = ','.join('?' for x in epobj.db_keys)
+        q = q % (insfields, insvals)
+        params = [epobj[k] for k in epobj.db_keys]
+        self.execute_query(q, params, fetch=0)
+        return epobj['id']            
+
+    def _update_episode(self, epobj):
+        q = 'UPDATE episode SET %s WHERE id = ?;'
+        updfields = ','.join(['%s=?' % (key) for key in epobj.db_keys])
+        q = q % updfields
+        params = [epobj[k] for k in epobj.db_keys]+[epobj['id']] #add 'id' for the where stmnt
+        log.debug('%s\n%s', q, params)
+        self.execute_query(q, params, fetch=0)
+        return epobj['id']            
+
     def upsert_episode(self, epobj):
         """
         upsert_episode(LocalEpisode) -> int episode id
         database upsert function.
-        """
+        """        
         if not epobj['id']:
             raise IncompleteEpisodeError(
                 'Unable to add id-less episode to the database: %s' % epobj
                 )        
-        params = []
         if self._exists(epobj['id']):
-            q = 'UPDATE episode SET %s WHERE id = ?;'
-            updfields = ','.join(['%s=?' % (key) for key in epobj.iterkeys()])
-            q = q % updfields
-            params = epobj.values()+[epobj['id']]        
+            return self._update_episode(epobj)
         else:
-            q = 'INSERT INTO episode (%s) VALUES (%s);'
-            insfields = ','.join(epobj.keys())
-            insvals = ','.join(['?' for x in xrange(len(epobj))])
-            q = q % (insfields, insvals)
-            params = epobj.values()
-        self.execute_query(q, params, fetch=0)
-        return epobj['id']            
+            return self._insert_episode(epobj)
+
+    def add_unparsed_child(self, child_path):
+        """
+        Will automatically determine the parent path based on child path.
+        """
+        log.debug('adding unparsed child: %s', child_path)
+        while True:
+            q = '''
+            INSERT INTO unparsed_episode (
+            child_path, parent_path, filename) 
+            VALUES (?, ?, ?);
+            '''
+            splitted = os.path.split(child_path)            
+            parent = None if not splitted[0] else splitted[0]
+            filename = util.split_path(child_path).pop()
+            params = (child_path, parent, filename)
+            try:
+                self.execute_query(q, params, fetch=0)
+            except sqlite3.IntegrityError as e:
+                #probable means child_path is not unique, should probly check for that
+                log.warning(
+                    'Error while adding unparsed child (usually nothing to worry about): %s\nmessage: %s',
+                    child_path, e.message
+                    )
+                pass
+            #new path
+            if parent == None: break            
+            child_path = parent
+
+        
+
             
 
 def make_where_statement(dicta=None, operator='=', separator='AND', **kwargs):
