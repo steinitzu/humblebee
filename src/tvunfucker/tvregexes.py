@@ -241,6 +241,9 @@ tv_regexes = [
     '''),          
 
     Regex('just_season_dir',
+    #s01
+    #season01
+    #season[separator]01
     '''
     ^(season|s)(%(separator)s|)(?P<season_number>\d+)$
     '''),
