@@ -49,8 +49,18 @@ class test_Parser(unittest.TestCase):
 
         
     def test_reverse_parse(self):
-        raise NotImplementedError
-
+        rootd = os.path.join(
+            self.cwd,
+            'testdata/testfs'
+            )
+        fname = os.path.join(
+            rootd, 
+            'The King of Queens/The King of Queens Season 2/13 - Block Buster.avi'
+            )
+        e = parser.reverse_parse_episode(fname, rootd)
+        self.assertEqual(e['series_title'].lower(), 'the king of queens')
+        self.assertEqual(e['season_number'], 2)
+        self.assertEqual(e['ep_number'], 13)
 
 class test_TVDBLookup(unittest.TestCase):
     @classmethod
@@ -81,4 +91,4 @@ class test_TVDBLookup(unittest.TestCase):
 
 
 
-unittest.main()
+unittest.main(verbosity=2)

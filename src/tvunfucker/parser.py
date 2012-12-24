@@ -4,6 +4,7 @@ import os, re
 from collections import OrderedDict
 
 from . import  tvregexes, util, dbguy
+from .util import split_path
 import tvunfucker
 
 log = tvunfucker.log
@@ -50,7 +51,7 @@ def _merge_episodes(eps, path_to_ep, backup_series_title=None):
         resultep['series_title'] = backup_series_title
     return resultep
 
-def reverse_parse_episode(path, source):
+def _reverse_parse_episode(path, source):
     #TODO: update this docstring
     """
     Takes a path to an episode and a tv source directory.\n
@@ -97,6 +98,24 @@ def reverse_parse_episode(path, source):
         path,
         backup_series_title=os.path.split(two_up_dir)[1]
         )
-    
-    
 
+
+def reverse_parse_episode(path, sourcedir):
+    """
+    assume bottom level filename has wrong info, start from the top.
+    emergencies only
+    """
+    #get the path below sourcedir
+    ep = ez_parse_episode(path)
+    relp = os.path.relpath(path, sourcedir)
+    splitted = split_path(relp)
+    if len(splitted) >= 3:
+        ep['series_title'] = splitted[-3]
+    if len(splitted) >=2:
+        sep = ez_parse_episode(splitted[-2])
+    else:
+        return ez_parse_episode(splitted[-1])
+    eep = ez_parse_episode(splitted[-1])
+    return _merge_episodes([ep, sep, eep], path)
+
+    

@@ -57,20 +57,40 @@ class Importer(object):
         scrapedep = lookup(episode)
         return scrapedep            
 
+    def hard_scrape_path(self, path):
+        """
+        hard_scrape_path(path) -> Episode
+        Do a reverse_parse and scrape given path.
+        """
+        ep = reverse_parse_episode(path, self.directory)
+        return self.scrape_episode(ep)
+
     def wrap(self):
+        excpt = (ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError, IncompleteEpisodeError)
         for ep in self.episodes():
             try:
                 ep = self.scrape_episode(ep)
-            except (ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError, IncompleteEpisodeError) as e:
+            except excpt as e:
                 log.info(
                     'Suppressed lookup error for episode %s.\nMessage:%s' % (
                         ep, e.message)
                     )
-                self._not_found.append(ep)
-                self.db.add_unparsed_child(ep['file_path'])
-                continue
+                #try harder
+                try: 
+                    ep = self.hard_scrape_path(ep['file_path'])
+                except excpt as e:                    
+                    #i give up
+                    self._not_found.append(ep)
+                    self.db.add_unparsed_child(ep['file_path'])
             else:
                 self.db.upsert_episode(ep)
         log.warning(
             '%s "episodes" were not fully parsed or not found the tvdb' % len(self._not_found)
             )
+
+
+class DifficultEpisodeHandler(object):
+    """
+    Handler of difficult episodes which can't be scraped with ordinary methods.
+    """
+    pass
