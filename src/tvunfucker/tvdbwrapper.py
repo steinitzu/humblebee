@@ -13,13 +13,14 @@ from .texceptions import ShowNotFoundError, SeasonNotFoundError, EpisodeNotFound
 from .texceptions import NoIdInURLError, IncompleteEpisodeError
 import tvunfucker
 from . import cfg
-from .bingapi.bingapi import Bing
+from bing import Bing
 from .dbguy import Episode
 
 log = logging.getLogger('tvunfucker')
 
 #tiss a ssingleton
 _api = None
+_bing_api = None
 
 def get_api():
     #THERE Can be only one.... api
@@ -28,6 +29,11 @@ def get_api():
         _api = Tvdb(apikey=tvunfucker.tvdb_key, actors=True)
     return _api
 
+def get_bing_api():
+    global _bing_api
+    if not _bing_api:
+        _bing_api = Bing(api_key=cfg.get('bing', 'api-key'), caching=True)
+    return _bing_api
 
 def _imdb_id_from_url(url):
     """
@@ -39,16 +45,15 @@ def _imdb_id_from_url(url):
         raise NoIdInURLError('No imdb id in url: %s' % url)
     return m.groupdict()['id']
 
-def bing_lookup(series_name, api_key=None):
+def bing_lookup(series_name):
     """
     Uses bing to find the imdb id of the series.
     Accepts kwarg api_key, if None it will use the one from cfg.
     """
-    if not api_key:
-        api_key = cfg.get('bing', 'api-key')
     query = 'site:imdb.com %s' % series_name
-    b = Bing(api_key, caching=True)
-    sres = b.search(query)
+    b = get_bing_api()
+    log.debug('Searching bing with query: %s', query)
+    sres = b[query]
     if not sres:
         raise ShowNotFoundError(
             'Series: \'%s\' was not found using bing',
@@ -79,6 +84,7 @@ def get_series(series_name, api=None):
     get_series(str) -> tvdb_api.Show\n
     raises tvdb_error or ShowNotFoundError on failure
     """
+    #TODO: do the tvdb retry interval here for bing lookup
     api = get_api() if not api else api
     api = get_api()
     rtrc = 0
