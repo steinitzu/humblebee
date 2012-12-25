@@ -50,7 +50,7 @@ def bing_lookup(series_name):
     Uses bing to find the imdb id of the series.
     Accepts kwarg api_key, if None it will use the one from cfg.
     """
-    query = 'site:imdb.com %s' % series_name
+    query = 'site:imdb.com %s "TV Series"' % series_name
     b = get_bing_api()
     log.debug('Searching bing with query: %s', query)
     sres = b[query]
