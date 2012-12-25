@@ -283,11 +283,16 @@ class TVDatabase(Database):
         """
         upsert_episode(LocalEpisode) -> int episode id
         database upsert function.
+        Implicitly converts episode's file_path 
+        to its relative path from self.directory
         """        
         if not epobj['id']:
             raise IncompleteEpisodeError(
                 'Unable to add id-less episode to the database: %s' % epobj
-                )        
+                )  
+        epobj['file_path'] = os.path.relpath(
+            epobj['file_path'], self.directory
+            )
         if self._exists(epobj['id']):
             return self._update_episode(epobj)
         else:

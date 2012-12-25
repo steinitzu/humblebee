@@ -1,4 +1,4 @@
-import logging
+import logging, os
 
 from .dbguy import TVDatabase
 from .dirscanner import get_episodes
@@ -81,7 +81,11 @@ class Importer(object):
                 except excpt as e:                    
                     #i give up
                     self._not_found.append(ep)
-                    self.db.add_unparsed_child(ep['file_path'])
+                    self.db.add_unparsed_child(
+                        os.path.relpath(
+                            ep['file_path'],
+                            self.db.directory
+                            ))
             else:
                 self.db.upsert_episode(ep)
         log.warning(

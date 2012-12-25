@@ -41,6 +41,9 @@ class SeasonNotFoundError(TVUFError):
             show, season)
         TVUFError.__init__(self, msg, *args, **kwargs)        
 
+class InvalidDirectoryError(TVUFError):
+    pass
+
 class FileExistsError(TVUFError):
     pass
 
