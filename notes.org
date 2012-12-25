@@ -1,23 +1,20 @@
-* TODO Handle rar files and such
-* TODO Make the db about 100x faster
-* TODO Chainwrapper.EpisodeSource is doing too many things
-* TODO log unhandled exceptions
-* TODO Maybe strip numbers from front of series name (e.g. '19The king of queens') (though that might be too much of a special case)
-Or maybe just try the folder parse AFTER failed lookup
-* TODO Allow language options for tvdb
-* TODO Make separate mounter thingy
-* TODO Mounting does not work without DEBUG (bad address) (is it foreground?)
+
+Tue Dec 25 02:44:13 GMT 2012
+episode: 2602
+unparsed: 940
+
+Tue Dec 25 02:53:47 GMT 2012
+episode: 2594
+unparsed: 921
 
 
-* TODO After failed lookup, do a dir parse
-* Later
-** TODO Make a gui
-** TODO Renaming and moving of actual files 
-
-** TODO Make the scraper a daemon
+Tue Dec 25 03:33:30 GMT 2012
+episode: 3557
+unparsed: 878
 
 
-* Unparsed on Sat Nov 17 04:33:59 GMT 2012
-1632
-
-
+* TODO refactor
+* TODO log module is silly, log file path and level should be config-able
+* TODO temp/runtime config which is spawned with cli options
+* TODO make cli 
+* TODO release
