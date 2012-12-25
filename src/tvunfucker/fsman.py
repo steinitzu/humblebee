@@ -86,3 +86,22 @@ def create_filesystem(source_dir, dest_dir):
             os.path.join(source_dir, ep['file_path'])
             )
         os.symlink(fp, epp)
+    
+    unpd = os.path.join(dest_dir, '_unknown')
+    os.mkdir(unpd)
+    q = 'SELECT * FROM unparsed_episode'
+    for row in db.execute_query(q):
+        cp = row['child_path']        
+        if os.path.isdir(os.path.join(source_dir, cp)):
+            _safe_make_dirs(os.path.join(unpd, cp))
+        elif os.path.isfile(os.path.join(source_dir, cp)):
+            _safe_make_dirs(
+                os.path.split(os.path.join(unpd, cp))[0]
+                )
+            os.symlink(
+                os.path.abspath(os.path.join(source_dir, cp)),
+                os.path.join(unpd, cp)
+                )
+        else:
+            raise Warning('%s is not a file or dir' % cp)
+            
