@@ -83,6 +83,6 @@ def create_filesystem(source_dir, dest_dir):
             _make_ep_filename(ep)
             )
         fp = os.path.abspath(
-            ep['file_path']
+            os.path.join(source_dir, ep['file_path'])
             )
         os.symlink(fp, epp)
