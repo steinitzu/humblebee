@@ -52,7 +52,7 @@ class Importer(object):
         Can raise ShowNotFoundError, SeasonNotFoundError or EpisodeNotFoundError
         """
         #TODO: be smarter (all eps in same dir should be the same series, right, unless there's a mix thing like incoming)
-        if not not episode.is_fully_parsed():
+        if not episode.is_fully_parsed():
             episode = reverse_parse_episode(episode['file_path'], self.directory)
         scrapedep = lookup(episode)
         return scrapedep            
