@@ -2,7 +2,8 @@
 
 import unittest, os
 
-from tvunfucker import dbguy
+from tvunfucker import dbguy, parser, tvdbwrapper
+from tvunfucker import log
 
 class test_Database(unittest.TestCase):
     @classmethod
@@ -13,6 +14,9 @@ class test_Database(unittest.TestCase):
             'testdata/testfs'
             )
         self.db = dbguy.TVDatabase(tvdir)
+        try:
+            os.unlink(self.db.dbfile)
+        except: pass
 
     def tearDown(self):
         ###  XXX code to do tear down
@@ -47,8 +51,27 @@ class test_Database(unittest.TestCase):
         """
         self.db.create_database()
 
-    def test_upsert_episode(self):
+    def test_get_episodes(self):
+        """
+        also tests upsert.
+        """
         self.db.create_database()
-        raise NotImplementedError
+        ep = parser.ez_parse_episode(
+            os.path.join(
+                self.db.directory,
+                'Sons of Anarchy/S04/Sons.of.'\
+                +'Anarchy.S04E11.Call.of.Duty.PROPER.HDTV.XviD-FQM'\
+                +'/sons.of.anarchy.s04e11.hdtv.xvid-fqm.avi'))
+        ep = tvdbwrapper.lookup(ep)
+        self.db.upsert_episode(ep)
+        deps = self.db.get_episodes('WHERE season_number = ?', params=(4,))
+        log.debug(deps)
+        deps = [d for d in deps]
+        self.failIfEqual(len(deps), 0)
+
+        for e in deps:
+            righttype = isinstance(e, dbguy.Episode)
+            self.assertTrue(righttype)        
+            self.assertEqual(e['season_number'], 4)
 
 unittest.main(verbosity=2)

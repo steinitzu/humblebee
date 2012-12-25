@@ -213,6 +213,7 @@ class Database(object):
 
 class TVDatabase(Database):
     def __init__(self, directory):
+        self.directory = directory
         dbfile = os.path.join(
             directory,
             cfg.get('database', 'local-database-filename')
@@ -244,6 +245,21 @@ class TVDatabase(Database):
         res = self.execute_query(q, (id_,), fetch=1)
         if res: return True
         else: return False
+
+    def get_episodes(self, where_statement='', params=()):
+        """
+        get_episode(where_statement='', params=()) -> yield Episode
+        yield all episodes matching given where_statement.
+        where_statement should be a valid sqlite3 in form 'WHERE [expression]'
+        parametarized queries are preferred for safety, but not enforced here.
+
+        If no where_statement is given, all episodes are selected.        
+        """
+        q = 'SELECT * FROM episode ' + where_statement        
+        for row in self.execute_query(q, params):
+            e = Episode('')
+            e.update(row)
+            yield e            
 
     def _insert_episode(self, epobj):
         q = 'INSERT INTO episode (%s) VALUES (%s);'
