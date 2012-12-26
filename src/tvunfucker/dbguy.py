@@ -7,7 +7,8 @@ A portal to the tv database.
 import sqlite3, logging, os
 from datetime import date
 
-from . import cfg, tvregexes, util
+from . import tvregexes, util
+from . import appconfig as cfg
 from .texceptions import InitExistingDatabaseError, IncompleteEpisodeError
 import re
 from collections import OrderedDict

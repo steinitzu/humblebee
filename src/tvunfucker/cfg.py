@@ -80,8 +80,9 @@ class ThreeTierConfigParser(RawConfigParser):
                 )            
         return config_path
 
-    def _get_global_cfg_path(self):
-        """
+    @classmethod
+    def get_global_cfg_path(self, program_name):
+        """        
         Get the default path to global config. 
         Just a convenience function, never used internally.
         Windows: '%ALLUSERSPROFILE%/program_name/program_name.cfg'
@@ -90,14 +91,14 @@ class ThreeTierConfigParser(RawConfigParser):
         if sys.platform == 'win32':
             cfg_path = os.path.join(
                 os.environ['ALLUSERSPROFILE'],
-                self.program_name,
-                self.program_name+'.cfg'
+                program_name,
+                program_name+'.cfg'
                 )
         else:
             cfg_path = os.path.join(
                 '/etc',
-                self.program_name,
-                self.program_name+'.cfg'
+                program_name,
+                program_name+'.cfg'
                 )
         return cfg_path
 

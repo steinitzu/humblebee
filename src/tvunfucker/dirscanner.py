@@ -5,7 +5,7 @@ import os
 from glob import glob
 
 from . import parser
-from . import cfg
+from . import appconfig as cfg
 from .logger import *
 from .texceptions import *
 

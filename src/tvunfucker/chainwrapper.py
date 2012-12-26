@@ -7,7 +7,8 @@ import tvdb_api
 
 import tvunfucker
 
-from . import dirscanner, parser, tvdbwrapper, cfg, localdbapi, util
+from . import dirscanner, parser, tvdbwrapper, localdbapi, util
+from . import appconfig as cfg
 from .texceptions import *
 import dbguy
 
