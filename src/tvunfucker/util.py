@@ -3,6 +3,7 @@
 
 from datetime import datetime
 from time import mktime
+import os
 
 from texceptions import InvalidArgumentError
 
@@ -44,6 +45,19 @@ def zero_prefix_int(num):
 
 def timestamp(dt):
     return mktime(dt.timetuple())
+
+def str_to_bool(string):
+    """
+    str_to_bool('False') -> False
+    str_to_bool('True') -> False
+    str_to_bool('true') -> True
+    """
+    if string.lower() == 'false':
+        return False
+    elif string.lower() == 'True':
+        return True
+    else:
+        raise ValueError('"%s" can not be converted to bool' % string)
 
 def safe_strpdate(s):
     """
@@ -94,3 +108,18 @@ def type_safe(
     if not isinstance(arg, expected_type):
         raise (InvalidArgumentError(error_message))
     return True
+
+
+def safe_make_dirs(path):
+    """
+    _safe_make_dirs(path)
+    os.makedir but suppresses errors when dir already exists.
+    All other errors are raised as normal.
+    """
+    try:
+        os.makedirs(path)
+    except OSError as e:
+        if e.errno == 17: #file exists
+            pass
+        else:
+            raise

@@ -3,6 +3,7 @@ import os
 from .texceptions import InvalidDirectoryError, NoSuchDatabaseError
 from .dbguy import TVDatabase
 from .util import replace_bad_chars, zero_prefix_int
+from .util import safe_make_dirs as _safe_make_dirs
 
 
 def _setup_env(source_dir, dest_dir):
@@ -33,19 +34,7 @@ def _setup_env(source_dir, dest_dir):
         os.makedirs(dest_dir)
     return db
 
-def _safe_make_dirs(path):
-    """
-    _safe_make_dirs(path)
-    os.makedir but suppresses errors when dir already exists.
-    All other errors are raised as normal.
-    """
-    try:
-        os.makedirs(path)
-    except OSError as e:
-        if e.errno == 17: #file exists
-            pass
-        else:
-            raise
+
 
 filename_mask_ep = (
     ' %(series_title)s s%(season_number)se%(ep_number)s%(extra_ep_number)s %(title)s%(ext)s'
