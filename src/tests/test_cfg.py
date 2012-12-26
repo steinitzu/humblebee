@@ -35,7 +35,14 @@ class Test_Cfg(unittest.TestCase):
         v = {'cake':{'flavor':'chocolate','candles':5,'is_lie':True}}
         self.cfgparser.import_to_runtime_parser(v)
         self.assertEquals(self.cfgparser.get('cake', 'is_lie'), True)
-        
+
+    def test_runtime_cfg_override(self):
+        """Test if runtime cfg overrides user cfg properly."""
+        v = self.cfgparser.get('cake', 'islie')
+        self.assertEquals(v, 'yes')
+        self.cfgparser.set('cake', 'islie', 'no', parser='runtime')
+        v = self.cfgparser.get('cake', 'islie')
+        self.assertEquals(v, 'no')
         
 
 unittest.main()        
