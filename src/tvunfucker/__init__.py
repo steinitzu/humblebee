@@ -1,15 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import logging, os
+import os
 
-from . import logger
 from . import cfg
+from .util import get_prog_home_dir
 
-log = logging.getLogger('tvunfucker')
-log.setLevel(logging.DEBUG)
-
-tvdb_key = '29E8EC8DF23A5918'
 
 __pkgname__ = 'tvunfucker'
 
@@ -19,3 +15,15 @@ appconfig = cfg.ThreeTierConfigParser(
     __pkgname__, 
     global_config_path=_globconffile
     )
+
+lf = appconfig.get('logging', 'filename')
+if lf is None or lf == 'None':
+    appconfig.set(
+        'logging', 
+        'filename',
+        os.path.join(get_prog_home_dir(__pkgname__), __pkgname__+'.log'),
+        parser='runtime'
+        )
+
+import logger #init the loggers
+

@@ -318,7 +318,7 @@ class TVDatabase(Database):
                 self.execute_query(q, params, fetch=0)
             except sqlite3.IntegrityError as e:
                 #probable means child_path is not unique, should probly check for that
-                log.warning(
+                log.debug(
                     'Error while adding unparsed child (usually nothing to worry about): %s\nmessage: %s',
                     child_path, e.message
                     )

@@ -26,7 +26,7 @@ def get_api():
     #THERE Can be only one.... api
     global _api
     if not _api:
-        _api = Tvdb(apikey=tvunfucker.tvdb_key, actors=True)
+        _api = Tvdb(apikey=cfg.get('tvdb', 'api-key'), actors=True)
     return _api
 
 def get_bing_api():
@@ -52,7 +52,7 @@ def bing_lookup(series_name):
     """
     query = 'site:imdb.com %s "TV Series"' % series_name
     b = get_bing_api()
-    log.debug('Searching bing with query: %s', query)
+    log.info('Searching bing with query: %s', query)
     sres = b[query]
     if not sres:
         raise ShowNotFoundError(
@@ -91,16 +91,10 @@ def get_series(series_name, api=None):
     series = None
     rtlimit = cfg.get('tvdb', 'retry-limit', int)
     rtinterval = cfg.get('tvdb', 'retry-interval', int)    
-    series = bing_lookup(series_name)
-    return series
-
-    """
-
     while True:
         try:
-            series = api[series_name]
+            series = bing_lookup(series_name)
         except tvdb_error as e:
-            #probably means no connection
             if rtrc >= rtlimit:
                 raise
             rtrc+=1
@@ -110,20 +104,8 @@ def get_series(series_name, api=None):
                 rtlimit, rtrc
                 )            
             time.sleep(rtinterval)
-        except tvdb_shownotfound as e:
-            log.info(
-                'Series \'%s\' was not found on tvdb, falling back on bing/imdb search',
-                series_name
-                )
-            series = bing_lookup(series_name)
-            break
-            #raise ShowNotFoundError(series_name)
-            #raise ShowNotFoundError(series_name), None, sys.exc_info()[2]
         else:
-            break
-    """
-    return series
-
+            return series
 
 def lookup(ep):
     """

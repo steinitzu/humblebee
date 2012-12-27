@@ -3,13 +3,22 @@
 
 from datetime import datetime
 from time import mktime
-import os
+import os, sys
 
 from texceptions import InvalidArgumentError
 
-#should be in __init__
-program_name = 'tvunfucker'
 
+def get_prog_home_dir(program_name):
+    if sys.platform == 'win32':
+        return os.path.join(
+            os.environ['APPDATA'],
+            program_name
+            )
+    else:
+        return os.path.join(
+            os.path.expanduser('~'),
+            '.'+program_name
+            )    
 
 def replace_bad_chars(string):
     """

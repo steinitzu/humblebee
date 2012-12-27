@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os, re
+import os, re, logging
 from collections import OrderedDict
 
 from . import  tvregexes, util, dbguy
 from .util import split_path
 import tvunfucker
 
-log = tvunfucker.log
+log = logging.getLogger('tvunfucker')
 
 def ez_parse_episode(path):
     """
