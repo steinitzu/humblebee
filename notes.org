@@ -14,7 +14,7 @@ unparsed: 878
 
 
 * TODO refactor
-* TODO log module is silly, log file path and level should be config-able
+* DONE log module is silly, log file path and level should be config-able
 * TODO temp/runtime config which is spawned with cli options
 * TODO make cli 
 * TODO release

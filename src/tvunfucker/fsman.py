@@ -49,7 +49,7 @@ def _make_ep_filename(ep):
     if not ep['extra_ep_number']:
         ep['extra_ep_number'] = ''
     else:
-        ep['extra_ep_number'] = zero_prefix_int(ep['extra_ep_number'])
+        ep['extra_ep_number'] = 'e'+zero_prefix_int(ep['extra_ep_number'])
     return replace_bad_chars(filename_mask_ep % ep)
     
 
