@@ -1,7 +1,8 @@
 from argparse import ArgumentParser
+import logging
 
-from .importer import Importer
-from . import appconfig
+from . import appconfig, logger
+from . import entrypoint
 
 
 def main():
@@ -21,6 +22,7 @@ def main():
         help='Overwrite existing database (if any) in directory.(overrides --update)'
         )
     parser.add_argument(
+        #TODO: This no work (cause value is set in __init__)
         '-l', '--log-file', dest='log_file', 
         help='Path to log file.'
         )
@@ -45,6 +47,10 @@ def main():
         }
 
     appconfig.import_to_runtime_parser(argsd)
+    logger.log.setLevel(logging.__getattribute__(args.log_level.upper()))
+    entrypoint.start_importer(args.directory)
+
+
     
 
 if __name__ == '__main__':

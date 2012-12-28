@@ -1,11 +1,11 @@
 import os
 import logging
 
-from chainwrapper import get_database
-from util import replace_bad_chars, zero_prefix_int, fndotify
-from texceptions import FileExistsError
+from .util import replace_bad_chars, zero_prefix_int, fndotify
+from .texceptions import FileExistsError
+from . import __pkgname__
 
-log = logging.getLogger('tvunfucker')
+log = logging.getLogger(__pkgname__)
 
 def make_series_dir(title, sdate, source_dir):
     """    

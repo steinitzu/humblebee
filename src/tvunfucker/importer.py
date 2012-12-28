@@ -6,34 +6,31 @@ from .parser import ez_parse_episode, reverse_parse_episode
 from .texceptions import InitExistingDatabaseError, IncompleteEpisodeError
 from .texceptions import ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError
 from .tvdbwrapper import lookup
+from . import appconfig as cfg
+from . import __pkgname__
 
-log = logging.getLogger('tvunfucker')
+log = logging.getLogger(__pkgname__)
 
 class Importer(object):    
 
     def __init__(self, directory, **kwargs):
+        #TODO: take options from cfg and do update and reset functions
         """
         the kwargs must be the command line options thingies, right..?
         """        
-        self.config = self.make_config(**kwargs)
         self.db = TVDatabase(directory)
         self.directory = directory
         #Episodes which weren't found on the web
         self._not_found = []
-
-    def make_config(self, **kwargs):
-        """
-        Make the config dict from kwargs.
-        """
-        config = {}
-        config['reset_database'] = kwargs.get('reset_database', False)        
-
-        return config
+        self.scraped_count = 0
 
     def start_import(self):
-        self.db.create_database(
-            force=self.config['reset_database']
-            )
+        if self.db.db_file_exists():
+            if cfg.get('database', 'reset', bool):
+                os.unlink(self.db.dbfile)
+                self.db.create_database(
+                    force=True
+                    )
         self.wrap()
 
     def episodes(self):
@@ -68,6 +65,15 @@ class Importer(object):
     def wrap(self):
         excpt = (ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError, IncompleteEpisodeError)
         for ep in self.episodes():
+            upd = cfg.get('database', 'update', bool)
+            exists = self.db.path_exists(ep['file_path'])
+            if upd and exists: 
+                log.debug(
+                    'ep at %s exists in database, ignoring.', 
+                    ep['file_path']
+                    )
+                #we're only supposed to update and current ep is in db
+                continue                
             try:
                 ep = self.scrape_episode(ep)
             except excpt as e:
@@ -88,9 +94,14 @@ class Importer(object):
                             ))
             else:
                 self.db.upsert_episode(ep)
+                self.scraped_count+=1
         log.warning(
-            '%s "episodes" were not fully parsed or not found the tvdb' % len(self._not_found)
+            '%s episodes were scraped and added to the database.', self.scraped_count
             )
+        log.warning(
+            '%s "episodes" were not fully parsed or not found the tvdb', len(self._not_found)
+            )
+
 
 
 class DifficultEpisodeHandler(object):

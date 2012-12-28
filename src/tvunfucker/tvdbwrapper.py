@@ -11,12 +11,12 @@ from tvdb_api.tvdb_api import tvdb_error, Tvdb, tvdb_shownotfound, tvdb_seasonno
 #this pkg
 from .texceptions import ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError
 from .texceptions import NoIdInURLError, IncompleteEpisodeError
-import tvunfucker
+from . import __pkgname__
 from . import appconfig as cfg
 from bing import Bing
 from .dbguy import Episode
 
-log = logging.getLogger('tvunfucker')
+log = logging.getLogger(__pkgname__)
 
 #tiss a ssingleton
 _api = None

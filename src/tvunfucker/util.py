@@ -61,6 +61,8 @@ def str_to_bool(string):
     str_to_bool('True') -> False
     str_to_bool('true') -> True
     """
+    if isinstance(string, bool):
+        return string
     if string.lower() == 'false':
         return False
     elif string.lower() == 'True':

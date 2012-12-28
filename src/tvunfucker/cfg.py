@@ -184,9 +184,9 @@ class ThreeTierConfigParser(RawConfigParser):
         {'section_name':{'option1':'value1', option2:'value2'}}
         """
         for section,v in dicti.iteritems():
-            self.runtime_parser.add_section(section)
+            #self.runtime_parser.add_section(section)
             for option,value in v.iteritems():
-                self.runtime_parser.set(section, option, value)
+                self.set(section, option, value, parser='runtime')
             
                 
             

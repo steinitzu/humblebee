@@ -6,14 +6,16 @@ A portal to the tv database.
 """
 import sqlite3, logging, os
 from datetime import date
+import re
+from collections import OrderedDict
 
 from . import tvregexes, util
 from . import appconfig as cfg
 from .texceptions import InitExistingDatabaseError, IncompleteEpisodeError
-import re
-from collections import OrderedDict
+from . import __pkgname__
 
-log = logging.getLogger('tvunfucker')
+
+log = logging.getLogger(__pkgname__)
 
 class Episode(OrderedDict):
     """
@@ -244,6 +246,22 @@ class TVDatabase(Database):
         """
         q = 'SELECT * FROM episode WHERE id = ?;'
         res = self.execute_query(q, (id_,), fetch=1)
+        if res: return True
+        else: return False
+
+    def path_exists(self, path):
+        """
+        path_exists(path) -> bool
+        Check whether an episode with given path exists in db.
+        Returns True or False respectively.
+        """
+        path = os.path.relpath(
+            os.path.abspath(path), 
+            self.directory
+            )
+        q = 'SELECT id FROM episode WHERE file_path = ?;'
+        params = (path,)
+        res = self.execute_query(q, params, fetch=1)
         if res: return True
         else: return False
 

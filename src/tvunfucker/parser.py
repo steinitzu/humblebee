@@ -5,9 +5,9 @@ from collections import OrderedDict
 
 from . import  tvregexes, util, dbguy
 from .util import split_path
-import tvunfucker
+from . import __pkgname__
 
-log = logging.getLogger('tvunfucker')
+log = logging.getLogger(__pkgname__)
 
 def ez_parse_episode(path):
     """
