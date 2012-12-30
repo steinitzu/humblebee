@@ -6,7 +6,7 @@ import time, logging, sys, re
 from datetime import datetime
 
 #3dparty
-from tvdb_api.tvdb_api import tvdb_error, Tvdb, tvdb_shownotfound, tvdb_seasonnotfound, tvdb_episodenotfound
+from .tvdb_api.tvdb_api import tvdb_error, Tvdb, tvdb_shownotfound, tvdb_seasonnotfound, tvdb_episodenotfound
 
 #this pkg
 from .texceptions import ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError
@@ -32,7 +32,11 @@ def get_api():
 def get_bing_api():
     global _bing_api
     if not _bing_api:
-        _bing_api = Bing(api_key=cfg.get('bing', 'api-key'), caching=True)
+        _bing_api = Bing(
+            api_key=cfg.get('bing', 'api-key'), 
+            caching=True,
+            headers={'cache-control':'max-age=%s' % cfg.get('bing', 'cache-max-age')}
+            )
     return _bing_api
 
 def _imdb_id_from_url(url):
