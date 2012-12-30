@@ -11,7 +11,7 @@ from .texceptions import *
 
 FILE_EXTENSIONS = cfg.get('scanner', 'match-extensions').split(',')
 
-#these functions belong to the world
+#TODO: use os.walk, symlinks and whatnot
 
 def _get_sub_directories(dir_):
     """
@@ -22,7 +22,7 @@ def _get_sub_directories(dir_):
     """
     for name in os.listdir(dir_):
         abspath = os.path.join(dir_,name)
-        if os.path.isfile(abspath):
+        if not os.path.isdir(abspath):
             continue
         if name in cfg.get('scanner', 'ignored-dirs').split(','):            
             log.info('ignored dir in ignore list \'%s\'' % abspath)
