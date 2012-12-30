@@ -13,7 +13,7 @@ from .texceptions import ShowNotFoundError, SeasonNotFoundError, EpisodeNotFound
 from .texceptions import NoIdInURLError, IncompleteEpisodeError
 from . import __pkgname__
 from . import appconfig as cfg
-from bing import Bing
+from .bingpy.bing import Bing
 from .dbguy import Episode
 
 log = logging.getLogger(__pkgname__)
