@@ -28,6 +28,6 @@ setup(
         },    
     
     install_requires=[
-        'bingpy'
+        'httplib2' #for bing api
         ]
     )
