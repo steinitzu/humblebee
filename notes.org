@@ -15,6 +15,7 @@ unparsed: 878
 
 * TODO refactor
 * DONE log module is silly, log file path and level should be config-able
-* TODO temp/runtime config which is spawned with cli options
-* TODO make cli 
+* DONE temp/runtime config which is spawned with cli options
+* DONE make cli 
 * TODO release
+* TODO write random bits to files in testfs for uniqueness, to diff against renamed fs

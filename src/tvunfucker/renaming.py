@@ -2,8 +2,9 @@ import os
 import logging
 
 from .util import replace_bad_chars, zero_prefix_int, fndotify
-from .texceptions import FileExistsError
+from .texceptions import FileExistsError, NoSuchDatabaseError
 from . import __pkgname__
+from .dbguy import TVDatabase
 
 log = logging.getLogger(__pkgname__)
 
@@ -79,19 +80,28 @@ def move_episode(episode, to_dir, source_dir):
     os.rename(oldpath, newpath)
     return newpath
 
-        
-    
-def do_renaming(directory):
+
+def _get_database(directory):
+    db = TVDatabase(directory)
+    if not db.db_file_exists():
+        raise NoSuchDatabaseError(
+            'No TV database in %s. Please scrape the directory first.' % directory
+            )
+    else:
+        return db
+
+
+def do_renaming(directory, dest_dir):
     """
     Rename and move files according to the database.
     Accepts an EpisodeSource.
     """
-    db = get_database(directory)    
+    db = _get_database(directory)    
     for episode in db.get_episodes():        
         dseries = make_series_dir(
             episode['series_title'],
             episode['series_start_date'],
-            directory
+            dest_dir
             )
         dseason = make_season_dir(
             episode['season_number'],
