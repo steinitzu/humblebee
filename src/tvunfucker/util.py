@@ -50,7 +50,7 @@ def zero_prefix_int(num):
     strnum = str(num)
     if len(strnum) == 1:
         return '0'+strnum
-    return num
+    return strnum
 
 def timestamp(dt):
     return mktime(dt.timetuple())
