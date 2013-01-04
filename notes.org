@@ -19,3 +19,4 @@ unparsed: 878
 * DONE make cli 
 * TODO release
 * TODO write random bits to files in testfs for uniqueness, to diff against renamed fs
+* TODO Keep the mediainfo duration as int minutes
