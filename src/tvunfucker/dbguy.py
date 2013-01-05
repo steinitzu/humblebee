@@ -249,6 +249,17 @@ class TVDatabase(Database):
         if res: return True
         else: return False
 
+    def episode_exists(self, ep):
+        """
+        episode_exists(Episode) -> bool
+        Check if an episode with same id as given already 
+        exists in database.
+        """
+        if not ep['id']:
+            #TODO: HACK
+            return False 
+        return self._exists(ep['id'])        
+
     def path_exists(self, path):
         """
         path_exists(path) -> bool

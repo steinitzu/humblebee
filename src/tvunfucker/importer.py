@@ -13,6 +13,13 @@ log = logging.getLogger(__pkgname__)
 
 class Importer(object):    
 
+    scrape_errors = (
+        ShowNotFoundError,
+        SeasonNotFoundError,
+        EpisodeNotFoundError,
+        IncompleteEpisodeError
+        )
+
     def __init__(self, directory, **kwargs):
         #TODO: take options from cfg and do update and reset functions
         """
@@ -22,7 +29,8 @@ class Importer(object):
         self.directory = directory
         #Episodes which weren't found on the web
         self._not_found = []
-        self.scraped_count = 0
+        self.scraped_count = 0 #deprecate
+        self.success_count = 0
 
     def start_import(self):
         if self.db.db_file_exists():
@@ -62,47 +70,91 @@ class Importer(object):
         ep = reverse_parse_episode(path, self.directory)
         return self.scrape_episode(ep)
 
-    def wrap(self):
-        excpt = (ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError, IncompleteEpisodeError)
-        for ep in self.episodes():
-            upd = cfg.get('database', 'update', bool)
-            exists = self.db.path_exists(ep['file_path'])
-            if upd and exists: 
-                log.debug(
-                    'ep at %s exists in database, ignoring.', 
-                    ep['file_path']
-                    )
-                #we're only supposed to update and current ep is in db
-                continue                
-            try:
-                ep = self.scrape_episode(ep)
-            except excpt as e:
-                log.info(
-                    'Suppressed lookup error for episode %s.\nMessage:%s' % (
-                        ep, e.message)
-                    )
-                #try harder
-                try: 
-                    ep = self.hard_scrape_path(ep['file_path'])
-                except excpt as e:                    
-                    #i give up
-                    self._not_found.append(ep)
-                    self.db.add_unparsed_child(
-                        os.path.relpath(
-                            ep['file_path'],
-                            self.db.directory
-                            ))
+
+    def fill_episode(self, ep):
+        """
+        fill_episode(Episode) -> Episode
+        Parses and looks up given episode info and returns.
+        May raise exceptions in self.scrape_errors.
+        """
+        fileindb = self.db.path_exists(ep['file_path'])
+        try:
+            ep = self.scrape_episode(ep)
+        except self.scrape_errors as e:
+            log.debug(
+                'Failed lookup for episode %s.\nMessage:%s', 
+                ep, 
+                e.message
+                )
+            ep = self.hard_scrape_path(ep['file_path'])
+        return ep
+
+    def who_better(self, ep1, ep2):
+        #TODO: Implement this shit
+        return ep1 
+        raise NotImplementedError
+
+    def _wrap_single(self, ep):
+        """
+        _wrap_single(Episode)
+        Wrapper method to handle single episode, from filename to db.
+        """
+        fileindb = self.db.path_exists(ep['file_path'])
+        update = cfg.get('database', 'update', bool)
+        if fileindb and update:
+            #don't need to scrape cause we ain't gunna do nuthin'
+            log.debug(
+                '"%s" already in database and update option set, skipping',
+                ep['file_path']
+                )
+            return
+        try:
+            ep = self.fill_episode(ep)
+        except self.scrape_errors as e:
+            self._not_found.append(ep)
+            self.db.add_unparsed_child(
+                os.path.relpath(
+                    ep['file_path'],
+                    self.db.directory)
+                )
+            return
+        if fileindb:
+            return self.db.upsert_episode(ep) #we update it
+
+        idindb = self.db.episode_exists(ep)
+        if idindb:
+            oldep = self.db.get_episodes('WHERE id = ?', params=(ep['id'],)).next()
+            log.info(
+                'Found duplicates. Original: "%s". Contender: "%s".',
+                oldep['file_path'],
+                ep['file_path']
+                )            
+            #can't be having same episode twice, thems ids be primary keys, yo
+            better = self.who_better(ep, oldep) 
+            if not better: 
+                #neither is better, it ain't no thang, do nuthin'
+                return 
+            elif better is oldep:
+                return
             else:
-                self.db.upsert_episode(ep)
-                self.scraped_count+=1
+                log.info('Replacing "%s" with "%s" in db.', 
+                         oldep['file_path'], ep['file_path'])                
+                return self.db.upsert_episode(ep)
+        else:
+            return self.db.upsert_episode(ep)                                         
+        
+    def wrap(self):
+        for ep in self.episodes():
+            res = self._wrap_single(ep)
+            if isinstance(res, int):
+                self.success_count+=1
         log.warning(
-            '%s episodes were scraped and added to the database.', self.scraped_count
+            '%s episodes were scraped and added to the database.', self.success_count
             )
         log.warning(
             '%s "episodes" were not fully parsed or not found the tvdb', len(self._not_found)
             )
-
-
+        
 
 class DifficultEpisodeHandler(object):
     """
