@@ -7,7 +7,7 @@ A python interface to mediainfo.
 
 from subprocess import Popen, PIPE
 import re
-from datetime import datetime
+from datetime import timedelta
 
 from . import xmltodict
 
@@ -46,31 +46,34 @@ class Track(object):
             return value
 
     def _duration_to_time(self, inst):
-        #TODO: keep the fuding duration in minutes
         """
-        _duration_to_time(str) -> timetuple
-        Convert a mediainfo duration string to timetuple.
+        _duration_to_time(str) -> timedelta
+        Convert a mediainfo duration string to timedelta.
         e.g. '2h 42mn' or '54mn 39s' or '30s 20ms'
         """
-        formats = (
-            '%Hh %Mmn',
-            '%Mmn %Ss',
-            '%Ss %fms'
-            )
-        try:
-            return datetime.strptime(inst, formats[0])
-        except ValueError:
-            try:
-                return datetime.strptime(inst, formats[1])
-            except ValueError:
-                return datetime.strptime(inst, formats[2])
+        timedict = {}
+        for part in inst.split(' '):
+            #part is like '22mn' or '2h' or '30s' or '600ms'
+            if part[-1] == 'h':
+                timedict['hours'] = int(part[:-1])
+            elif part[-2:] == 'mn':
+                timedict['minutes'] = int(part[:-2])
+            elif part[-2:] == 'ms':
+                timedict['milliseconds'] = int(part[:-2])
+            elif part[-1] == 's':
+                timedict['seconds'] = int(part[:-1])
+            else:
+                raise ValueError('%s is not a valid time value.' % part)
+        return timedelta(**timedict)
 
 class MediaInfo(object):
-    video = None
-    audio = []
-    general = None
+
     def __init__(self, filename):
         tracks = get_tracks(filename)
+        self.video = None
+        self.audio = []
+        self.general = None
+        
         for t in tracks:
             if t.type == 'Video':
                 self.video = t
