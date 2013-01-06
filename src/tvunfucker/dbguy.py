@@ -18,19 +18,38 @@ from . import __pkgname__
 log = logging.getLogger(__pkgname__)
 
 class Episode(OrderedDict):
+
     """
-    #TODO: docstring is out of date
-    keys\n
-    --------\n
-    season_num: the season number (int)\n
-    series_title: the series name (string(unicode))\n
-    ep_num: episode number (int)\n
-    extra_ep_num: for 2 parter episodes\n
-    extra_info: some extra gunk from the filename\n
-    release_group: the media (scene) release group\n
-    which_regex: which regex parsed this filename\n
-    path: absolute path to the episode object\n
-    tvdb_ep: Episode object from the tvdb_api\n    
+    Keys mapping to database fields:
+    --------------------------
+    'id' : the episode's id (from thetvdb) (int)
+    'created_at' : the time which episode is added to database (datetime)
+    'modified_at' : last modified time of episode in database (datetime)
+    'title' : title of episode (str)
+    'ep_number' : number of episode in season (int)
+    'extra_ep_number' : number of extra episode in file (if any) (int)
+    'ep_summary' : plot summary of episode (str)
+    'air_date' : date when episode first aired (date)
+    'file_path' : path to media file containing episode (relative to source dir) (str)
+    'season_id' : id of episode's season (from thetvdb) (int)
+    'season_number' : number of season (int)
+    'series_id' : id of episode's series (from thetvdb) (int)
+    'series_title' : title of series (str)
+    'series_summary' : plot summary of series (str)
+    'series_start_date' : when series first aired (date)
+    'run_time_minutes' : (int)
+    'network' : (str)
+
+    keys extracted by the filename parser (not in database):
+    ---------------------------
+    'release_group' : scene release group
+    'which_regex' : which regex matched the episode
+    'extra_info' : any seemingly irrelevant text from filename
+
+    This is a dict derived type which does not allow creation of new keys 
+    except those listed.
+    __setitem__ will convert given values to their correct types 
+    when possible.    
     """
     preset_keys = (
         'id',
@@ -98,7 +117,8 @@ class Episode(OrderedDict):
             super(Episode, self).__setitem__(
                 key, None
                 )
-        self['file_path'] = path
+        self['file_path'] = path        
+        self.is_rar = False
 
     def safe_update(self, otherep):
         """

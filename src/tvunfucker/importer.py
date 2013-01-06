@@ -47,8 +47,9 @@ class Importer(object):
         Yield Episodes in directory.
         Episodes returned from here are result of ez_parse_episode.
         """
-        for epath in get_episodes(self.directory):            
-            yield ez_parse_episode(epath)
+        for ep in get_episodes(self.directory):            
+            yield ep
+            #yield ez_parse_episode(epath)
 
     def _scrape_episode(self, episode):
         """

@@ -5,9 +5,10 @@ import os
 from glob import glob
 
 from . import parser
+from .parser import ez_parse_episode
 from . import appconfig as cfg
-from .logger import *
-from .texceptions import *
+from logger import log
+from .texceptions import InvalidArgumentError
 
 FILE_EXTENSIONS = cfg.get('scanner', 'match-extensions').split(',')
 
@@ -77,13 +78,27 @@ def get_file_from_single_ep_dir(dir_):
             continue
         else:
             return f
+
+
+def _is_rar(path):
+    """
+    _is_rar(path) -> bool
+    Checks whether given path contains a scene style 
+    rarred episode (e.g. *.r01, *.r02,...)
+    """  
+    raise NotImplementedError
+    rnumfiles = glob(
+        os.path.join(path, '*.r[0-9][0-9]')
+        )
+    pass
                     
 
 
 def get_episodes(dir_):
     """
+    get_episodes(dir_) ->> Episode
     Recursive function which yields episodes from dir_ and down.\n
-    Returns strings, just paths.
+    Returns first pass parsed episodes from ez_parse_episode
     """
     if not os.path.isdir(dir_):
         raise InvalidArgumentError(
@@ -95,10 +110,10 @@ def get_episodes(dir_):
         if dir_is_single_ep(subdir):
             ret = get_file_from_single_ep_dir(subdir)            
             log.info('Found episode: %s', ret)
-            yield ret
+            yield ez_parse_episode(ret)
             continue
         for file_ in _get_video_files(subdir):
             log.info('Found video file: %s', file_)
-            yield file_
+            yield ez_parse_episode(file_)
         for result in get_episodes(subdir):
             yield result            
