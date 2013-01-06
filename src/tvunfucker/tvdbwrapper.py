@@ -73,6 +73,11 @@ def bing_lookup(series_name):
             ), None, sys.exc_info()[2]    
     api = get_api()
     try:
+        log.info(
+            'Looking up imdb id: %s (seriesname: %s) on thetvdb', 
+            imdbid,
+            series_name
+            )
         series = api[imdbid, 'imdb']
     except tvdb_shownotfound:
         raise ShowNotFoundError(

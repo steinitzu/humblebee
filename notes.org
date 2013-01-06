@@ -14,9 +14,9 @@ unparsed: 878
 
 
 * TODO refactor
-* DONE log module is silly, log file path and level should be config-able
-* DONE temp/runtime config which is spawned with cli options
-* DONE make cli 
 * TODO release
 * TODO write random bits to files in testfs for uniqueness, to diff against renamed fs
-* TODO Keep the mediainfo duration as int minutes
+* TODO handle InvalidVideoFileError in quality_battle (handle in importer)
+* TODO don't think log_file option works in cli, cause __init__ sets it first
+* TODO write out a stat summary after importing (duplicates, scraped, unscraped, etc)
+* TODO mediainfo fails on rard stuff

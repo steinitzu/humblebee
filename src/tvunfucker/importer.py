@@ -6,6 +6,7 @@ from .parser import ez_parse_episode, reverse_parse_episode
 from .texceptions import InitExistingDatabaseError, IncompleteEpisodeError
 from .texceptions import ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError
 from .tvdbwrapper import lookup
+from .quality import quality_battle
 from . import appconfig as cfg
 from . import __pkgname__
 
@@ -49,7 +50,7 @@ class Importer(object):
         for epath in get_episodes(self.directory):            
             yield ez_parse_episode(epath)
 
-    def scrape_episode(self, episode):
+    def _scrape_episode(self, episode):
         """
         scrape_episode(Episode) -> Episode
         Fully parse it, look it up, fill it with info and return.
@@ -62,13 +63,13 @@ class Importer(object):
         scrapedep = lookup(episode)
         return scrapedep            
 
-    def hard_scrape_path(self, path):
+    def _fallback_scrape_episode(self, path):
         """
         hard_scrape_path(path) -> Episode
         Do a reverse_parse and scrape given path.
         """
         ep = reverse_parse_episode(path, self.directory)
-        return self.scrape_episode(ep)
+        return self._scrape_episode(ep)
 
 
     def fill_episode(self, ep):
@@ -79,20 +80,15 @@ class Importer(object):
         """
         fileindb = self.db.path_exists(ep['file_path'])
         try:
-            ep = self.scrape_episode(ep)
+            ep = self._scrape_episode(ep)
         except self.scrape_errors as e:
             log.debug(
                 'Failed lookup for episode %s.\nMessage:%s', 
                 ep, 
                 e.message
                 )
-            ep = self.hard_scrape_path(ep['file_path'])
+            ep = self._fallback_scrape_episode(ep['file_path'])
         return ep
-
-    def who_better(self, ep1, ep2):
-        #TODO: Implement this shit
-        return ep1 
-        raise NotImplementedError
 
     def _wrap_single(self, ep):
         """
@@ -130,7 +126,13 @@ class Importer(object):
                 ep['file_path']
                 )            
             #can't be having same episode twice, thems ids be primary keys, yo
-            better = self.who_better(ep, oldep) 
+            better = quality_battle(ep, oldep, self.db.directory) 
+            if better: bpath = better['file_path']
+            else: bpath = None
+            log.info(
+                'Quality battle between "%s" and "%s". "%s" wins.',
+                ep['file_path'], oldep['file_path'], None
+                )
             if not better: 
                 #neither is better, it ain't no thang, do nuthin'
                 return 

@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-import logging
+import logging, os
 
 from . import appconfig, logger
 from . import entrypoint
@@ -33,6 +33,11 @@ def main():
         +'Available values (in order of highest -> lowest verbosity: '\
         +'DEBUG, INFO, WARNING, ERROR, FATAL'
         )
+    parser.add_argument(
+        '--clear-log-file', dest='clear_log_file', 
+        action='store_true', default=False,
+        help='Clear any existing log file.'
+        )
 
     args = parser.parse_args()
 
@@ -48,6 +53,9 @@ def main():
 
     appconfig.import_to_runtime_parser(argsd)
     logger.log.setLevel(logging.__getattribute__(args.log_level.upper()))
+    try:
+        os.unlink(appconfig.get('logging', 'filename'))
+    except: pass
     entrypoint.start_importer(args.directory)
 
 
