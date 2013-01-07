@@ -100,6 +100,14 @@ class Importer(object):
             ep = self._fallback_scrape_episode(ep['file_path'])
         return ep
 
+    def full_path(self, path):
+        """
+        full_path(path) -> db.directory + path
+        Gets full path concatenated with source directory.
+        convenience function.
+        """
+        return os.path.join(self.db.directory, path)
+
     def _wrap_single(self, ep):
         """
         _wrap_single(Episode)
@@ -135,7 +143,15 @@ class Importer(object):
                 'Found duplicates. Original: "%s". Contender: "%s".',
                 oldep['file_path'],
                 ep['file_path']
-                )            
+                ) 
+            if not os.path.exists(self.full_path(oldep['file_path'])):
+                log.info(
+                    'Original: "%s" does not exist anymore".'\
+                    +' Replacing with contender: "%s".', 
+                    oldep['file_path'], 
+                    ep['file_path']
+                    )
+                return self.db.upsert_episode(ep)
             #can't be having same episode twice, thems ids be primary keys, yo
             better = quality_battle(ep, oldep, self.db.directory) 
             if better: bpath = better['file_path']
