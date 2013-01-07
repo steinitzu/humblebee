@@ -1,12 +1,17 @@
 import logging, os
+from glob import glob
+
+from send2trash import send2trash
 
 from .dbguy import TVDatabase
-from .dirscanner import get_episodes
-from .parser import ez_parse_episode, reverse_parse_episode
-from .texceptions import InitExistingDatabaseError, IncompleteEpisodeError
+from .dirscanner import get_episodes, get_file_from_single_ep_dir, is_rar
+from .parser import reverse_parse_episode
+from .texceptions import IncompleteEpisodeError
 from .texceptions import ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError
+from .texceptions import InvalidDirectoryError
 from .tvdbwrapper import lookup
 from .quality import quality_battle
+from .unrarman import unrar_file
 from . import appconfig as cfg
 from . import __pkgname__
 
@@ -40,6 +45,8 @@ class Importer(object):
                 self.db.create_database(
                     force=True
                     )
+        else:
+            self.db.create_database()
         self.wrap()
 
     def episodes(self):
@@ -49,16 +56,18 @@ class Importer(object):
         """
         for ep in get_episodes(self.directory):            
             yield ep
-            #yield ez_parse_episode(epath)
 
     def _scrape_episode(self, episode):
         """
         scrape_episode(Episode) -> Episode
         Fully parse it, look it up, fill it with info and return.
         Ideally results in an Episode with full info, ready for the database.
-        Can raise ShowNotFoundError, SeasonNotFoundError or EpisodeNotFoundError
+        Can raise ShowNotFoundError, SeasonNotFoundError 
+        or EpisodeNotFoundError
         """
-        #TODO: be smarter (all eps in same dir should be the same series, right, unless there's a mix thing like incoming)
+        #TODO: be smarter (all eps in same dir
+        #should be the same series, right, unless 
+        #there's a mix thing like incoming)
         if not episode.is_fully_parsed():
             episode = reverse_parse_episode(episode['file_path'], self.directory)
         scrapedep = lookup(episode)
@@ -120,7 +129,8 @@ class Importer(object):
 
         idindb = self.db.episode_exists(ep)
         if idindb:
-            oldep = self.db.get_episodes('WHERE id = ?', params=(ep['id'],)).next()
+            oldep = self.db.get_episodes(
+                'WHERE id = ?', params=(ep['id'],)).next()
             log.info(
                 'Found duplicates. Original: "%s". Contender: "%s".',
                 oldep['file_path'],
@@ -145,17 +155,56 @@ class Importer(object):
                 return self.db.upsert_episode(ep)
         else:
             return self.db.upsert_episode(ep)                                         
+
+    def trash_rars_in_dir(self, directory):
+        """
+        trash_rars_in_dir(directory)
+        Send rar files in given directory to trash.
+        """
+        log.info('Sending rar files in "%s" to trash.', directory)
+        rnfiles = glob(
+            os.path.join(directory, '*.r[0-9][0-9]'))
+        rarfiles = glob(
+            os.path.join(directory, '*.rar'))
+        for f in rnfiles+rarfiles:
+            send2trash(f)
+
+    def unrar_episode(self, ep, out_dir=None):
+        """
+        unrar_episode(Episode)
+        """
+        p = os.path.join(
+            self.db.directory,
+            ep['file_path']
+            )
+        if not os.path.isdir(ep['file_path']):
+            raise InvalidDirectoryError(
+                'Episode path must be a directory. "%s" is not.' % p
+                )
+        log.info('Extracting "%s" from rar files.', p)
+        unrar_file(p, out_dir=out_dir)
+        #get new path to episode
+        
+        ep['file_path'] = get_file_from_single_ep_dir(p)
+        delr = cfg.get('importer', 'delete-rar', bool)
+        if delr:
+            self.trash_rars_in_dir(p)
+        return ep
         
     def wrap(self):
         for ep in self.episodes():
+            if cfg.get('importer', 'unrar', bool) and is_rar(ep['file_path']):
+                ep = self.unrar_episode(ep)
             res = self._wrap_single(ep)
             if isinstance(res, int):
                 self.success_count+=1
         log.warning(
-            '%s episodes were scraped and added to the database.', self.success_count
+            '%s episodes were scraped and added to the database.', 
+            self.success_count
             )
         log.warning(
-            '%s "episodes" were not fully parsed or not found the tvdb', len(self._not_found)
+            '%s "episodes" were not fully parsed or not found the tvdb', 
+            len(self._not_found)
             )
         
 

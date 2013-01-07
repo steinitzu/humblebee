@@ -28,6 +28,8 @@ setup(
         },    
     
     install_requires=[
-        'httplib2' #for bing api
+        'httplib2', #for bing api
+        'pyUnRAR2',
+        'send2trash'
         ]
     )

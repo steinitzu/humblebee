@@ -22,6 +22,12 @@ def main():
         help='Overwrite existing database (if any) in directory.(overrides --update)'
         )
     parser.add_argument(
+        '-e', '--extract-rars', dest='extract_rars',
+        action='store_true', default=False,
+        help='Extract episodes which are in rar format before scraping them.'\
+            +'Rar files will be deleted afterwards.'
+        )
+    parser.add_argument(
         #TODO: This no work (cause value is set in __init__)
         '-l', '--log-file', dest='log_file', 
         help='Path to log file.'
@@ -44,18 +50,24 @@ def main():
     argsd = {}
     argsd['logging'] = {
         'level':args.log_level,
-        'filename':args.log_file
-        }
+        'filename':args.log_file,
+        'clear_log_file':args.clear_log_file
+        }        
     argsd['database'] = {
         'reset':args.reset_database,
         'update':args.update_database
         }
+    argsd['importer'] = {
+        'unrar':args.extract_rars,
+        'delete-rar':args.extract_rars
+        }
 
     appconfig.import_to_runtime_parser(argsd)
     logger.log.setLevel(logging.__getattribute__(args.log_level.upper()))
-    try:
-        os.unlink(appconfig.get('logging', 'filename'))
-    except: pass
+    if args.clear_log_file:
+        try:
+            os.unlink(appconfig.get('logging', 'filename'))
+        except: pass
     entrypoint.start_importer(args.directory)
 
 

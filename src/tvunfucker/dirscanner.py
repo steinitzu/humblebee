@@ -61,6 +61,7 @@ def get_file_from_single_ep_dir(dir_):
     """
     Finds the media file in a given single episode directory.
     Returns a path.
+    If no media file is found it returns the directory it self.    
     """    
     log.debug('Checking single ep dir: %s', dir_)
     vfiles = [f for f in _get_video_files(dir_)]
@@ -74,23 +75,24 @@ def get_file_from_single_ep_dir(dir_):
     log.debug('There was more than one media file in dir: %s', dir_)
     for f in vfiles:
         fname = os.path.split(f)[1]
+        #TODO: What if 'sample' is in the ep title or something?
         if 'sample' in fname.lower():
             continue
         else:
             return f
 
 
-def _is_rar(path):
+def is_rar(path):
     """
-    _is_rar(path) -> bool
+    is_rar(path) -> bool
     Checks whether given path contains a scene style 
     rarred episode (e.g. *.r01, *.r02,...)
     """  
-    raise NotImplementedError
     rnumfiles = glob(
         os.path.join(path, '*.r[0-9][0-9]')
         )
-    pass
+    if rnumfiles: return True
+    else: return False
                     
 
 
@@ -110,7 +112,8 @@ def get_episodes(dir_):
         if dir_is_single_ep(subdir):
             ret = get_file_from_single_ep_dir(subdir)            
             log.info('Found episode: %s', ret)
-            yield ez_parse_episode(ret)
+            epp = ez_parse_episode(ret)
+            yield epp
             continue
         for file_ in _get_video_files(subdir):
             log.info('Found video file: %s', file_)
