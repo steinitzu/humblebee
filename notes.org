@@ -15,8 +15,12 @@ unparsed: 878
 
 * TODO refactor
 * TODO release
-* TODO write random bits to files in testfs for uniqueness, to diff against renamed fs
 * TODO handle InvalidVideoFileError in quality_battle (handle in importer)
 * TODO don't think log_file option works in cli, cause __init__ sets it first
 * TODO write out a stat summary after importing (duplicates, scraped, unscraped, etc)
 * TODO mediainfo fails on rard stuff
+* DONE Handle rar somehow ffs
+* TODO if series not found on bing (imdb) fall back on tvdb text search (e.g. steindinn okkar)
+* TODO Tweak rar support, order of operations, make sure if -e is not set that quality battle doesn't run
+* TODO set up a real testfs with partial media files
+* TODO not-update (-U) option which deletes eps from db that don't exist anymore 
