@@ -86,9 +86,13 @@ def ensure_utf8(value):
              ))
     if value == '':
         return u''
-    if isinstance(value, unicode):
-        return value
-    return value.decode('utf-8')
+    try:
+        return value.decode('utf-8')
+    except UnicodeEncodeError:
+        return value.encode('utf-8').decode('utf-8')
+    #if isinstance(value, unicode):
+    #    return value
+    #return value.decode('utf-8')
 
 def split_path(path):
     return path.strip('/').split('/')

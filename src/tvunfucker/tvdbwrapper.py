@@ -68,9 +68,8 @@ def bing_lookup(series_name):
     except NoIdInURLError as e:
         log.warning(e.message)
         raise ShowNotFoundError(
-            'Series: \'%s\' was not found using bing',
-            series_name, 
-            ), None, sys.exc_info()[2]    
+            'Found no imdb id for series "%s"' % series_name
+            )
     api = get_api()
     try:
         log.info(
@@ -81,9 +80,9 @@ def bing_lookup(series_name):
         series = api[imdbid, 'imdb']
     except tvdb_shownotfound:
         raise ShowNotFoundError(
-            'Series: \'%s\' (imdb id: \'%s\' was not found.',
+            'Series: \'%s\' (imdb id: \'%s\' was not found.' % (
             series_name, 
-            imdbid
+            imdbid)
             ), None, sys.exc_info()[2]    
     else:
         return series
@@ -102,7 +101,7 @@ def get_series(series_name, api=None):
     rtinterval = cfg.get('tvdb', 'retry-interval', int)    
     while True:
         try:
-            series = bing_lookup(series_name)
+            return bing_lookup(series_name)
         except tvdb_error as e:
             if rtrc >= rtlimit:
                 raise
@@ -113,8 +112,19 @@ def get_series(series_name, api=None):
                 rtlimit, rtrc
                 )            
             time.sleep(rtinterval)
-        else:
-            return series
+        except ShowNotFoundError as e:
+            log.warning(
+                'Failed to look up series "%s" by imdb id, will try name lookup',
+                series_name
+                )
+            api = get_api()
+            try:
+                return api[series_name]
+            except tvdb_shownotfound:
+                raise ShowNotFoundError(
+                    'Series named "%s" not found on thetvdb.' % (
+                        series_name)
+                        ), None, sys.exc_info()[2]                           
 
 def lookup(ep):
     """

@@ -30,6 +30,17 @@ def _get_sub_directories(dir_):
             continue
         yield abspath
 
+def _is_video_file(fn):
+    topfn = os.path.split(fn)[1]
+    if not os.path.isfile(fn):
+        return False
+    elif  topfn in cfg.get('scanner', 'ignored-files').split(','):    
+        return False
+    elif not os.path.splitext(fn)[1] in FILE_EXTENSIONS:
+        return False    
+    else:
+        return True
+
 def _get_video_files(dir_):
     """
     Generator function. Yields video files in given dir_\n
@@ -37,14 +48,7 @@ def _get_video_files(dir_):
     """
     for name in os.listdir(dir_):
         abspath = os.path.join(dir_,name)
-        if not os.path.isfile(abspath):
-            continue
-        if name in cfg.get('scanner', 'ignored-files').split(','):
-            log.info('ignored file in ignore list \'%s\'' % abspath)
-            continue
-        ext = os.path.splitext(name)[1]
-        if not ext in FILE_EXTENSIONS:
-            #TODO: do something about rar files
+        if not _is_video_file(abspath):
             continue
         yield abspath
 
@@ -93,30 +97,23 @@ def is_rar(path):
         )
     if rnumfiles: return True
     else: return False
-                    
-
+        
 
 def get_episodes(dir_):
-    """
-    get_episodes(dir_) ->> Episode
-    Recursive function which yields episodes from dir_ and down.\n
-    Returns first pass parsed episodes from ez_parse_episode
-    """
     if not os.path.isdir(dir_):
         raise InvalidArgumentError(
             '\'%s\' is not a valid directory.' % dir_
             )
-
-    for subdir in _get_sub_directories(dir_):
-        log.info('Probing directory \'%s\'' % subdir)
-        if dir_is_single_ep(subdir):
-            ret = get_file_from_single_ep_dir(subdir)            
-            log.info('Found episode: %s', ret)
-            epp = ez_parse_episode(ret)
-            yield epp
-            continue
-        for file_ in _get_video_files(subdir):
-            log.info('Found video file: %s', file_)
-            yield ez_parse_episode(file_)
-        for result in get_episodes(subdir):
-            yield result            
+    for dirpath, dirnames, filenames in os.walk(dir_):
+        for subdir in dirnames:
+            subdir = os.path.join(dirpath, subdir)
+            if dir_is_single_ep(subdir):
+                ret = get_file_from_single_ep_dir(subdir)
+                log.info('Found episode: %s', ret)                
+                yield ez_parse_episode(ret)
+        for fn in filenames:
+            fn = os.path.join(dirpath, fn)
+            if _is_video_file(fn):
+                yield ez_parse_episode(fn)            
+            else:
+                continue

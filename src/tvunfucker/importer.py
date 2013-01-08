@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import logging, os
 from glob import glob
 
@@ -32,7 +35,7 @@ class Importer(object):
         the kwargs must be the command line options thingies, right..?
         """        
         self.db = TVDatabase(directory)
-        self.directory = directory
+        self.directory = self.db.directory
         #Episodes which weren't found on the web
         self._not_found = []
         self.scraped_count = 0 #deprecate
@@ -94,7 +97,7 @@ class Importer(object):
         except self.scrape_errors as e:
             log.debug(
                 'Failed lookup for episode %s.\nMessage:%s', 
-                ep, 
+                ep['file_path'],
                 e.message
                 )
             ep = self._fallback_scrape_episode(ep['file_path'])
@@ -153,6 +156,10 @@ class Importer(object):
                     )
                 return self.db.upsert_episode(ep)
             #can't be having same episode twice, thems ids be primary keys, yo
+            if is_rar(
+                self.full_path(ep['file_path'])) or is_rar(
+                self.full_path(oldep['file_path'])):
+                return #there be rars, just leave it alone
             better = quality_battle(ep, oldep, self.db.directory) 
             if better: bpath = better['file_path']
             else: bpath = None
