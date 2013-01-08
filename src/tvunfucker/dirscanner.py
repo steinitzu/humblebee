@@ -15,6 +15,7 @@ FILE_EXTENSIONS = cfg.get('scanner', 'match-extensions').split(',')
 #TODO: use os.walk, symlinks and whatnot
 
 def _get_sub_directories(dir_):
+    #deprecated
     """
     A generator functions which yields first level sub
     directories in the given dir_.\n
@@ -97,7 +98,9 @@ def is_rar(path):
         )
     if rnumfiles: return True
     else: return False
-        
+
+def dir_is_empty(path):
+    return not os.listdir(path)
 
 def get_episodes(dir_):
     if not os.path.isdir(dir_):
@@ -106,7 +109,11 @@ def get_episodes(dir_):
             )
     for dirpath, dirnames, filenames in os.walk(dir_):
         for subdir in dirnames:
+            if subdir in cfg.get('scanner', 'ignored-dirs').split(','):
+                continue
             subdir = os.path.join(dirpath, subdir)
+            if dir_is_empty(subdir):
+                continue
             if dir_is_single_ep(subdir):
                 ret = get_file_from_single_ep_dir(subdir)
                 log.info('Found episode: %s', ret)                
