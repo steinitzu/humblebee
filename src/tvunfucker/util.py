@@ -79,6 +79,7 @@ def safe_strpdate(s):
     return datetime.strptime(s, '%Y-%m-%d').date()
 
 def ensure_utf8(value):
+    if value is None: return None
     if not isinstance(value, basestring):
         raise ValueError(
             'Arg 0 must be a string type. You gave \'%s\' (type %s)' %
@@ -94,10 +95,95 @@ def ensure_utf8(value):
     #    return value
     #return value.decode('utf-8')
 
+WINDOWS_MAGIC_PREFIX = u'\\\\?\\'
+
+def _fsencoding():
+    """Get the system's filesystem encoding. On Windows, this is always
+    UTF-8 (not MBCS).
+    """
+    encoding = sys.getfilesystemencoding() or sys.getdefaultencoding()
+    if encoding == 'mbcs':
+        # On Windows, a broken encoding known to Python as "MBCS" is
+        # used for the filesystem. However, we only use the Unicode API
+        # for Windows paths, so the encoding is actually immaterial so
+        # we can avoid dealing with this nastiness. We arbitrarily
+        # choose UTF-8.
+        encoding = 'utf8'
+    return encoding
+
+def bytestring_path(path, pathmod=None):
+    """Given a path, which is either a str or a unicode, returns a str
+    path (ensuring that we never deal with Unicode pathnames).
+    """
+    pathmod = pathmod or os.path
+    windows = pathmod.__name__ == 'ntpath'
+
+    # Pass through bytestrings.
+    if isinstance(path, str):
+        return path
+
+    # On Windows, remove the magic prefix added by `syspath`. This makes
+    # ``bytestring_path(syspath(X)) == X``, i.e., we can safely
+    # round-trip through `syspath`.
+    if windows and path.startswith(WINDOWS_MAGIC_PREFIX):
+        path = path[len(WINDOWS_MAGIC_PREFIX):]
+
+    # Try to encode with default encodings, but fall back to UTF8.
+    try:
+        return path.encode(_fsencoding())
+    except (UnicodeError, LookupError):
+        return path.encode('utf8')
+
+def syspath(path, pathmod=None):
+    """Convert a path for use by the operating system. In particular,
+    paths on Windows must receive a magic prefix and must be converted
+    to unicode before they are sent to the OS.
+    """
+    pathmod = pathmod or os.path
+    windows = pathmod.__name__ == 'ntpath'
+
+    # Don't do anything if we're not on windows
+    if not windows:
+        return path
+
+    if not isinstance(path, unicode):
+        # Beets currently represents Windows paths internally with UTF-8
+        # arbitrarily. But earlier versions used MBCS because it is
+        # reported as the FS encoding by Windows. Try both.
+        try:
+            path = path.decode('utf8')
+        except UnicodeError:
+            # The encoding should always be MBCS, Windows' broken
+            # Unicode representation.
+            encoding = sys.getfilesystemencoding() or sys.getdefaultencoding()
+            path = path.decode(encoding, 'replace')
+
+    # Add the magic prefix if it isn't already there
+    if not path.startswith(WINDOWS_MAGIC_PREFIX):
+        path = WINDOWS_MAGIC_PREFIX + path
+
+    return path
+
+def normpath(path):
+    """Provide the canonical form of the path suitable for storing in
+    the database.
+    """
+    path = syspath(path)
+    path = os.path.normpath(os.path.abspath(os.path.expanduser(path)))
+    return bytestring_path(path)
+
 def split_path(path):
     return path.strip('/').split('/')
 
 
+def split_root_dir(path, root):
+    """
+    split_root_dir(path, root) -> (root, path[root:])
+    Split `root` from `path` and return both.
+    """
+    r = os.path.relpath
+    pj = os.path.join
+    return normpath(root), bytestring_path(r(pj(root, path), root))  
 
 def type_safe(
     arg,

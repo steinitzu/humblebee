@@ -138,7 +138,7 @@ def lookup(ep):
             )
     series = get_series(ep.clean_name(ep['series_title']))
     log.info('Looking up series: %s', series)
-    newep = Episode(ep['file_path'])
+    newep = Episode(ep.path(), ep.root_dir)
     #put base info in new ep
     for key in newep.local_keys:
         newep[key] = ep[key]

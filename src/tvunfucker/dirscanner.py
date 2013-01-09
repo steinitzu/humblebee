@@ -14,23 +14,6 @@ FILE_EXTENSIONS = cfg.get('scanner', 'match-extensions').split(',')
 
 #TODO: use os.walk, symlinks and whatnot
 
-def _get_sub_directories(dir_):
-    #deprecated
-    """
-    A generator functions which yields first level sub
-    directories in the given dir_.\n
-    Ignores dirs in ignored_dirs.\n
-    yields absolute paths.
-    """
-    for name in os.listdir(dir_):
-        abspath = os.path.join(dir_,name)
-        if not os.path.isdir(abspath):
-            continue
-        if name in cfg.get('scanner', 'ignored-dirs').split(','):            
-            log.info('ignored dir in ignore list \'%s\'' % abspath)
-            continue
-        yield abspath
-
 def _is_video_file(fn):
     topfn = os.path.split(fn)[1]
     if not os.path.isfile(fn):
@@ -117,10 +100,10 @@ def get_episodes(dir_):
             if dir_is_single_ep(subdir):
                 ret = get_file_from_single_ep_dir(subdir)
                 log.info('Found episode: %s', ret)                
-                yield ez_parse_episode(ret)
+                yield ez_parse_episode(ret, dir_)
         for fn in filenames:
             fn = os.path.join(dirpath, fn)
             if _is_video_file(fn):
-                yield ez_parse_episode(fn)            
+                yield ez_parse_episode(fn, dir_)            
             else:
                 continue

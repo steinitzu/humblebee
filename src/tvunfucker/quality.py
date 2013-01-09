@@ -21,8 +21,8 @@ def quality_battle(ep1, ep2, source_dir):
 
     osp = os.path.join
     m = (
-        MediaInfo(osp(source_dir, ep1['file_path'])),
-        MediaInfo(osp(source_dir, ep2['file_path']))
+        MediaInfo(osp(source_dir, ep1.path('rel'))),
+        MediaInfo(osp(source_dir, ep2.path('rel')))
         )
 
     def raise_inv(plusmsg=''):

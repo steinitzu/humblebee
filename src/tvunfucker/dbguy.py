@@ -10,6 +10,7 @@ import re
 from collections import OrderedDict
 
 from . import tvregexes, util
+from .util import normpath, split_root_dir, ensure_utf8
 from . import appconfig as cfg
 from .texceptions import InitExistingDatabaseError, IncompleteEpisodeError
 from . import __pkgname__
@@ -110,7 +111,7 @@ class Episode(OrderedDict):
         'network'
         )
     
-    def __init__(self, path):
+    def __init__(self, path, root_dir):
         path = util.ensure_utf8(path)
         super(Episode, self).__init__()
         for key in self.preset_keys:
@@ -118,7 +119,7 @@ class Episode(OrderedDict):
                 key, None
                 )
         self['file_path'] = path        
-        self.is_rar = False
+        self.root_dir = normpath(root_dir)
 
     def safe_update(self, otherep):
         """
@@ -151,6 +152,24 @@ class Episode(OrderedDict):
         name = name.title()
         return name
 
+    def path(self, form='abs'):
+        """
+        Return this episode's file path.
+        `form` may be 'abs' or 'rel' (absolute or relative)         
+        path will be returned in respective form.        
+        Relative means relative to `root_dir`.
+        """
+        if form == 'abs':
+            return normpath(
+                os.path.join(self.root_dir, self['file_path'])
+                )
+        elif form == 'rel':       
+            return split_root_dir(self['file_path'], self.root_dir)[1]
+        else:
+            raise InvalidArgumentError(
+                'arg `form` must be "abs" or "rel", you gave %s' % form
+                )
+        
     def __setitem__(self, key, value):
         """
         Introducing some type safety and stuff to this dict.\n
@@ -174,8 +193,6 @@ class Episode(OrderedDict):
                 return set_val(None)
             return set_val(util.ensure_utf8(value))
         return set_val(value)
-
-
 
 class Database(object):
     """
@@ -286,12 +303,15 @@ class TVDatabase(Database):
         Check whether an episode with given path exists in db.
         Returns True or False respectively.
         """
+        """
         path = os.path.relpath(
             os.path.abspath(path), 
             self.directory
             )
+        """
         q = 'SELECT id FROM episode WHERE file_path = ?;'
-        params = (path,)
+        log.debug(path)
+        params = (ensure_utf8(path),)
         res = self.execute_query(q, params, fetch=1)
         if res: return True
         else: return False
@@ -307,7 +327,7 @@ class TVDatabase(Database):
         """
         q = 'SELECT * FROM episode ' + where_statement        
         for row in self.execute_query(q, params):
-            e = Episode('')
+            e = Episode('', self.directory)
             e.update(row)
             yield e            
 
@@ -340,9 +360,7 @@ class TVDatabase(Database):
             raise IncompleteEpisodeError(
                 'Unable to add id-less episode to the database: %s' % epobj
                 )  
-        epobj['file_path'] = os.path.relpath(
-            epobj['file_path'], self.directory
-            )
+        epobj['file_path'] = ensure_utf8(epobj.path('rel'))
         if self._exists(epobj['id']):
             return self._update_episode(epobj)
         else:
@@ -362,7 +380,8 @@ class TVDatabase(Database):
             splitted = os.path.split(child_path)            
             parent = None if not splitted[0] else splitted[0]
             filename = util.split_path(child_path).pop()
-            params = (child_path, parent, filename)
+            eutf = ensure_utf8
+            params = (eutf(child_path), eutf(parent), eutf(filename))
             try:
                 self.execute_query(q, params, fetch=0)
             except sqlite3.IntegrityError as e:

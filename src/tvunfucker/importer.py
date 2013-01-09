@@ -72,7 +72,8 @@ class Importer(object):
         #should be the same series, right, unless 
         #there's a mix thing like incoming)
         if not episode.is_fully_parsed():
-            episode = reverse_parse_episode(episode['file_path'], self.directory)
+            episode = reverse_parse_episode(
+                episode.path(), self.directory)
         scrapedep = lookup(episode)
         return scrapedep            
 
@@ -91,16 +92,15 @@ class Importer(object):
         Parses and looks up given episode info and returns.
         May raise exceptions in self.scrape_errors.
         """
-        fileindb = self.db.path_exists(ep['file_path'])
         try:
             ep = self._scrape_episode(ep)
         except self.scrape_errors as e:
             log.debug(
                 'Failed lookup for episode %s.\nMessage:%s', 
-                ep['file_path'],
+                ep.path(),
                 e.message
                 )
-            ep = self._fallback_scrape_episode(ep['file_path'])
+            ep = self._fallback_scrape_episode(ep.path())
         return ep
 
     def full_path(self, path):
@@ -116,13 +116,13 @@ class Importer(object):
         _wrap_single(Episode)
         Wrapper method to handle single episode, from filename to db.
         """
-        fileindb = self.db.path_exists(ep['file_path'])
+        fileindb = self.db.path_exists(ep.path('rel'))
         update = cfg.get('database', 'update', bool)
         if fileindb and update:
             #don't need to scrape cause we ain't gunna do nuthin'
             log.debug(
                 '"%s" already in database and update option set, skipping',
-                ep['file_path']
+                ep.path()
                 )
             return
         try:
@@ -130,9 +130,7 @@ class Importer(object):
         except self.scrape_errors as e:
             self._not_found.append(ep)
             self.db.add_unparsed_child(
-                os.path.relpath(
-                    ep['file_path'],
-                    self.db.directory)
+                ep.path('rel')
                 )
             return
         if fileindb:
@@ -144,28 +142,28 @@ class Importer(object):
                 'WHERE id = ?', params=(ep['id'],)).next()
             log.info(
                 'Found duplicates. Original: "%s". Contender: "%s".',
-                oldep['file_path'],
-                ep['file_path']
+                oldep.path(),
+                ep.path()
                 ) 
-            if not os.path.exists(self.full_path(oldep['file_path'])):
+            if not os.path.exists(oldep.path()):
                 log.info(
                     'Original: "%s" does not exist anymore".'\
                     +' Replacing with contender: "%s".', 
-                    oldep['file_path'], 
-                    ep['file_path']
+                    oldep.path(), 
+                    ep.path()
                     )
                 return self.db.upsert_episode(ep)
             #can't be having same episode twice, thems ids be primary keys, yo
-            if is_rar(
-                self.full_path(ep['file_path'])) or is_rar(
-                self.full_path(oldep['file_path'])):
+            if is_rar(ep.path()) or is_rar(oldep.path()):
                 return #there be rars, just leave it alone
             better = quality_battle(ep, oldep, self.db.directory) 
-            if better: bpath = better['file_path']
-            else: bpath = None
+            if better: 
+                bpath = better.path()
+            else: 
+                bpath = None
             log.info(
                 'Quality battle between "%s" and "%s". "%s" wins.',
-                ep['file_path'], oldep['file_path'], None
+                ep.path(), oldep.path(), bpath
                 )
             if not better: 
                 #neither is better, it ain't no thang, do nuthin'
@@ -174,7 +172,7 @@ class Importer(object):
                 return
             else:
                 log.info('Replacing "%s" with "%s" in db.', 
-                         oldep['file_path'], ep['file_path'])                
+                         oldep.path(), ep.path())                
                 return self.db.upsert_episode(ep)
         else:
             return self.db.upsert_episode(ep)                                         
@@ -196,11 +194,8 @@ class Importer(object):
         """
         unrar_episode(Episode)
         """
-        p = os.path.join(
-            self.db.directory,
-            ep['file_path']
-            )
-        if not os.path.isdir(ep['file_path']):
+        p = ep.path()
+        if not os.path.isdir(p):
             raise InvalidDirectoryError(
                 'Episode path must be a directory. "%s" is not.' % p
                 )
@@ -216,7 +211,7 @@ class Importer(object):
         
     def wrap(self):
         for ep in self.episodes():
-            if cfg.get('importer', 'unrar', bool) and is_rar(ep['file_path']):
+            if cfg.get('importer', 'unrar', bool) and is_rar(ep.path()):
                 ep = self.unrar_episode(ep)
             res = self._wrap_single(ep)
             if isinstance(res, int):

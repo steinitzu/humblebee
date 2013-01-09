@@ -4,6 +4,7 @@ from .texceptions import InvalidDirectoryError, NoSuchDatabaseError
 from .dbguy import TVDatabase
 from .util import replace_bad_chars, zero_prefix_int
 from .util import safe_make_dirs as _safe_make_dirs
+from .fsutil import samefile
 
 
 def _setup_env(source_dir, dest_dir):
@@ -21,7 +22,7 @@ def _setup_env(source_dir, dest_dir):
     if os.path.exists(dest_dir):
         if not os.path.isdir(dest_dir):
             raise InvalidDirectoryError('"%s" is not a valid directory.' % dest_dir)
-        if os.path.samefile(source_dir, dest_dir):
+        if samefile(source_dir, dest_dir):
             raise InvalidDirectoryError(
                 'source_dir and dest_dir can not be the same directory (%s)' % (dest_dir)
                 )
@@ -42,10 +43,11 @@ filename_mask_ep = (
 
 def _make_ep_filename(ep):
     nums = ('season_number', 'ep_number')
+    oep = ep
     ep = dict(ep.items())
     for num in nums:
         ep[num] = zero_prefix_int(ep[num])
-    ep['ext'] = os.path.splitext(ep['file_path'])[1]
+    ep['ext'] = os.path.splitext(oep.path())[1]
     if not ep['extra_ep_number']:
         ep['extra_ep_number'] = ''
     else:
@@ -71,9 +73,7 @@ def create_filesystem(source_dir, dest_dir):
             dirp,
             _make_ep_filename(ep)
             )
-        fp = os.path.abspath(
-            os.path.join(source_dir, ep['file_path'])
-            )
+        fp = ep.path()
         os.symlink(fp, epp)
     
     unpd = os.path.join(dest_dir, '_unknown')
