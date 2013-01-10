@@ -4,10 +4,12 @@
 """
 A simple web search interface to the bing search api.
 """
-
-import httplib2, tempfile, os, getpass, base64
+import tempfile, os, getpass, base64, re
 from urllib import quote
 from json import JSONDecoder
+from md5 import new as _md5
+
+import httplib2
 
 def _dir_exists(path):
     return os.path.exists(path) and os.path.isdir(path)
@@ -16,6 +18,35 @@ def _get_cache_dir():
     return os.path.join(
         tempfile.gettempdir(), 'bingpy-'+getpass.getuser()
         )
+
+re_url_scheme    = re.compile(r'^\w+://')
+re_slash         = re.compile(r'[?/:|]+')
+def _safecachename(filename):
+    """Return a filename suitable for the cache.
+
+    Strips dangerous and common characters to create a filename we
+    can use to store the cache in.
+    """
+
+    try:
+        if re_url_scheme.match(filename):
+            if isinstance(filename,str):
+                filename = filename.decode('utf-8')
+                filename = filename.encode('idna')
+            else:
+                filename = filename.encode('idna')
+    except UnicodeError:
+        pass
+    if isinstance(filename,unicode):
+        filename=filename.encode('utf-8')
+    filemd5 = _md5(filename).hexdigest()
+    filename = re_url_scheme.sub("", filename)
+    filename = re_slash.sub(",", filename)
+
+    # limit length of filename
+    if len(filename)>80:
+        filename=filename[:80]
+    return ",".join((filename, filemd5))
     
 
 class Bing(object):
@@ -37,23 +68,15 @@ class Bing(object):
         """
         self.api_key = api_key
         self.caching = caching
-        if caching and cache_dir:
-            if not _dir_exists(cache_dir):
-                raise IOError(
-                    '%s does not exist or is not a valid directory.' % (cache_dir)
-                    )
-            else: 
-                self.cache_dir = cache_dir
-        elif caching:
-            self.cache_dir = _get_cache_dir()
+        if caching:
+            self.cache = self._get_file_cache(cache_dir)        
         else:
-            self.cache_dir = None
-        
+            self.cache = None
         self.headers = headers
         self.http = self.get_http()
 
     def get_http(self):
-        h = httplib2.Http(cache=self.cache_dir)
+        h = httplib2.Http(cache=self.cache)
         return h        
 
     def get_json(self, query):
@@ -80,6 +103,15 @@ class Bing(object):
     
     def __getitem__(self, query):
         return self.get_results(query)
+
+    def _get_file_cache(self, cache_dir):
+        cache_dir = cache_dir or _get_cache_dir()
+        fc = httplib2.FileCache(
+            cache_dir,
+            safe=_safecachename
+            )
+        return fc
+            
 
 
 
