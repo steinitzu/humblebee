@@ -398,6 +398,7 @@ class TVDatabase(Database):
             params = (path, ancest[0])
             do_query(params)
         else: #grandparents and shit
+            do_query((path, ancest[-1])) #put filename itself
             for index, p in enumerate(ancest):
                 if index == 0:
                     params = (p, None)

@@ -30,6 +30,7 @@ setup(
     install_requires=[
         'httplib2', #for bing api
         'pyUnRAR2',
-        'send2trash'
+        'send2trash',
+        'unidecode'
         ]
     )

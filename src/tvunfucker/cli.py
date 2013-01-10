@@ -22,6 +22,11 @@ def main():
         help='Overwrite existing database (if any) in directory.(overrides --update)'
         )
     parser.add_argument(
+        '-b', '--brute', dest='brute',
+        action='store_true', default=appconfig.get('importer', 'brute', bool),
+        help="Don't do quality comparison for duplicate episodes in database, just replace."
+        )
+    parser.add_argument(
         '-e', '--extract-rars', dest='extract_rars',
         action='store_true', default=False,
         help='Extract episodes which are in rar format before scraping them.'\
@@ -59,7 +64,8 @@ def main():
         }
     argsd['importer'] = {
         'unrar':args.extract_rars,
-        'delete-rar':args.extract_rars
+        'delete-rar':args.extract_rars,
+        'brute':args.brute
         }
 
     appconfig.import_to_runtime_parser(argsd)
