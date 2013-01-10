@@ -10,7 +10,7 @@ import re
 from collections import OrderedDict
 
 from . import tvregexes, util
-from .util import normpath, split_root_dir, ensure_utf8
+from .util import normpath, split_root_dir, ensure_utf8, ancestry
 from . import appconfig as cfg
 from .texceptions import InitExistingDatabaseError, IncompleteEpisodeError
 from . import __pkgname__
@@ -160,9 +160,8 @@ class Episode(OrderedDict):
         Relative means relative to `root_dir`.
         """
         if form == 'abs':
-            return normpath(
-                os.path.join(self.root_dir, self['file_path'])
-                )
+            root, path = split_root_dir(self['file_path'], self.root_dir)
+            return normpath(os.path.join(root, path))
         elif form == 'rel':       
             return split_root_dir(self['file_path'], self.root_dir)[1]
         else:
@@ -371,31 +370,40 @@ class TVDatabase(Database):
         Will automatically determine the parent path based on child path.
         """
         log.debug('adding unparsed child: %s', child_path)
-        while True:
-            q = '''
-            INSERT INTO unparsed_episode (
-            child_path, parent_path, filename) 
-            VALUES (?, ?, ?);
-            '''
-            splitted = os.path.split(child_path)            
-            parent = None if not splitted[0] else splitted[0]
-            filename = util.split_path(child_path).pop()
-            eutf = ensure_utf8
-            params = (eutf(child_path), eutf(parent), eutf(filename))
+        root, path = split_root_dir(child_path, self.directory)
+        q = '''
+            INSERT INTO unparsed_episode(
+            child_path, parent_path) VALUES (?, ?);
+            '''        
+        def do_query(ps):            
             try:
-                self.execute_query(q, params, fetch=0)
-            except sqlite3.IntegrityError as e:
-                #probable means child_path is not unique, should probly check for that
-                log.debug(
-                    'Error while adding unparsed child (usually nothing to worry about): %s\nmessage: %s',
-                    child_path, e.message
+                self.execute_query(
+                    q, 
+                    (ensure_utf8(ps[0]), ensure_utf8(ps[1])),
+                    fetch=0
                     )
-                pass
-            #new path
-            if parent == None: break            
-            child_path = parent
-
-        
+            except sqlite3.IntegrityError as e:
+                #probable means child_path is not unique
+                log.debug(
+                    'Error while adding unparsed child '\
+                    +'(usually nothing to worry about): %s\nmessage: %s',
+                    ps, e.message
+                    )
+                pass            
+        ancest = ancestry(path)
+        if not ancest: #no parents
+            params = (path, None)
+            do_query(params)
+        elif len(ancest) == 1: #only parent, no gramps
+            params = (path, ancest[0])
+            do_query(params)
+        else: #grandparents and shit
+            for index, p in enumerate(ancest):
+                if index == 0:
+                    params = (p, None)
+                else:
+                    params = (p, ancest[index-1]) #parent is p from before
+                do_query(params)        
 
             
 

@@ -19,10 +19,9 @@ def quality_battle(ep1, ep2, source_dir):
        if more than 10% it's the winning point no matter what
     """
 
-    osp = os.path.join
     m = (
-        MediaInfo(osp(source_dir, ep1.path('rel'))),
-        MediaInfo(osp(source_dir, ep2.path('rel')))
+        MediaInfo(ep1.path()),
+        MediaInfo(ep2.path())
         )
 
     def raise_inv(plusmsg=''):
@@ -73,9 +72,15 @@ def quality_battle(ep1, ep2, source_dir):
         points[0]+=1
     elif b1 > b0:
         points[1]+=1
-
-    d0 = m[0].video.duration.seconds
-    d1 = m[0].video.duration.seconds
+    
+    try:
+        d0 = m[0].video.duration.seconds
+    except AttributeError:
+        d0 = m[0].general.duration.seconds
+    try:
+        d1 = m[0].video.duration.seconds
+    except AttributeError:
+        d1 = m[0].general.duration.seconds        
     if d1/(d1+d0)*100 < 40:
         return ep[0] #K.O. motherfucker
     elif d0/(d0+d1)*100 < 40:

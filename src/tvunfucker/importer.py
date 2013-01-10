@@ -96,20 +96,12 @@ class Importer(object):
             ep = self._scrape_episode(ep)
         except self.scrape_errors as e:
             log.debug(
-                'Failed lookup for episode %s.\nMessage:%s', 
+                u'Failed lookup for episode %s.\nMessage:%s', 
                 ep.path(),
                 e.message
                 )
             ep = self._fallback_scrape_episode(ep.path())
         return ep
-
-    def full_path(self, path):
-        """
-        full_path(path) -> db.directory + path
-        Gets full path concatenated with source directory.
-        convenience function.
-        """
-        return os.path.join(self.db.directory, path)
 
     def _wrap_single(self, ep):
         """

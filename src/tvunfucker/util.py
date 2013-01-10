@@ -181,8 +181,11 @@ def split_root_dir(path, root):
     split_root_dir(path, root) -> (root, path[root:])
     Split `root` from `path` and return both.
     """
+    root = normpath(root)
     r = os.path.relpath
     pj = os.path.join
+    if path.startswith(root):
+        path = path[len(root):].strip('\\/')
     return normpath(root), bytestring_path(r(pj(root, path), root))  
 
 def type_safe(
@@ -224,3 +227,27 @@ def safe_make_dirs(path):
             pass
         else:
             raise
+
+
+def ancestry(path, pathmod=None):
+    """Return a list consisting of path's parent directory, its
+    grandparent, and so on. For instance:
+
+       >>> ancestry('/a/b/c')
+       ['/', '/a', '/a/b']
+
+    The argument should *not* be the result of a call to `syspath`.
+    """
+    pathmod = pathmod or os.path
+    out = []
+    last_path = None
+    while path:
+        path = pathmod.dirname(path)
+
+        if path == last_path:
+            break
+        last_path = path
+
+        if path: # don't yield ''
+            out.insert(0, path)
+    return out
