@@ -52,6 +52,22 @@ class Importer(object):
             self.db.create_database()
         self.wrap()
 
+    def wrap(self):
+        for ep in self.episodes():
+            if cfg.get('importer', 'unrar', bool) and is_rar(ep.path()):
+                ep = self.unrar_episode(ep)
+            res = self._wrap_single(ep)
+            if isinstance(res, int):
+                self.success_count+=1
+        log.warning(
+            '%s episodes were scraped and added to the database.', 
+            self.success_count
+            )
+        log.warning(
+            '%s "episodes" were not fully parsed or not found the tvdb', 
+            len(self._not_found)
+            )
+
     def episodes(self):
         """
         Yield Episodes in directory.
@@ -103,71 +119,76 @@ class Importer(object):
             ep = self._fallback_scrape_episode(ep.path())
         return ep
 
+    def dump_unscraped(self, ep):
+        self._not_found.append(ep)
+        self.db.add_unparsed_child(ep.path('rel'))            
+
+    def should_scrape(self, ep):
+        """
+        Determine whether given episode should be scraped for this run.
+        """
+        fileindb = self.db.path_exists(ep.path('rel'))
+        update = cfg.get('database', 'update', bool)
+        if fileindb and update:
+            return False
+        else:
+            return True
+
+    def battle_existing(self, ep):
+        """
+        Do a quality battle with existing ep in db with same id as `ep`.
+        Winner returns.
+        If no winner, return None
+        """
+        oldep = self.db.get_episodes('WHERE id=?', params=(ep['id'],)).next()
+        log.info(
+            'Found duplicates. Original: "%s". Contender: "%s".',
+            oldep.path(),
+            ep.path()
+            ) 
+        if not os.path.exists(oldep.path()):
+            log.info(
+                'Original: "%s" does not exist anymore".'\
+                    +' Replacing with contender: "%s".', 
+                oldep.path(), 
+                ep.path()
+                )
+            return ep
+        if is_rar(ep.path()) or is_rar(oldep.path()):
+            #can't battle rars
+            return
+        #let's fight
+        return quality_battle(ep, oldep, self.db.directory)        
+        
+
     def _wrap_single(self, ep):
         """
         _wrap_single(Episode)
         Wrapper method to handle single episode, from filename to db.
         """
-        fileindb = self.db.path_exists(ep.path('rel'))
-        update = cfg.get('database', 'update', bool)
-        if fileindb and update:
-            #don't need to scrape cause we ain't gunna do nuthin'
-            log.debug(
-                '"%s" already in database and update option set, skipping',
-                ep.path()
-                )
+        if not self.should_scrape(ep):
             return
         try:
             ep = self.fill_episode(ep)
         except self.scrape_errors as e:
-            self._not_found.append(ep)
-            self.db.add_unparsed_child(
-                ep.path('rel')
-                )
-            return
-        if fileindb:
-            return self.db.upsert_episode(ep) #we update it
+            return self.dump_unscraped(ep)
+#        if fileindb:
+#            return self.db.upsert_episode(ep) #we update it
 
         idindb = self.db.episode_exists(ep)
-        if idindb:
-            oldep = self.db.get_episodes(
-                'WHERE id = ?', params=(ep['id'],)).next()
+        if idindb and not cfg.get('importer', 'brute', bool):
+            better = self.battle_existing(ep)
             log.info(
-                'Found duplicates. Original: "%s". Contender: "%s".',
-                oldep.path(),
-                ep.path()
-                ) 
-            if not os.path.exists(oldep.path()):
-                log.info(
-                    'Original: "%s" does not exist anymore".'\
-                    +' Replacing with contender: "%s".', 
-                    oldep.path(), 
-                    ep.path()
-                    )
-                return self.db.upsert_episode(ep)
-            #can't be having same episode twice, thems ids be primary keys, yo
-            if is_rar(ep.path()) or is_rar(oldep.path()):
-                return #there be rars, just leave it alone
-            better = quality_battle(ep, oldep, self.db.directory) 
-            if better: 
-                bpath = better.path()
-            else: 
-                bpath = None
-            log.info(
-                'Quality battle between "%s" and "%s". "%s" wins.',
-                ep.path(), oldep.path(), bpath
+                '"%s" won the quality battle.',
+                better.path() if better else None
                 )
-            if not better: 
-                #neither is better, it ain't no thang, do nuthin'
-                return 
-            elif better is oldep:
-                return
+            if better is ep:
+                return self.db.upsert_episode(better)                
             else:
-                log.info('Replacing "%s" with "%s" in db.', 
-                         oldep.path(), ep.path())                
-                return self.db.upsert_episode(ep)
+                #don't care if it's oldep or None
+                return
         else:
-            return self.db.upsert_episode(ep)                                         
+            return self.db.upsert_episode(ep)
 
     def trash_rars_in_dir(self, directory):
         """
@@ -201,21 +222,7 @@ class Importer(object):
             self.trash_rars_in_dir(p)
         return ep
         
-    def wrap(self):
-        for ep in self.episodes():
-            if cfg.get('importer', 'unrar', bool) and is_rar(ep.path()):
-                ep = self.unrar_episode(ep)
-            res = self._wrap_single(ep)
-            if isinstance(res, int):
-                self.success_count+=1
-        log.warning(
-            '%s episodes were scraped and added to the database.', 
-            self.success_count
-            )
-        log.warning(
-            '%s "episodes" were not fully parsed or not found the tvdb', 
-            len(self._not_found)
-            )
+
         
 
 class DifficultEpisodeHandler(object):
