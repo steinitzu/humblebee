@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os
+import os, sys, logging, traceback
+from random import randint
 
 from . import cfg
 from .util import get_prog_home_dir
@@ -15,6 +16,25 @@ appconfig = cfg.ThreeTierConfigParser(
     __pkgname__, 
     global_config_path=_globconffile
     )
+
+quotes = [
+    "Omar comin!",
+    "I'm afraid I just blue myself.",
+    "Screw you guys, I'm goin' home...",
+    "I want to be the one person who doesn't die with dignity.",    
+    ]
+
+def app_excepthook(etype, e, etraceback):
+    log = logging.getLogger('tvunfucker')
+    q = quotes[randint(0, len(quotes)-1)]
+    log.fatal(q)
+    log.fatal(
+        ''.join(traceback.format_exception(etype, e, etraceback))
+        )
+    #raise it normally
+    sys.__excepthook__(etype, e, etraceback)
+
+sys.excepthook = app_excepthook    
 
 lf = appconfig.get('logging', 'filename')
 if lf is None or lf == 'None':
