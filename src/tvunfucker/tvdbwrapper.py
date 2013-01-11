@@ -103,7 +103,7 @@ def get_series(series_name):
     while True:
         rtcount+=1
         try:
-            series = _get_series(series_name)
+            series = _get_series(series_name, imdbid)
         except ShowNotFoundError as e:
             if imdbid: 
                 rtcount-=1
@@ -133,7 +133,7 @@ def get_series(series_name):
             #too far off
             log.debug(
                 'Asked for "%s", got "%s". Dist: %s',
-                series_name, series['series_name'], dist
+                series_name, series['seriesname'], dist
                 )
             __raiserr()
         else:

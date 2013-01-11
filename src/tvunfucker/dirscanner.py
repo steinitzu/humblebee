@@ -9,6 +9,7 @@ from .parser import ez_parse_episode
 from . import appconfig as cfg
 from logger import log
 from .texceptions import InvalidArgumentError
+from .util import normpath, bytestring_path
 
 FILE_EXTENSIONS = cfg.get('scanner', 'match-extensions').split(',')
 
@@ -90,8 +91,12 @@ def get_episodes(dir_):
         raise InvalidArgumentError(
             '\'%s\' is not a valid directory.' % dir_
             )
+    bs = bytestring_path
     for dirpath, dirnames, filenames in os.walk(dir_):
+        dirpath = normpath(dirpath)
+        log.debug('Walking path: %s', dirpath)
         for subdir in dirnames:
+            subdir = bs(subdir)
             if subdir in cfg.get('scanner', 'ignored-dirs').split(','):
                 continue
             subdir = os.path.join(dirpath, subdir)
@@ -99,11 +104,12 @@ def get_episodes(dir_):
                 continue
             if dir_is_single_ep(subdir):
                 ret = get_file_from_single_ep_dir(subdir)
-                log.info('Found episode: %s', ret)                
+                log.info('Found episode: %s', ret)
                 yield ez_parse_episode(ret, dir_)
         for fn in filenames:
+            fn = bs(fn)
             fn = os.path.join(dirpath, fn)
             if _is_video_file(fn):
-                yield ez_parse_episode(fn, dir_)            
+                yield ez_parse_episode(fn, dir_)
             else:
                 continue
