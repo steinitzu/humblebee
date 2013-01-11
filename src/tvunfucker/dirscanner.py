@@ -91,6 +91,8 @@ def get_episodes(dir_):
         raise InvalidArgumentError(
             '\'%s\' is not a valid directory.' % dir_
             )
+    dir_ = normpath(dir_)
+    log.debug('Starting scrape on: "%s"', dir_)
     bs = bytestring_path
     for dirpath, dirnames, filenames in os.walk(dir_):
         dirpath = normpath(dirpath)
