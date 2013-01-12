@@ -174,6 +174,9 @@ def normpath(path):
     return bytestring_path(path)
 
 def split_path(path):
+    raise NotImplementedError(
+        'This function has been killed, use "components" instead.'
+        )
     return path.strip('/').split('/')
 
 
@@ -252,6 +255,30 @@ def ancestry(path, pathmod=None):
         if path: # don't yield ''
             out.insert(0, path)
     return out
+
+def components(path, pathmod=None):
+    """Return a list of the path components in path. For instance:
+
+       >>> components('/a/b/c')
+       ['a', 'b', 'c']
+
+    The argument should *not* be the result of a call to `syspath`.
+    """
+    pathmod = pathmod or os.path
+    comps = []
+    ances = ancestry(path, pathmod)
+    for anc in ances:
+        comp = pathmod.basename(anc)
+        if comp:
+            comps.append(comp)
+        else:  # root
+            comps.append(anc)
+
+    last = pathmod.basename(path)
+    if last:
+        comps.append(last)
+
+    return comps
 
 
 
