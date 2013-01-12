@@ -280,7 +280,11 @@ def components(path, pathmod=None):
 
     return comps
 
-
+def posixpath(path):
+    """
+    Replace backslashes with slashes and nothing else.
+    """
+    return path.replace('\\', '/')
 
 #blatantly stolen from beets
 #string distance stuff
