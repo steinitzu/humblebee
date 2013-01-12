@@ -6,7 +6,8 @@ import logging
 from tvunfucker.importer import Importer
 from tvunfucker.util import normpath, syspath
 from tvunfucker.tvregexes import tv_regexes
-from tvunfucker.parser import ez_parse_episode
+from tvunfucker.parser import ez_parse_episode, reverse_parse_episode
+from tvunfucker.tvdbwrapper import lookup
 
 def get_log():
     l = logging.getLogger()
@@ -20,55 +21,116 @@ def get_log():
 
 log = get_log()
 
-testfsdir = syspath(os.path.join(__file__,'tests/testdata/testfs'))
-    
+testfsdir = syspath(
+    normpath(os.path.join(os.path.dirname(__file__),'testdata/testfs'))
+    )
 
-d = {
-    'standard_repeat' : 'seinfeld.s03e17e18.the.boyfriend',
-    'fov_repeat' : 'seinfeld 3x17 3x18 the boyfriend',
-    'stupid_acronyms' : 'abc-seinfeld.s03e17'
-    }
-
-
+###
+#all the importer,parser,lookup, dbguy tests
 
 class TestParseAndLookup(TestCase):
 
     def setUp(self):
         self.tvdir = testfsdir
+        self.root = testfsdir
 
-    def _test_regex(self, rename, ep):
-        dosername = (
-            'standard_repeat',
-            'fov_repeat',            
-            )        
-        doepnum = dosername+(
-            'stupid_acronyms',
+    def test_regexes(self):        
+        """
+        Test some of the filename regular expressions
+        against known matching filenames.
+        """
+        d = {
+            'standard' : 'seinfeld.s03e17e18.the.boyfriend-lol',
+            'fov_repeat' : 'seinfeld 3x17 3x18 the boyfriend',
+            'stupid_acronyms' : 'abc-seinfeld.s03e17',
+            'verbose' : 'Seinfeld Season 03 Episode 17 The Boyfriend',
+            #'scene_date_format' : 'seinfeld.1990.09.26.the.boyfriend' - borked
+            'standardish_weird' : 'seinfelds03e17somecrap',
+            'season_ep_only' : 'Season 3 Episode 17',    
+            'stupid' : 'tpz-seinfeld317',
+            }
+        for regn, fn in d.iteritems():
+            ep = ez_parse_episode(fn)
+            log.debug('\n%s : %s', regn, fn)
+            log.debug(ep.pretty())
+            self._check_regex(regn, ep)
+            log.debug('Passed re: %s', regn)
+
+    def test_reverse_parse(self):
+        fn = self._get_parsable(reverse=True)
+        ep = reverse_parse_episode(fn, self.root)
+        log.debug('\n'+ep.pretty())
+        self.assertEqual(ep['series_title'], 'The War At Home')
+        self.assertEqual(ep['season_number'], 1)
+        self.assertEqual(ep['ep_number'], 11)
+
+    def test_lookup(self):
+        ep = reverse_parse_episode(
+            self._get_parsable(True),
+            self.root
             )
-        doeepnum = dosername
-        dosnum = doepnum        
-            
-        self.assertEqual(rename, ep['which_regex'])
+        lep = lookup(ep)
+        self.assertEqual(lep['series_title'].lower(), 'the war at home')
+        self.assertEqual(lep['season_number'], 1)
+        self.assertEqual(lep['ep_number'], 11)
+        
+        
 
+
+    def _get_parsable(self, reverse=True):
+        if reverse:
+            fn = 'The War At Home/Season 1/tpz-twat111.avi' 
+            fn = os.path.join(self.root, fn)
+            return fn
+        else:
+            raise NotImplementedError
+        
+
+    def _check_regex(self, rename, ep):
+        dosername = (
+            'standard',
+            'fov_repeat',            
+            'verbose',
+            'standardish_weird',
+            )        
+        
+        doepnum = (
+            'standard',
+            'fov_repeat',
+            'stupid_acronyms',
+            'verbose',
+            'season_ep_only',
+            'standardish_weird',
+            'stupid',
+            )
+        dosnum = (
+            'standard',
+            'fov_repeat', 
+            'stupid_acronym',
+            'verbose',
+            'season_ep_only',
+            'standardish_weird',
+            'stupid',
+            )
+        doeepnum = (
+            'standard',
+            'fov_repeat',
+            )                    
+        self.assertEqual(rename, ep['which_regex'])
         if rename in dosername:
-            sname = ep['series_title'].lower()        
+            sname = ep.clean_name(ep['series_title']).lower()
             self.assertEqual(sname, 'seinfeld')
         if rename in dosnum:
             snum = ep['season_number']            
             self.assertEqual(snum, 3)
         if rename in doepnum:
-            enum = ep['ep_number']
-            eenum = ep['extra_ep_number']
+            self.assertEqual(ep['ep_number'], 17)
         if rename in doeepnum:        
-            self.assertEqual(eenum, 18)
+            self.assertEqual(ep['extra_ep_number'], 18)
 
-    def test_regexes(self):        
-        #ut = unittest
-        #regx = {}
-        #for r in tv_regexes:
-        #    regx[r.alias] = r.pattern
-        for regn, fn in d.iteritems():
-            ep = ez_parse_episode(fn)
-            log.debug('Passed re: %s', regn)
+
+        
+        
 
 
 

@@ -12,7 +12,7 @@ from collections import OrderedDict
 from . import tvregexes, util
 from .util import normpath, split_root_dir, ensure_utf8, ancestry
 from . import appconfig as cfg
-from .texceptions import InitExistingDatabaseError, IncompleteEpisodeError
+from .texceptions import InitExistingDatabaseError, IncompleteEpisodeError, InvalidArgumentError
 from . import __pkgname__
 
 
@@ -168,6 +168,12 @@ class Episode(OrderedDict):
             raise InvalidArgumentError(
                 'arg `form` must be "abs" or "rel", you gave %s' % form
                 )
+
+    def pretty(self):
+        """
+        Get pretty print output of this episode.
+        """
+        return '\n'.join(['%s : %s' % (k, v) for k, v in self.iteritems()])
         
     def __setitem__(self, key, value):
         """
