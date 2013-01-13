@@ -32,6 +32,15 @@ def replace_bad_chars(string):
         nstring = nstring.replace(ch, '')
     return nstring
 
+def scene_style(string):
+    """
+    Return given string in scene style.
+    WIth spaces replaced with '.' and lowercase.
+    """
+    if string is None:
+        return
+    return '.'.join(string.split())
+
 
 def fndotify(string, keep_bad_chars=False):
     """
