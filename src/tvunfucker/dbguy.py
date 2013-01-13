@@ -10,7 +10,7 @@ import re
 from collections import OrderedDict
 
 from . import tvregexes, util
-from .util import normpath, split_root_dir, ensure_utf8, ancestry
+from .util import normpath, split_root_dir, ensure_utf8, ancestry, posixpath
 from . import appconfig as cfg
 from .texceptions import InitExistingDatabaseError, IncompleteEpisodeError, InvalidArgumentError
 from . import __pkgname__
@@ -156,6 +156,8 @@ class Episode(OrderedDict):
         """
         Return this episode's file path.
         `form` may be 'abs' or 'rel' (absolute or relative)         
+        Can also be 'db' which is same as 'rel' but backslashes 
+        are always replaced by forward slashes.
         path will be returned in respective form.        
         Relative means relative to `root_dir`.
         """
@@ -164,6 +166,9 @@ class Episode(OrderedDict):
             return normpath(os.path.join(root, path))
         elif form == 'rel':       
             return split_root_dir(self['file_path'], self.root_dir)[1]
+        elif form == 'db':
+            p = split_root_dir(self['file_path'], self.root_dir)[1]
+            return posixpath(p)
         else:
             raise InvalidArgumentError(
                 'arg `form` must be "abs" or "rel", you gave %s' % form
@@ -316,7 +321,8 @@ class TVDatabase(Database):
         """
         q = 'SELECT id FROM episode WHERE file_path = ?;'
         log.debug(path)
-        params = (ensure_utf8(path),)
+        
+        params = (posixpath(ensure_utf8(path)),)
         res = self.execute_query(q, params, fetch=1)
         if res: return True
         else: return False
@@ -365,7 +371,7 @@ class TVDatabase(Database):
             raise IncompleteEpisodeError(
                 'Unable to add id-less episode to the database: %s' % epobj
                 )  
-        epobj['file_path'] = ensure_utf8(epobj.path('rel'))
+        epobj['file_path'] = ensure_utf8(epobj.path('db'))
         if self._exists(epobj['id']):
             return self._update_episode(epobj)
         else:

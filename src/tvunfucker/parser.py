@@ -4,7 +4,7 @@ import os, re, logging
 from collections import OrderedDict
 
 from . import  tvregexes, util, dbguy
-from .util import split_path
+from .util import components
 from . import __pkgname__
 
 log = logging.getLogger(__pkgname__)
@@ -58,8 +58,12 @@ def reverse_parse_episode(path, sourcedir):
     """
     #get the path below sourcedir
     ep = ez_parse_episode(path, sourcedir)
-    relp = os.path.relpath(path, sourcedir)
-    splitted = split_path(relp)
+    abs = ep.path()
+    relp = ep.path('rel')
+    #relp = os.path.relpath(path, sourcedir)
+    log.debug('abspath: %s', abs)
+    log.debug('relpath: %s', relp)
+    splitted = components(relp)
     if len(splitted) >= 3:
         ep['series_title'] = splitted[-3]
     if len(splitted) >=2:

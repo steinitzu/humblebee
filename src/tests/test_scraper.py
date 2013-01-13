@@ -10,20 +10,32 @@ from tvunfucker.parser import ez_parse_episode, reverse_parse_episode
 from tvunfucker.tvdbwrapper import lookup
 
 def get_log():
-    l = logging.getLogger()
+    lf = logging.Formatter('%(levelname)s:%(funcName)s: %(message)s')
+    lh = logging.StreamHandler()
+    lh.setFormatter(lf)    
+    l = logging.getLogger('tester')
+    l.addHandler(lh)
+    l.setLevel(logging.DEBUG)
+    """
     if not l.handlers:
         logging.getLogger('tvunfucker').setLevel(logging.FATAL)
         l.addHandler(
             logging.StreamHandler()
             )
         l.setLevel(logging.DEBUG)
+    """
     return l
 
 log = get_log()
+logging.getLogger('tvunfucker').setLevel(logging.DEBUG)
 
-testfsdir = syspath(
-    normpath(os.path.join(os.path.dirname(__file__),'testdata/testfs'))
-    )
+testfsdir = os.path.abspath(normpath(
+    os.path.join(
+        os.path.dirname(__file__), 'testdata/testfs')
+    ))
+#testfsdir = syspath(
+#    normpath(os.path.join(os.path.dirname(__file__),'testdata/testfs'))
+#    )
 
 ###
 #all the importer,parser,lookup, dbguy tests
@@ -79,8 +91,10 @@ class TestParseAndLookup(TestCase):
 
     def _get_parsable(self, reverse=True):
         if reverse:
-            fn = 'The War At Home/Season 1/tpz-twat111.avi' 
-            fn = os.path.join(self.root, fn)
+            fn = 'The War At Home/Season 1/tpz-twat111.avi'
+            fn = normpath(os.path.join(self.root, fn))
+            log.debug('rev parsable fn: "%s"', fn)
+            log.debug('is valid path: %s', os.path.exists(fn))
             return fn
         else:
             raise NotImplementedError

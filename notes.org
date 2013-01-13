@@ -33,4 +33,5 @@ When you have to log from mid function, your function is probably doing too much
 
 
 google is so sneaky 
-* TODO make it work on Windows
+* DONE make it work on Windows
+* DONE Backslash paths in database on windows are no good (then must convert to POSIX in path_exists)
