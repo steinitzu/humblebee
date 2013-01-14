@@ -6,16 +6,18 @@ import time, logging, sys, re
 from datetime import datetime
 
 #3dparty
-from .tvdb_api.tvdb_api import tvdb_error, Tvdb, tvdb_shownotfound, tvdb_seasonnotfound, tvdb_episodenotfound
+#from .tvdb_api.tvdb_api import tvdb_error, Tvdb, tvdb_shownotfound, tvdb_seasonnotfound, tvdb_episodenotfound
+from gnarlytvdb import TVDB, SeriesNotFoundError, SeasonNotFoundError, EpisodeNotFoundError, TVDBConnectError
 
 #this pkg
-from .texceptions import ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError
+#from .texceptions import ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError
 from .texceptions import NoIdInURLError, IncompleteEpisodeError
 from . import __pkgname__
 from . import appconfig as cfg
 from .bing import Bing
 from .dbguy import Episode
 from .util import string_dist
+from . import texceptions as texc
 
 log = logging.getLogger(__pkgname__)
 
@@ -27,7 +29,10 @@ def get_api():
     #THERE Can be only one.... api
     global _api
     if not _api:
-        _api = Tvdb(apikey=cfg.get('tvdb', 'api-key'), actors=True)
+        _api = TVDB(
+            api_key=cfg.get('tvdb', 'api-key')
+            )
+        #_api = Tvdb(apikey=cfg.get('tvdb', 'api-key'), actors=True)
     return _api
 
 def get_bing_api():
@@ -59,14 +64,14 @@ def get_imdb_id(series_name):
     bing = get_bing_api()
     searchres = bing[query]
     if not searchres:
-        raise ShowNotFoundError(
+        raise texc.ShowNotFoundError(
             'Search query returned zero results for series name: "%s"' % (
                 series_name)
             )
     try: #parse id out of first result
         imdbid = _imdb_id_from_url(searchres[0]['Url'])
     except NoIdInURLError as e:
-        raise ShowNotFoundError(
+        raise texc.ShowNotFoundError(
             'Unable to accurately get an imdb id for series name: "%s"' % (
                 series_name)
             )
@@ -82,8 +87,8 @@ def _get_series(series_name, imdb_id=None):
             return tvdb[imdb_id, 'imdb']
         else:
             return tvdb[series_name]
-    except tvdb_shownotfound as e:
-        raise ShowNotFoundError(e.message)
+    except SeriesNotFoundError as e:
+        raise texc.ShowNotFoundError(e.message)
 
 def get_series(series_name):
     """
@@ -92,7 +97,7 @@ def get_series(series_name):
     try:
         imdbid = get_imdb_id(series_name)
         log.debug('Got imdb id "%s" (series_name: "%s").', imdbid, series_name)
-    except ShowNotFoundError as e:
+    except texc.ShowNotFoundError as e:
         log.warning(e.message)
         imdbid = None
 
@@ -104,14 +109,14 @@ def get_series(series_name):
         rtcount+=1
         try:
             series = _get_series(series_name, imdbid)
-        except ShowNotFoundError as e:
+        except texc.ShowNotFoundError as e:
             if imdbid: 
                 rtcount-=1
                 imdbid = None #try again with name lookup
                 continue
             else:
                 raise
-        except tvdb_error as e:
+        except TVDBConnectError as e:
             if rtcount >= rtlimit:
                 raise
             rtcount+=1
@@ -124,7 +129,7 @@ def get_series(series_name):
         else:
             break
     def __raiserr():
-        raise ShowNotFoundError(
+        raise texc.ShowNotFoundError(
             'No matching series found for "%s"' % series_name
             )
     if series:
@@ -150,22 +155,28 @@ def lookup(ep):
         raise IncompleteEpisodeError(
             'Episode does not have sufficient info for lookup\n%s' % ep
             )
+    log.info('Looking up series: %s', ep['series_title'])
     series = get_series(ep.clean_name(ep['series_title']))
-    log.info('Looking up series: %s', series)
     newep = Episode(ep.path(), ep.root_dir)
     #put base info in new ep
     for key in newep.local_keys:
         newep[key] = ep[key]
     webep = None
     try:
-        webep = series[ep['season_number']][ep['ep_number']]
-    except tvdb_seasonnotfound as e:
-        raise SeasonNotFoundError(
+        webep = series.season(ep['season_number']).episode(ep['ep_number'])
+    except SeasonNotFoundError as e:
+        raise texc.SeasonNotFoundError(
             series['seriesname'], ep['season_number']), None, sys.exc_info()[2]
-    except tvdb_episodenotfound as e:
-        raise EpisodeNotFoundError(
+    except EpisodeNotFoundError as e:
+        raise texc.EpisodeNotFoundError(
             series['seriesname'], ep['season_number'], ep['ep_number']), None, sys.exc_info()[2]
     else:
+        log.debug(
+            'Match was found for %s-s%se%s',
+            ep['series_title'],
+            ep['season_number'],
+            ep['ep_number']
+            )
         return _update_ep_with_tvdb_ep(newep, webep)
 
 def _safe_string_to_date(dstring):
@@ -186,20 +197,18 @@ def _update_ep_with_tvdb_ep(ep, webep):
     Updates the given ep with info from webep.
     webep is a tvdb_api.Episode in this context.
     """
-    show = webep.season.show
+    show = webep.series
     ep['id'] = webep['id']
     ep['title'] = webep['episodename']
     ep['ep_number'] = webep['episodenumber']
     ep['ep_summary'] = webep['overview']
-    ep['air_date'] = _safe_string_to_date(webep['firstaired'])
+    ep['air_date'] = webep['firstaired']
     ep['season_id'] = webep['seasonid']
     ep['season_number'] = webep['seasonnumber']
     ep['series_id'] = webep['seriesid']
     ep['series_title'] = show['seriesname']
     ep['series_summary'] = show['overview']
-    ep['series_start_date'] = _safe_string_to_date(
-        show['firstaired']
-        )
+    ep['series_start_date'] = show['firstaired']
     ep['run_time_minutes'] = show['runtime']
     ep['network'] = show['network']
     return ep

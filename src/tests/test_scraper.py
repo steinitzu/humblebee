@@ -85,9 +85,6 @@ class TestParseAndLookup(TestCase):
         self.assertEqual(lep['series_title'].lower(), 'the war at home')
         self.assertEqual(lep['season_number'], 1)
         self.assertEqual(lep['ep_number'], 11)
-        
-        
-
 
     def _get_parsable(self, reverse=True):
         if reverse:
@@ -97,8 +94,7 @@ class TestParseAndLookup(TestCase):
             log.debug('is valid path: %s', os.path.exists(fn))
             return fn
         else:
-            raise NotImplementedError
-        
+            raise NotImplementedError        
 
     def _check_regex(self, rename, ep):
         dosername = (
