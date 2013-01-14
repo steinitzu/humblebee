@@ -174,7 +174,10 @@ class Importer(object):
             return self.dump_unscraped(ep)
 #        if fileindb:
 #            return self.db.upsert_episode(ep) #we update it
-
+        log.debug(
+            'Checking if episode exists. id:%s,sname:%s-s%se%s',
+            ep['id'], ep['series_title'], ep['season_number'], ep['ep_number']
+            )
         idindb = self.db.episode_exists(ep)
         if idindb and not cfg.get('importer', 'brute', bool):
             better = self.battle_existing(ep)

@@ -291,6 +291,10 @@ class TVDatabase(Database):
         _exists(id_) -> True or False
         Check if row with given id_ exists in episode table.                
         """
+        log.debug(
+            'Will check if id:%s (type:%s) exists in db',
+            id_, type(id_)
+            )            
         q = 'SELECT * FROM episode WHERE id = ?;'
         res = self.execute_query(q, (id_,), fetch=1)
         if res: return True
