@@ -5,7 +5,7 @@ from setuptools import setup
 
 setup(
     name='tvunfucker',
-    version='0.5',
+    version='0.6',
     description='A scraper for TV shows.',
     author='Steinthor Palsson',
     author_email='steinitzu@gmail.com',
