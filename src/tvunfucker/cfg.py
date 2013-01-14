@@ -1,125 +1,192 @@
-"""
-This module will initialize the config parsers.\n
-There are two parsers.\n
-One for the default config file and one for the user config.\n
-\n
-If a user config file does not exist, it will be created here on import.\n
-Use the |get| and |set| methods to retrieve and set config values.\n
-|get| will always prefer user config over default config when possible.\n
-|read| will re-read the user config file and |write| will write any changes you have
-made back to the file.
-"""
-import ConfigParser, sys, os, logging
+import sys, os
+from ConfigParser import NoOptionError, NoSectionError, RawConfigParser
 
-import util
+from .texceptions import InvalidArgumentError
+from .util import safe_make_dirs, str_to_bool
 
-
-rtlog = logging.getLogger('runtundi')
-#from . import __init__ as runtundi
-
-def get_user_config():
+class ThreeTierConfigParser(RawConfigParser):
     """
-    Finds the user config file in a platform specific way.\n
-    Returns the config file's path regardless of
-    wheather it exists or not.  
+    Config parser with 3 configs
+    1. global config (stored in default_cfg_path)
+    2. user config (stored in user_cfg_path)
+    3. runtime config (stored in memory)
+
+    option foo, section bar from user config will always override the 
+    same option in global config if available.
+    Options in runtime config will override user config in the same way.
     """
-    config_path = None
-    if sys.platform == 'win32':
-        config_path = os.path.join(
-            os.environ['APPDATA'],
-            util.program_name,
-            util.program_name+'.cfg'
-            )
-    else:
-        #use ~/.program_name
-        config_path = os.path.join(
-            os.path.expanduser('~'),
-            '.'+util.program_name,
-            util.program_name+'.cfg'
-            )
-    return config_path
 
+    def __init__(self, program_name, global_config_path=None, runtime_options={}, *a, **kw):
+        """
+        See |import_to_runtime_parser| method for format of runtime options.
+        """
+        self.program_name = program_name
+        RawConfigParser.__init__(self, *a, **kw)
+        self.user_cfg_path = self._get_user_cfg_path()        
+        try:
+            if os.path.exists(global_config_path):
+                self.global_cfg_path = global_config_path
+            else:
+                self.global_cfg_path = None
+        except TypeError:
+            self.global_cfg_path = None
 
-default_config = ConfigParser.RawConfigParser()
-default_config_path = os.path.join(os.path.dirname(__file__), 'default.cfg')
-#find the default config file
-default_config.read(default_config_path)
+        self.user_parser = RawConfigParser()        
+        self.global_parser = RawConfigParser() if self.global_cfg_path else None
+        self.runtime_parser = RawConfigParser()                
+        self.__runtime_options = runtime_options
+        self.initialize()
 
-cfg_path = get_user_config()
-user_config = ConfigParser.RawConfigParser()
+    def initialize(self):
+        try:
+            open(self.user_cfg_path)
+        except IOError as e:
+            if e.errno == 2:
+                self._create_user_cfg_file()
+        self.read_all()
+        self.import_to_runtime_parser(self.__runtime_options)
 
-#Make the file
-if not os.path.exists(cfg_path):
-    try:
-        os.makedirs(os.path.dirname(cfg_path))
-    except OSError as e:
-        if e.errno == 17:
-            pass
+    def _create_user_cfg_file(self):
+        if os.path.exists(self.user_cfg_path):
+            return
+        safe_make_dirs(
+            os.path.split(self.user_cfg_path)[0]
+            )                
+        try:
+            f = open(self.user_cfg_path, 'w')
+        finally:
+            f.close()
+
+    def _get_user_cfg_path(self):
+        """
+        Get path to user config regardless of whether it exists or not.
+        On Windows, path is "%APPDATA%/program_name/program_name.cfg"
+        On *nix it is '~/.program_name/program_name.cfg'
+        This function does not create any files.
+        """
+        if sys.platform == 'win32':
+            #%APPDATA%/program_name/program_name.cfg
+            config_path = os.path.join(
+                os.environ['APPDATA'],
+                self.program_name,
+                self.program_name+'.cfg'
+                )
         else:
-            raise        
-    f = open(cfg_path, 'w')
-    f.close()
-    
+            #~/.program_name/program_name.cfg
+            config_path = os.path.join(
+                os.path.expanduser('~'),
+                '.'+self.program_name,
+                self.program_name+'.cfg'
+                )            
+        return config_path
 
-def set(section, option, value):
-    """
-    set(section, option, value)\n
-    This method sets an option in user_config.\n
-    IT does not write the config file.
-    This is so many options can be edited faster and
-    reverted if needed.\n
-    They will all be written at once with write_config.
-    """
-    user_config.read(cfg_path)
-    if not user_config.has_section(section):
-        user_config.add_section(section)
-    user_config.set(section, option, value)
+    @classmethod
+    def get_global_cfg_path(self, program_name):
+        """        
+        Get the default path to global config. 
+        Just a convenience function, never used internally.
+        Windows: '%ALLUSERSPROFILE%/program_name/program_name.cfg'
+        *nix: '/etc/program_name/program_name.cfg'
+        """
+        if sys.platform == 'win32':
+            cfg_path = os.path.join(
+                os.environ['ALLUSERSPROFILE'],
+                program_name,
+                program_name+'.cfg'
+                )
+        else:
+            cfg_path = os.path.join(
+                '/etc',
+                program_name,
+                program_name+'.cfg'
+                )
+        return cfg_path
 
 
-def get(section, option, as_type=None):
-    """
-    get(section, option, as_type=None)\n
-    get(str, str, as_type=type)\n
+    def get(self, section, option, as_type=None):
+        """
+        get(section, option, as_type=None) -> object
+        Try to get the given section and option from one of the parser.
+        Starts with runtime_parser, falls back on user_parser which falls back on 
+        global_parser.
+        If all parsers fail, a NoOptionError or NoSectionError will be raised.
 
-    as_type accepts bool, float and int\n
-    will return a string if it's None or assume the type
-    or whatever it is that ConfigParser does.
-    """
-    tmap = {
-        int : user_config.getint,
-        float : user_config.getfloat,
-        bool : user_config.getboolean,
-        None : user_config.get
-        }
-    dtmap = {
-        int : default_config.getint,
-        float : default_config.getfloat,
-        bool : default_config.getboolean,
-        None : default_config.get
-        }        
-    result = None
-    try:
-        result = tmap[as_type](section, option)
-    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError) as e:
-        #error will be raised if this fails since that means
-        #caller passed an invalid option/section
-        result = dtmap[as_type](section,option)
-    return result
+        Return value will be cast to |as_type| type if not None.
+        If as type is None, a string is returned.
+        Guaranteed supported types as int, float and bool
+        """
+        excp = (NoOptionError, NoSectionError)
+        try:
+            result = self.runtime_parser.get(section, option)
+        except excp as e:
+            try:
+                result = self.user_parser.get(section, option)
+            except excp as e:
+                if not self.global_parser:
+                    raise
+                else:
+                    result = self.global_parser.get(section, option)
+        if as_type:
+            if as_type==bool:
+                return str_to_bool(result)
+            else:
+                return as_type(result)                
+        return result
 
-def write_user_config():
-    """
-    This will write the current state of user_config
-    to the config file.
-    """
-    with open(cfg_path, 'wb') as cfgfile:
-        user_config.write(cfgfile)
-    read_user_config()
+    def set(self, section, option, value, parser='user', write=False):
+        """
+        set(section, option, parser='user', write=False)        
+        Set given option in given section to given value.
+        Section is implicitly created if it does not exist.
+        The |parser| argument can be either 'user' or 'runtime'.
+        If write==True the config file (if any) will also be written 
+        with the new value.
+        """
+        if parser=='user': p = self.user_parser
+        elif parser=='runtime': p = self.runtime_parser
+        else: 
+            raise InvalidArgumentError(
+                '"%s" is not a valid argument for parser' % parser
+                )
+        if not p.has_section(section):
+            p.add_section(section)
+        p.set(section, option, value)
+        if write and parser == 'user':
+            p.write(self.user_cfg_path)
+        
 
-def read_config():
-    """
-    Updates the user_config object from file.
-    """
-    user_config.read(cfg_path)    
-    default_config.read(default_config_path)
+    def read_all(self):
+        """
+        Read settings from user and global config files.
+        """
+        self.user_parser.read(self.user_cfg_path)
+        if self.global_parser:
+            self.global_parser.read(self.global_cfg_path)
 
-read_config()
+    def write_user_config(self):
+        """
+        Write settings from user_parser to file user_cfg_path.
+        """  
+        f = None
+        try:
+            f = open(self.user_cfg_path, 'w')
+            self.user_parser.write(f)
+        finally:
+            f.close()
+
+
+    def import_to_runtime_parser(self, dicti):
+        """
+        import_to_runtime_parser(dict)
+        Create sections and options/values from given dict and 
+        set to runtime_parser.
+        dict should be in format 
+        {'section_name':{'option1':'value1', option2:'value2'}}
+        """
+        for section,v in dicti.iteritems():
+            #self.runtime_parser.add_section(section)
+            for option,value in v.iteritems():
+                self.set(section, option, value, parser='runtime')
+            
+                
+            

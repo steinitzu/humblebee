@@ -1,15 +1,10 @@
 import sys
 
-from tvunfucker import importer
+from tvunfucker import cli
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-    print argv
-    imp = importer.Importer(argv[1])
-    imp.start_import()
+def main():
+    cli.main()
 
 if __name__ == '__main__':
     main()
-    
     

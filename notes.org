@@ -1,20 +1,37 @@
-
-Tue Dec 25 02:44:13 GMT 2012
-episode: 2602
-unparsed: 940
-
-Tue Dec 25 02:53:47 GMT 2012
-episode: 2594
-unparsed: 921
-
-
-Tue Dec 25 03:33:30 GMT 2012
-episode: 3557
-unparsed: 878
-
-
 * TODO refactor
-* TODO log module is silly, log file path and level should be config-able
-* TODO temp/runtime config which is spawned with cli options
-* TODO make cli 
 * TODO release
+* TODO handle InvalidVideoFileError in quality_battle (handle in importer)
+* TODO don't think log_file option works in cli, cause __init__ sets it first
+* TODO write out a stat summary after importing (duplicates, scraped, unscraped, etc)
+* TODO set up a real testfs with partial media files
+* TODO not-update (-U) option which deletes eps from db that don't exist anymore 
+
+
+os.path.join works all wrong on windows
+
+
+ok, bara til að muna
+
+vandamálið er að af einhverjum ástæðum í add_unparsed_child
+þá splitter split_root_dir ekki 'X:Transformers 1984'
+fuckin hell veit ekki afhverju
+þannig ég enda með fokking abspath með drive letter áfostum og þetta endar í endalausri lúppu við það
+að adda X: í unparsed fffffs
+bed now
+
+
+
+mundu að þú ert á nýju branch og thad er eitt stórt commit á develop
+
+
+transformers are unparsed but they shouldn't be
+
+need to change how 'is single ep dir' is determined
+
+
+When you have to log from mid function, your function is probably doing too much
+
+
+google is so sneaky 
+* DONE make it work on Windows
+* DONE Backslash paths in database on windows are no good (then must convert to POSIX in path_exists)

@@ -5,32 +5,31 @@ import logging
 from decimal import Decimal
 from time import time
 
-#romlog
-log = logging.getLogger('tvunfucker')
-formatter = logging.Formatter(
+from . import appconfig as cfg
+from . import __pkgname__
+
+log = logging.getLogger(__pkgname__)
+
+streamformatter = logging.Formatter(
+    '%(levelname)s: %(message)s'
+    )
+fileformatter = logging.Formatter(
     '%(levelname)s %(asctime)s %(module)s.%(funcName)s: %(message)s'
     )
-streamhdlr = logging.StreamHandler()
-streamhdlr.setFormatter(formatter)
+streamhandler =  logging.StreamHandler()
+streamhandler.setFormatter(streamformatter)
+filehandler = logging.FileHandler(cfg.get('logging', 'filename'), mode='a') #has a default
+filehandler.setFormatter(fileformatter)
 
-file_handler = logging.FileHandler('romlog.log',  mode='a')
-file_handler.setFormatter(
-    logging.Formatter(
-        '%(levelname)s %(asctime)s %(module)s.%(funcName)s: %(message)s')
-        )
+log.addHandler(filehandler)
+log.addHandler(streamhandler)
 
-log.addHandler(file_handler)
-log.addHandler(streamhdlr)
-
-
-#testlog
-test_log = logging.getLogger('testlog')
-file_handler = logging.FileHandler('testlog.log',  mode='a')
-file_handler.setFormatter(logging.Formatter(formatter))
-test_log.addHandler(file_handler)
-#test_log.setLevel(logging.DEBUG)
+level = cfg.get('logging', 'level')
+log.setLevel(logging.__getattribute__(level.upper()))
+####################################
 
 
+#decorator
 def log_time(func):
     def caller(*args, **kwargs):
         starttime = Decimal(time())

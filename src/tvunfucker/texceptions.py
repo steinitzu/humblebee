@@ -70,3 +70,6 @@ class PoolExhaustedError(PoolError):
 
 class PutUnkeyedConnectionError(PoolError):
     pass
+
+class InvalidVideoFileError(TVUFError):
+    pass

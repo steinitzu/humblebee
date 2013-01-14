@@ -1,21 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os, re
+import os, re, logging
 from collections import OrderedDict
 
 from . import  tvregexes, util, dbguy
-from .util import split_path
-import tvunfucker
+from .util import components
+from . import __pkgname__
 
-log = tvunfucker.log
+log = logging.getLogger(__pkgname__)
 
-def ez_parse_episode(path):
+def ez_parse_episode(path, root_dir=''):
     """
-    parse_episode(absolute path) -> dict\n
+    parse_episode(absolute path, root_dir='') -> dict\n
     Parses only the episode's filename.    
     """
     log.info('Parsing path: %s', path)
-    result = dbguy.Episode(path)
+    result = dbguy.Episode(path, root_dir)
     directory,filename = os.path.split(path)
     if os.path.isfile(path):
         filename = os.path.splitext(filename)[0]
@@ -30,7 +30,7 @@ def ez_parse_episode(path):
     result.safe_update(match.groupdict())
     return result
 
-def _merge_episodes(eps, path_to_ep, backup_series_title=None):
+def _merge_episodes(eps, path_to_ep, root_dir, backup_series_title=None):
     """
     Accepts a sequence of Episode objects.\n    
     Merges their data into one Episode object
@@ -42,7 +42,7 @@ def _merge_episodes(eps, path_to_ep, backup_series_title=None):
     """
     log.debug(eps)
     log.debug(path_to_ep)
-    resultep = dbguy.Episode(path_to_ep)
+    resultep = dbguy.Episode(path_to_ep, root_dir)
     for ep in eps:
         resultep.safe_update(ep)
     if resultep.is_fully_parsed:
@@ -51,71 +51,26 @@ def _merge_episodes(eps, path_to_ep, backup_series_title=None):
         resultep['series_title'] = backup_series_title
     return resultep
 
-def _reverse_parse_episode(path, source):
-    #TODO: update this docstring
-    """
-    Takes a path to an episode and a tv source directory.\n
-    Starts by parsing the name one dir up from path.\n
-    If that directory contains a season_num but not a series_title,
-    it will be assumed that two dirs up from path is the series name (as long as that
-    doesn't match any regex).\n
-    For example,\n
-        if path is: '/media/tv/breaking bad/season 2/episode 4.avi'\n
-        and source is: '/media/tv'\n
-        then the result will be a Episode with the following:\n
-        {'series_title' : 'breaking bad', 'season_num':2, 'ep_num':4}\n
-
-    If the episode file is in the root of source and can't be parsed by any
-    regex it will< remain unparsed.
-    """
-
-    #get ONE fully parsed episode (series_title, ep_num, season_num)
-
-    #step 1
-    #parse directory one up from path, get a Episode object
-
-    #step 2
-    #parse directory two up from path, get a Episode object
-
-    #step3
-    #merge all 3 Episode objects into one ep and return it
-
-    ep = ez_parse_episode(path)
-
-    one_up_dir = os.path.dirname(path)
-    if os.path.samefile(one_up_dir, source):
-        #we reached the source, nothing to see here
-        return ep
-    one_up_ep = ez_parse_episode(one_up_dir)
-
-    two_up_dir = os.path.dirname(one_up_dir)
-    if os.path.samefile(two_up_dir, source):
-        return _merge_episodes((ep, one_up_ep), path)
-    two_up_ep = ez_parse_episode(two_up_dir)
-
-    return _merge_episodes(
-        (ep,one_up_ep,two_up_ep),
-        path,
-        backup_series_title=os.path.split(two_up_dir)[1]
-        )
-
-
 def reverse_parse_episode(path, sourcedir):
     """
     assume bottom level filename has wrong info, start from the top.
     emergencies only
     """
     #get the path below sourcedir
-    ep = ez_parse_episode(path)
-    relp = os.path.relpath(path, sourcedir)
-    splitted = split_path(relp)
+    ep = ez_parse_episode(path, sourcedir)
+    abs = ep.path()
+    relp = ep.path('rel')
+    #relp = os.path.relpath(path, sourcedir)
+    log.debug('abspath: %s', abs)
+    log.debug('relpath: %s', relp)
+    splitted = components(relp)
     if len(splitted) >= 3:
         ep['series_title'] = splitted[-3]
     if len(splitted) >=2:
-        sep = ez_parse_episode(splitted[-2])
+        sep = ez_parse_episode(splitted[-2], sourcedir)
     else:
-        return ez_parse_episode(splitted[-1])
-    eep = ez_parse_episode(splitted[-1])
-    return _merge_episodes([ep, sep, eep], path)
+        return ez_parse_episode(splitted[-1], sourcedir)
+    eep = ez_parse_episode(splitted[-1], sourcedir)
+    return _merge_episodes([ep, sep, eep], path, sourcedir)
 
     
