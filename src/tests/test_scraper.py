@@ -6,7 +6,7 @@ import logging
 from tvunfucker.importer import Importer
 from tvunfucker.util import normpath, syspath
 from tvunfucker.tvregexes import tv_regexes
-from tvunfucker.parser import ez_parse_episode, reverse_parse_episode
+from tvunfucker.parser import base_parse_episode, reverse_parse_episode
 from tvunfucker.tvdbwrapper import lookup
 
 def get_log():
@@ -62,7 +62,7 @@ class TestParseAndLookup(TestCase):
             'stupid' : 'tpz-seinfeld317',
             }
         for regn, fn in d.iteritems():
-            ep = ez_parse_episode(fn)
+            ep = base_parse_episode(fn)
             log.debug('\n%s : %s', regn, fn)
             log.debug(ep.pretty())
             self._check_regex(regn, ep)

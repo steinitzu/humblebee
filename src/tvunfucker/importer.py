@@ -15,6 +15,7 @@ from .texceptions import InvalidDirectoryError
 from .tvdbwrapper import lookup
 from .quality import quality_battle
 from .unrarman import unrar_file
+from .util import normpath, split_root_dir, bytestring_path 
 from . import appconfig as cfg
 from . import __pkgname__
 
@@ -42,6 +43,7 @@ class Importer(object):
         self.success_count = 0
 
     def start_import(self):
+        self.last_stat = self.read_laststat()
         if self.db.db_file_exists():
             if cfg.get('database', 'reset', bool):
                 os.unlink(self.db.dbfile)
@@ -51,6 +53,7 @@ class Importer(object):
         else:
             self.db.create_database()
         self.wrap()
+        self.write_laststat(self.last_stat)
 
     def wrap(self):
         for ep in self.episodes():
@@ -73,7 +76,22 @@ class Importer(object):
         Yield Episodes in directory.
         Episodes returned from here are result of ez_parse_episode.
         """
-        for ep in get_episodes(self.directory):            
+        for ep in get_episodes(self.directory):
+            p = ep.path()
+            mt = float(str(os.path.getmtime(p)))
+            if self.last_stat.has_key(p):
+                log.debug('%s is in laststat', p)
+                if mt > self.last_stat[p]:
+                    log.debug('%s mtime has changed', p)
+                    self.last_stat[p] = mt
+                    pass
+                elif cfg.get('database', 'reset', bool):
+                    yield ep
+                elif cfg.get('database', 'update', bool):
+                    continue #it's da same, skip it
+            else:
+                log.debug('%s not in laststat', p)
+                self.last_stat[p] = mt
             yield ep
 
     def _scrape_episode(self, episode):
@@ -192,6 +210,7 @@ class Importer(object):
                 return
         else:
             return self.db.upsert_episode(ep)
+        
 
     def trash_rars_in_dir(self, directory):
         """
@@ -224,8 +243,47 @@ class Importer(object):
         if delr:
             self.trash_rars_in_dir(p)
         return ep
-        
 
+
+    def read_laststat(self):
+        p = self._last_stat_path()
+        try:
+            f = open(p, 'r')
+        except IOError as e:
+            if e.errno == 2:
+                return {} #means no last run
+            else:
+                raise
+        stats = {}
+        lines = f.readlines()
+        f.close()
+        for line in lines:
+            bs = bytestring_path
+            #path should always be relative to root
+            path,mtime = line.strip('\n').split(';')
+            path = normpath(os.path.join(bs(self.directory), bs(path)))
+            stats[path] = float(mtime)
+        return stats
+
+    def write_laststat(self, stats):
+        p = self._last_stat_path()
+        try:
+            f = open(p, 'w')
+        except IOError as e:
+            raise        
+        s = ''
+        for fn, mtime in stats.iteritems():
+            fn = split_root_dir(fn, self.directory)[1]
+            s+='%s;%s\n' % (fn,mtime)
+        s = s[:-1] #strip last newline
+        f.write(s)
+        f.close()
+            
+    def _last_stat_path(self):
+        return os.path.join(
+            self.directory,
+            cfg.get('database', 'resume-data-filename')
+            )                    
         
 
 class DifficultEpisodeHandler(object):

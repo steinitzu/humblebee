@@ -5,7 +5,7 @@ import os
 from glob import glob
 
 from . import parser
-from .parser import ez_parse_episode
+from .parser import base_parse_episode
 from . import appconfig as cfg
 from logger import log
 from .texceptions import InvalidArgumentError
@@ -42,7 +42,7 @@ def dir_is_single_ep(dir_):
     """
     str path -> bool
     """
-    ep = parser.ez_parse_episode(dir_)
+    ep = parser.base_parse_episode(dir_)
     return ep.is_fully_parsed()
 
 
@@ -107,11 +107,11 @@ def get_episodes(dir_):
             if dir_is_single_ep(subdir):
                 ret = get_file_from_single_ep_dir(subdir)
                 log.info('Found episode: %s', ret)
-                yield ez_parse_episode(ret, dir_)
+                yield base_parse_episode(ret, dir_)
         for fn in filenames:
             fn = bs(fn)
             fn = os.path.join(dirpath, fn)
             if _is_video_file(fn):
-                yield ez_parse_episode(fn, dir_)
+                yield base_parse_episode(fn, dir_)
             else:
                 continue
