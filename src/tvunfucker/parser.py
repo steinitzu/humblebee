@@ -9,7 +9,7 @@ from . import __pkgname__
 
 log = logging.getLogger(__pkgname__)
 
-def ez_parse_episode(path, root_dir=''):
+def base_parse_episode(path, root_dir=''):
     """
     parse_episode(absolute path, root_dir='') -> dict\n
     Parses only the episode's filename.    
@@ -57,7 +57,7 @@ def reverse_parse_episode(path, sourcedir):
     emergencies only
     """
     #get the path below sourcedir
-    ep = ez_parse_episode(path, sourcedir)
+    ep = base_parse_episode(path, sourcedir)
     abs = ep.path()
     relp = ep.path('rel')
     #relp = os.path.relpath(path, sourcedir)
@@ -67,10 +67,10 @@ def reverse_parse_episode(path, sourcedir):
     if len(splitted) >= 3:
         ep['series_title'] = splitted[-3]
     if len(splitted) >=2:
-        sep = ez_parse_episode(splitted[-2], sourcedir)
+        sep = base_parse_episode(splitted[-2], sourcedir)
     else:
-        return ez_parse_episode(splitted[-1], sourcedir)
-    eep = ez_parse_episode(splitted[-1], sourcedir)
+        return base_parse_episode(splitted[-1], sourcedir)
+    eep = base_parse_episode(splitted[-1], sourcedir)
     return _merge_episodes([ep, sep, eep], path, sourcedir)
 
     

@@ -28,9 +28,10 @@ setup(
         },    
     
     install_requires=[
-        'httplib2', #for bing api
+        'httplib2', 
         'pyUnRAR2',
         'send2trash',
-        'unidecode'
+        'unidecode',
+        'gnarlytvdb',
         ]
     )
