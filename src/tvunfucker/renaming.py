@@ -1,116 +1,81 @@
 import os
-import logging
 
-from .util import replace_bad_chars, zero_prefix_int, fndotify
-from .texceptions import FileExistsError, NoSuchDatabaseError
-from . import __pkgname__
-from .dbguy import TVDatabase
+from util import zero_prefix_int as padnum
+from util import replace_bad_chars
+from util import normpath
+from util import ensure_utf8
 
-log = logging.getLogger(__pkgname__)
 
-def make_series_dir(title, sdate, source_dir):
-    """    
-    Make a directory for season according to title, sdate and source_dir.
-    """
-    if not sdate: year = 'unknown'
-    else: year = sdate.year
-    title = replace_bad_chars(title)    
-    dirname = '%s (%s)' % (title, year)
-    fpath = os.path.join(
-        source_dir, dirname
-        )
-    try:
-        os.mkdir(fpath)
-    except OSError as e:
-        if e.errno == 17:
-            log.info(
-                'dir: "%s" already exists in source dir: "%s". Moving on.',
-                dirname,
-                source_dir
-                )
-        else: raise
-    return fpath
+class NamingScheme(object):
 
-def make_season_dir(season_num, series_dir):
-    """
-    Make a subdirectory for season_num in given series_dir.
-    """
-    fpath = os.path.join(
-        series_dir,
-        's%s' % zero_prefix_int(season_num)
-        )
-    try:
-        os.mkdir(fpath)
-    except OSError as e:
-        if e.errno == 17:
-            log.info(
-                'dir: %s already exists. Moving on.', fpath
-                )
-        else: raise
-    return fpath
+    def ep_filename(self, ep):
+        """
+        Get bottom level filename for episode.
+        """
+        raise NotImplementedError
 
-def make_filename(epdict, source_dir):
-    mask = '%s.s%se%s.%s'
-    if os.path.isfile(os.path.join(source_dir, epdict['file_path'])):
-        ext = os.path.splitext(epdict['file_path'])[1]
-    else: ext = ''
+    def season_filename(self, ep):
+        """
+        Filename of season directory.
+        """
+        raise NotImplementedError
 
-    fname = mask % (
-        fndotify(epdict['series_title']),
-        zero_prefix_int(epdict['season_number']),
-        zero_prefix_int(epdict['ep_number']),
-        fndotify(epdict['title'])
-        )        
-    return fname if not ext else fname+'.'+ext
+    def series_filename(self, ep):
+        """
+        Filename of series directory.
+        """
+        raise NotImplementedError
 
-def move_episode(episode, to_dir, source_dir):
-    """
-    Rename and move given episode to to_dir.
-    """
-    newfn = make_filename(dict(episode), source_dir)
-    oldpath = os.path.join(source_dir, episode['file_path'])
-    newpath = os.path.join(
-        to_dir, newfn
-        )
-    if os.path.exists(newpath):
-        #don't want to overwrite anything
-        raise FileExistsError(
-            'File "%s" already exists.' % newpath
+    def full_path(self, ep):
+        """
+        Get full series/season/ep path.
+        Result should be treated as relative to 
+        whatver root dir is.
+        """
+        eu = ensure_utf8
+        fp = os.path.join(
+            eu(self.series_filename(ep)),
+            eu(self.season_filename(ep)),
+            eu(self.ep_filename(ep))
             )
-    os.rename(oldpath, newpath)
-    return newpath
+        return fp
 
-
-def _get_database(directory):
-    db = TVDatabase(directory)
-    if not db.db_file_exists():
-        raise NoSuchDatabaseError(
-            'No TV database in %s. Please scrape the directory first.' % directory
-            )
-    else:
-        return db
-
-
-def do_renaming(directory, dest_dir):
+class Friendly(NamingScheme):
     """
-    Rename and move files according to the database.
-    Accepts an EpisodeSource.
+    Series Name (year)/s01/Series Name s01e02 Episode Title.avi
     """
-    db = _get_database(directory)    
-    for episode in db.get_episodes():        
-        dseries = make_series_dir(
-            episode['series_title'],
-            episode['series_start_date'],
-            dest_dir
-            )
-        dseason = make_season_dir(
-            episode['season_number'],
-            dseries
-            )
-        neweppath = move_episode(
-            episode,
-            dseason,
-            directory
-            )
-        #todo: update the episode path in the database here
-        #todo: clean up empty directories
+    ep_mask = u'%(series_title)s s%(season_number)se%(ep_number)s%(extra_ep_number)s %(title)s%(ext)s'
+    series_mask = u'%(series_title)s (%(series_start_date)s)'
+    season_mask = u'season %(season_number)s'
+    
+    def ep_filename(self, ep):
+        epd = dict(ep.items())
+        eep = epd['extra_ep_number']
+        if eep:
+            epd['extra_ep_number'] = 'e'+padnum(eep)
+        else:
+            epd['extra_ep_number'] = ''                
+        epd['ext'] = os.path.splitext(ep.path())[1]
+        return self.ep_mask % epd
+
+    def season_filename(self, ep):
+        epd = dict(ep.items())
+        epd['season_number'] = padnum(ep['season_number'])
+        return self.season_mask % epd
+
+    def series_filename(self, ep):
+        """
+        Get a series foldername from ep.
+        """
+        epd = dict(ep.items())
+        firstair = ep['series_start_date']
+        if firstair:
+            epd['series_start_date'] = firstair.year
+        else:
+            epd['series_start_date'] = 'no-date'
+        if ep['series_title'].endswith('(%s)' % ep['series_start_date']):
+            epd['series_title'] = ep['series_title'][:5]
+        return replace_bad_chars(self.series_mask % epd)
+
+def rename_episode(ep, naming_scheme):    
+    pass
