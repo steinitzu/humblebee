@@ -16,6 +16,7 @@ from .tvdbwrapper import lookup
 from .quality import quality_battle
 from .unrarman import unrar_file
 from .util import normpath, split_root_dir, bytestring_path 
+from .renaming import Renamer
 from . import appconfig as cfg
 from . import __pkgname__
 
@@ -41,6 +42,11 @@ class Importer(object):
         self._not_found = []
         self.scraped_count = 0 #deprecate
         self.success_count = 0
+        self.renamer = Renamer(
+            self.directory,
+            self.directory,
+            cfg.get('importer', 'naming_scheme')
+            )
 
     def start_import(self):
         self.last_stat = self.read_laststat()
@@ -56,12 +62,15 @@ class Importer(object):
         self.write_laststat(self.last_stat)
 
     def wrap(self):
+        ren = cfg.get('importer', 'move-files', bool)
         for ep in self.episodes():
             if cfg.get('importer', 'unrar', bool) and is_rar(ep.path()):
                 ep = self.unrar_episode(ep)
             res = self._wrap_single(ep)
             if isinstance(res, int):
                 self.success_count+=1
+            if ren:
+                self.rename_episode(ep)
         log.warning(
             '%s episodes were scraped and added to the database.', 
             self.success_count
@@ -176,8 +185,7 @@ class Importer(object):
             #can't battle rars
             return
         #let's fight
-        return quality_battle(ep, oldep, self.db.directory)        
-        
+        return quality_battle(ep, oldep, self.db.directory)
 
     def _wrap_single(self, ep):
         """
@@ -209,8 +217,7 @@ class Importer(object):
                 #don't care if it's oldep or None
                 return
         else:
-            return self.db.upsert_episode(ep)
-        
+            return self.db.upsert_episode(ep)        
 
     def trash_rars_in_dir(self, directory):
         """
@@ -244,6 +251,8 @@ class Importer(object):
             self.trash_rars_in_dir(p)
         return ep
 
+    def rename_episode(self, ep):
+        self.renamer.move_episode(ep)
 
     def read_laststat(self):
         p = self._last_stat_path()

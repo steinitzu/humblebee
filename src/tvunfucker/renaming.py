@@ -1,9 +1,13 @@
 import os
 
-from util import zero_prefix_int as padnum
-from util import replace_bad_chars
-from util import normpath
-from util import ensure_utf8
+from .util import zero_prefix_int as padnum
+from .util import replace_bad_chars
+from .util import normpath
+from .util import ensure_utf8
+from .util import safe_make_dirs
+from .util import samefile
+from .dbguy import TVDatabase
+from .texceptions import FileExistsError
 
 
 class NamingScheme(object):
@@ -26,11 +30,13 @@ class NamingScheme(object):
         """
         raise NotImplementedError
 
-    def full_path(self, ep):
+    def full_path(self, ep, root=None):
         """
         Get full series/season/ep path.
         Result should be treated as relative to 
         whatver root dir is.
+        If `root` is passed, the resulting path will be 
+        an absolute path.
         """
         eu = ensure_utf8
         fp = os.path.join(
@@ -38,6 +44,8 @@ class NamingScheme(object):
             eu(self.season_filename(ep)),
             eu(self.ep_filename(ep))
             )
+        if root:
+            fp = normpath(os.path.join(root, fp))            
         return fp
 
 class Friendly(NamingScheme):
@@ -77,5 +85,49 @@ class Friendly(NamingScheme):
             epd['series_title'] = ep['series_title'][:5]
         return replace_bad_chars(self.series_mask % epd)
 
-def rename_episode(ep, naming_scheme):    
-    pass
+naming_schemes = {
+    'friendly' : Friendly
+    }
+
+
+class Renamer(object):
+    """
+    Handles renaming/moving of episodes in both filesystem and database.
+    """    
+    def __init__(self, rootdir, destdir, naming_scheme='friendly'):
+        self.db = TVDatabase(rootdir)
+        self.destdir = normpath(destdir)
+        self.naming_scheme = naming_scheme()
+        
+        #list of directories to try pruning when renaming is done
+        self._pruneable = []
+
+    def update_db_path(self, ep, newpath):
+        """
+        Update file_path in database for given episode.
+        """
+        ep['file_path'] = newpath
+        return self.db.upsert_episode(ep)
+
+    def move_episode(self, ep, force=False):
+        """
+        Path will be moved to `destdir` in a filename structure 
+        decided by `naming_scheme`.
+        If `destdir` is the same as `db.directory`, path will also be updated 
+        in database.        
+
+        If the new potential path exists already in filesystem, 
+        an FileExistsError is raised.
+        If  `force` is True, no error is raised and existing file is overwritten.
+        """
+        oldfile = ep.path()
+        pathindb = self.db.path_exists(ep.path('db'))        
+        newfile = self.naming_scheme.full_path(ep, root=self.destdir)
+        if os.path.exists(newfile) and not force:
+            raise FileExistsError(
+                'Can not overwrite file at "%s"', newfile
+                )
+        safe_make_dirs(os.path.dirname(newfile))
+        os.rename(oldfile, newfile)
+        if samefile(self.destdir, self.db.directory):
+            self.update_db_path(ep, newfile)
