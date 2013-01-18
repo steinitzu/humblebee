@@ -1,4 +1,4 @@
-import os
+import os, logging, shutil
 
 from .util import zero_prefix_int as padnum
 from .util import replace_bad_chars
@@ -6,9 +6,12 @@ from .util import normpath
 from .util import ensure_utf8
 from .util import safe_make_dirs
 from .util import samefile
+from .util import prune_dirs
+from .util import make_symlink
 from .dbguy import TVDatabase
-from .texceptions import FileExistsError
+from .texceptions import FileExistsError, InvalidDirectoryError
 
+log = logging.getLogger('tvunfucker')
 
 class NamingScheme(object):
 
@@ -59,6 +62,8 @@ class Friendly(NamingScheme):
     def ep_filename(self, ep):
         epd = dict(ep.items())
         eep = epd['extra_ep_number']
+        epd['season_number'] = padnum(epd['season_number'])
+        epd['ep_number'] = padnum(epd['ep_number'])
         if eep:
             epd['extra_ep_number'] = 'e'+padnum(eep)
         else:
@@ -97,10 +102,8 @@ class Renamer(object):
     def __init__(self, rootdir, destdir, naming_scheme='friendly'):
         self.db = TVDatabase(rootdir)
         self.destdir = normpath(destdir)
-        self.naming_scheme = naming_scheme()
-        
-        #list of directories to try pruning when renaming is done
-        self._pruneable = []
+        self.naming_scheme = naming_schemes[naming_scheme]()
+        safe_make_dirs(self.destdir)
 
     def update_db_path(self, ep, newpath):
         """
@@ -116,18 +119,46 @@ class Renamer(object):
         If `destdir` is the same as `db.directory`, path will also be updated 
         in database.        
 
+        Containing directory of ep is pruned afterwards.
+
         If the new potential path exists already in filesystem, 
         an FileExistsError is raised.
         If  `force` is True, no error is raised and existing file is overwritten.
-        """
+        If `force` and new file is a directory, it will be overwritten regardless 
+        of whether it is empty or not (you have been warned).
+        """        
         oldfile = ep.path()
-        pathindb = self.db.path_exists(ep.path('db'))        
+        olddir = os.path.dirname(oldfile)
         newfile = self.naming_scheme.full_path(ep, root=self.destdir)
+        log.debug('Renaming "%s" -> "%s"', oldfile, newfile)
+        pathindb = self.db.path_exists(ep.path('db'))        
         if os.path.exists(newfile) and not force:
             raise FileExistsError(
                 'Can not overwrite file at "%s"', newfile
                 )
+        if os.path.isdir(newfile) and force:
+            shutil.rmtree(newfile)
         safe_make_dirs(os.path.dirname(newfile))
         os.rename(oldfile, newfile)
         if samefile(self.destdir, self.db.directory):
             self.update_db_path(ep, newfile)
+        prune_dirs(olddir, root=self.db.directory)
+
+class SymlinkRenamer(Renamer):
+
+    """
+    Safer version of Renamer. Creates symlinks in destdir instead of actually moving 
+    any files.
+    `rootdir` may not be the same as `destdir`
+    """    
+    def __init__(self, rootdir, destdir, naming_scheme='friendly'):        
+        super(SymlinkRenamer, self).__init__(rootdir,destdir,naming_scheme)
+        if samefile(self.destdir, self.db.directory):
+            raise InvalidDirectoryError(
+                'rootdir and destdir can not be the same directory.'
+                )
+
+    def move_episode(self, ep, force=True):
+        oldfile = ep.path()
+        newfile = self.naming_scheme.full_path(ep, root=self.destdir)
+        make_symlink(oldfile, newfile)

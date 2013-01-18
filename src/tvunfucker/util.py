@@ -75,7 +75,7 @@ def str_to_bool(string):
         return string
     if string.lower() == 'false':
         return False
-    elif string.lower() == 'True':
+    elif string.lower() == 'true':
         return True
     else:
         raise ValueError('"%s" can not be converted to bool' % string)
@@ -245,6 +245,22 @@ def prune_dirs(path, root=None, clutter=('.DS_Store', 'Thumbs.db')):
                 break
         else:
             break
+
+def make_symlink(target, link):
+    """
+    Make symlink and all dirs leading up to it.
+    OSError 17 (file exists) will be ignored.
+    """
+    target = syspath(target)
+    link = syspath(link)
+    safe_make_dirs(os.path.dirname(link))
+    try:        
+        os.symlink(target, link)
+    except OSError as e:
+        if e.errno == 17:
+            pass
+        else:
+            raise        
 
 def type_safe(
     arg,

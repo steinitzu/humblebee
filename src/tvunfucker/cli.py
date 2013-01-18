@@ -12,24 +12,39 @@ def main():
         help='Your TV directory. Can be any directory containing TV shows.'
         )
     parser.add_argument(
+        'dest_directory', nargs='?',
+        help='Destination TV directory when renaming/symlinks is enabled. (optional)',
+        default=None
+        )        
+    parser.add_argument(
         '-u', '--update', dest='update_database',
         action='store_true', default=appconfig.get('database', 'update', bool),
         help='Only import episodes which don\'t already exist in database. (Default)'
         )
     parser.add_argument(
-        '-r', '--reset', dest='reset_database',
-        action='store_true', default=appconfig.get('database', 'reset', bool),
+        '-c', '--clear', dest='clear_database',
+        action='store_true', default=appconfig.get('database', 'clear', bool),
         help='Overwrite existing database (if any) in directory.(overrides --update)'
         )
     parser.add_argument(
-        '-m', '--move-files', dest='move_files',
-        action='store_true', default=appconfig.get('importer', 'move-files', bool),
+        '-r', '--rename-files', dest='rename_files',
+        action='store_true', default=appconfig.get('importer', 'rename-files', bool),
         help='Rename and organize TV show files while importing.'
+        )
+    parser.add_argument(
+        '-s', '--symlinks', dest='symlinks',
+        action='store_true', default=appconfig.get('importer', 'symlinks', bool),
+        help='Create a virtual filesystem of TV dir with symlinks. Requires `dest_directory`.'
         )
     parser.add_argument(
         '-n', '--naming-scheme', dest='naming_scheme',
         default=appconfig.get('importer', 'naming-scheme'),
         help='The naming scheme to use when renaming.'
+        )
+    parser.add_argument(
+        '--force-rename', dest='force_rename', action='store_true',
+        default=appconfig.get('importer', 'force-rename', bool),
+        help='Allow overwriting of existing files when renaming.'
         )
     parser.add_argument(
         '-b', '--brute', dest='brute',
@@ -62,31 +77,39 @@ def main():
 
     args = parser.parse_args()
 
-    argsd = {}
+    argsd = {}    
     argsd['logging'] = {
         'level':args.log_level,
-        'filename':args.log_file,
         'clear_log_file':args.clear_log_file
         }        
     argsd['database'] = {
-        'reset':args.reset_database,
+        'clear':args.clear_database,
         'update':args.update_database
         }
     argsd['importer'] = {
         'unrar':args.extract_rars,
         'delete-rar':args.extract_rars,
         'brute':args.brute,
-        'move-files':args.move_files,
+        'move-files':args.rename_files,
         'naming-scheme':args.naming_scheme,
+        'force-rename':args.force_rename,
+        'symlinks':args.symlinks,
         }
+    if not args.dest_directory:
+        args.dest_directory = args.directory
+    if args.log_file:
+        argsd['logging']['filename'] = args.log_file
 
     appconfig.import_to_runtime_parser(argsd)
+
+    lfn = appconfig.get('logging', 'filename')
+    logger.set_filehandler(lfn)
     logger.log.setLevel(logging.__getattribute__(args.log_level.upper()))
     if args.clear_log_file:
         try:
-            os.unlink(appconfig.get('logging', 'filename'))
+            lfn
         except: pass
-    entrypoint.start_importer(args.directory)
+    entrypoint.start_importer(args.directory, args.dest_directory)
 
 
     

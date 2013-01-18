@@ -20,10 +20,6 @@ class IncompleteEpisodeError(TVUFError):
 class InvalidArgumentError(TVUFError):
     pass
 
-#fuck this
-class NotADirectoryError(TVUFError):
-    pass
-
 class ShowNotFoundError(TVUFError):
     def __init__(self, msg, *args, **kwargs):
         msg = 'Show \'%s\' was not found on the TVDB' % msg
@@ -60,15 +56,6 @@ class NoResultsError(TVUFError):
     pass
 
 class NoIdInURLError(TVUFError):
-    pass
-
-class PoolError(TVUFError):
-    pass
-
-class PoolExhaustedError(PoolError):
-    pass
-
-class PutUnkeyedConnectionError(PoolError):
     pass
 
 class InvalidVideoFileError(TVUFError):

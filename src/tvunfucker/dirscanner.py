@@ -3,6 +3,7 @@
 
 import os
 from glob import glob
+from fnmatch import fnmatch
 
 from . import parser
 from .parser import base_parse_episode
@@ -19,7 +20,7 @@ def _is_video_file(fn):
     topfn = os.path.split(fn)[1]
     if not os.path.isfile(fn):
         return False
-    elif  topfn in cfg.get('scanner', 'ignored-files').split(','):    
+    elif is_clutter(fn):
         return False
     elif not os.path.splitext(fn)[1] in FILE_EXTENSIONS:
         return False    
@@ -86,6 +87,13 @@ def is_rar(path):
 def dir_is_empty(path):
     return not os.listdir(path)
 
+def is_clutter(filename):
+    clutter = cfg.get('scanner', 'clutter').split(',')
+    for pat in clutter:
+        if fnmatch(filename, pat):
+            return True    
+    return False    
+
 def get_episodes(dir_):
     if not os.path.isdir(dir_):
         raise InvalidArgumentError(
@@ -96,10 +104,12 @@ def get_episodes(dir_):
     bs = bytestring_path
     for dirpath, dirnames, filenames in os.walk(dir_):
         dirpath = normpath(dirpath)
+        if is_clutter(os.path.split(dirpath)[1]):
+            continue
         log.debug('Walking path: %s', dirpath)
         for subdir in dirnames:
             subdir = bs(subdir)
-            if subdir in cfg.get('scanner', 'ignored-dirs').split(','):
+            if is_clutter(subdir):
                 continue
             subdir = os.path.join(dirpath, subdir)
             if dir_is_empty(subdir):
@@ -109,6 +119,8 @@ def get_episodes(dir_):
                 log.info('Found episode: %s', ret)
                 yield base_parse_episode(ret, dir_)
         for fn in filenames:
+            if is_clutter(fn):
+                continue
             fn = bs(fn)
             fn = os.path.join(dirpath, fn)
             if _is_video_file(fn):

@@ -26,6 +26,22 @@ log.addHandler(streamhandler)
 
 level = cfg.get('logging', 'level')
 log.setLevel(logging.__getattribute__(level.upper()))
+
+def set_filehandler(filename):
+    """
+    remove existing `filehandler` and set a new one.
+    `global filehandler` will become the new handler.
+    """
+    fh = logging.FileHandler(filename)
+    fh.setFormatter(fileformatter)
+    global filehandler
+    log.removeHandler(filehandler)
+    filehandler = fh
+    log.addHandler(fh)
+
+
+
+
 ####################################
 
 

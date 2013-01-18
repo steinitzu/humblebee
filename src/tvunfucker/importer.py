@@ -16,7 +16,7 @@ from .tvdbwrapper import lookup
 from .quality import quality_battle
 from .unrarman import unrar_file
 from .util import normpath, split_root_dir, bytestring_path 
-from .renaming import Renamer
+from .renaming import Renamer, SymlinkRenamer
 from . import appconfig as cfg
 from . import __pkgname__
 
@@ -31,7 +31,7 @@ class Importer(object):
         IncompleteEpisodeError
         )
 
-    def __init__(self, directory, **kwargs):
+    def __init__(self, directory, destdir, **kwargs):
         #TODO: take options from cfg and do update and reset functions
         """
         the kwargs must be the command line options thingies, right..?
@@ -42,16 +42,33 @@ class Importer(object):
         self._not_found = []
         self.scraped_count = 0 #deprecate
         self.success_count = 0
-        self.renamer = Renamer(
-            self.directory,
-            self.directory,
-            cfg.get('importer', 'naming_scheme')
-            )
+
+        if cfg.get('importer', 'symlinks', bool):
+            log.debug(
+                'doing a symlink renamer dir: %s, destdir: %s',
+                directory,
+                destdir
+                )
+            self.renamer = SymlinkRenamer(
+                self.directory,
+                destdir,
+                cfg.get('importer', 'naming-scheme')                
+                )
+        else:
+            self.renamer = Renamer(
+                self.directory,
+                destdir,
+                cfg.get('importer', 'naming-scheme')
+                )
 
     def start_import(self):
-        self.last_stat = self.read_laststat()
+        clear = cfg.get('database', 'clear', bool)
+        if clear:
+            self.last_stat = {}
+        else:
+            self.last_stat = self.read_laststat()            
         if self.db.db_file_exists():
-            if cfg.get('database', 'reset', bool):
+            if clear:
                 os.unlink(self.db.dbfile)
                 self.db.create_database(
                     force=True
@@ -61,16 +78,27 @@ class Importer(object):
         self.wrap()
         self.write_laststat(self.last_stat)
 
+    def get_ep_by_id(self, id_):
+        """
+        Get episode from database with given id.
+        """
+        w = 'WHERE id = ?'
+        p = (id_,)
+        return self.db.get_episodes(w, p).next()
+
     def wrap(self):
-        ren = cfg.get('importer', 'move-files', bool)
+        ren = cfg.get('importer', 'rename-files', bool)
+        if not ren: 
+            ren = cfg.get('importer', 'symlinks', bool)
         for ep in self.episodes():
             if cfg.get('importer', 'unrar', bool) and is_rar(ep.path()):
                 ep = self.unrar_episode(ep)
             res = self._wrap_single(ep)
             if isinstance(res, int):
                 self.success_count+=1
-            if ren:
-                self.rename_episode(ep)
+                if ren:
+                    ep = self.get_ep_by_id(res)
+                    self.rename_episode(ep)
         log.warning(
             '%s episodes were scraped and added to the database.', 
             self.success_count
@@ -94,7 +122,7 @@ class Importer(object):
                     log.debug('%s mtime has changed', p)
                     self.last_stat[p] = mt
                     pass
-                elif cfg.get('database', 'reset', bool):
+                elif cfg.get('database', 'clear', bool):
                     yield ep
                 elif cfg.get('database', 'update', bool):
                     continue #it's da same, skip it
@@ -192,6 +220,8 @@ class Importer(object):
         _wrap_single(Episode)
         Wrapper method to handle single episode, from filename to db.
         """
+        todb = False
+        tobin = False
         if not self.should_scrape(ep):
             return
         try:
@@ -252,7 +282,8 @@ class Importer(object):
         return ep
 
     def rename_episode(self, ep):
-        self.renamer.move_episode(ep)
+        force = cfg.get('importer', 'force-rename', bool)
+        self.renamer.move_episode(ep, force=force)
 
     def read_laststat(self):
         p = self._last_stat_path()
