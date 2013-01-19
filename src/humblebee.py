@@ -1,6 +1,6 @@
 import sys
 
-from tvunfucker import cli
+from humblebee import cli
 
 def main():
     cli.main()

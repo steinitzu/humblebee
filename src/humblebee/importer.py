@@ -28,7 +28,7 @@ from .unrarman import unrar_file
 from .quality import quality_battle
 from . import appconfig as cfg
 
-log = logging.getLogger('tvunfucker')
+log = logging.getLogger('humblebee')
 
 class Importer(object):
 

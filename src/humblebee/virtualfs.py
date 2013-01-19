@@ -8,7 +8,7 @@ from .texceptions import NoSuchDatabaseError
 from .util import replace_bad_chars, scene_style, zero_prefix_int, normpath, ensure_utf8
 from .util import safe_make_dirs
 
-log = logging.getLogger('tvunfucker')
+log = logging.getLogger('humblebee')
 
 FNMASKEP = u'%(series_title)s.s%(season_number)se%(ep_number)s%(extra_ep_number)s.%(title)s%(ext)s'
 FNMASKSERIES = u'%(series_title)s (%(series_start_date)s)'
