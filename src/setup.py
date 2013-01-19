@@ -33,5 +33,6 @@ setup(
         'send2trash',
         'unidecode',
         'gnarlytvdb',
+        'xmltodict',
         ]
     )

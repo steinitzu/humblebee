@@ -9,7 +9,7 @@ from subprocess import Popen, PIPE
 import re
 from datetime import timedelta
 
-from . import xmltodict
+import xmltodict
 
 #TODO: turn numeric keys into ints n floats (height, width, bitrate n such)
 
