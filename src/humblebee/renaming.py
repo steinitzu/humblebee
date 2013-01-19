@@ -11,7 +11,7 @@ from .util import make_symlink
 from .dbguy import TVDatabase
 from .texceptions import FileExistsError, InvalidDirectoryError
 
-log = logging.getLogger('tvunfucker')
+log = logging.getLogger('humblebee')
 
 class NamingScheme(object):
 

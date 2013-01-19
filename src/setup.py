@@ -4,7 +4,7 @@
 from setuptools import setup
 
 setup(
-    name='tvunfucker',
+    name='humblebee',
     version='0.6',
     description='A scraper for TV shows.',
     author='Steinthor Palsson',
@@ -15,15 +15,15 @@ setup(
     include_package_data=True,
     
     packages=[
-        'tvunfucker', 
-        'tvunfucker.tvdb_api'
+        'humblebee', 
+        'humblebee.tvdb_api'
         ],
     
-    package_data = {'tvunfucker' : ['default.cfg', 'schema.sql']},
+    package_data = {'humblebee' : ['default.cfg', 'schema.sql']},
     
     entry_points={
         'console_scripts': [
-            'tvunfucker = tvunfucker.cli:main'
+            'humblebee = humblebee.cli:main'
             ]
         },    
     

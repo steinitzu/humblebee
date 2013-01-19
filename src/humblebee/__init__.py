@@ -8,7 +8,7 @@ from . import cfg
 from .util import get_prog_home_dir
 
 
-__pkgname__ = 'tvunfucker'
+__pkgname__ = 'humblebee'
 
 _globconffile = os.path.join(os.path.dirname(__file__), 'default.cfg')
 
@@ -26,7 +26,7 @@ quotes = [
     ]
 
 def app_excepthook(etype, e, etraceback):
-    log = logging.getLogger('tvunfucker')
+    log = logging.getLogger('humblebee')
     q = quotes[randint(0, len(quotes)-1)]
     log.fatal(q)
     log.fatal(
