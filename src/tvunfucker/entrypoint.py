@@ -6,4 +6,4 @@ def start_importer(directory, dest_directory):
     Start a new Importer with current cfg options.
     """
     imp = importer.Importer(directory, dest_directory)
-    imp.start_import()
+    imp.do_import()

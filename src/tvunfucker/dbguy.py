@@ -263,7 +263,7 @@ class Database(object):
 
 class TVDatabase(Database):
     def __init__(self, directory):
-        self.directory = util.ensure_utf8(directory)
+        self.directory = normpath(util.ensure_utf8(directory))
         dbfile = os.path.join(
             directory,
             cfg.get('database', 'local-database-filename')

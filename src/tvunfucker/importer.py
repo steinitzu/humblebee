@@ -7,193 +7,129 @@ from glob import glob
 from send2trash import send2trash
 
 from .dbguy import TVDatabase
-from .dirscanner import get_episodes, get_file_from_single_ep_dir, is_rar
+from .renaming import Renamer, SymlinkRenamer
 from .parser import reverse_parse_episode
+from .texceptions import SeasonNotFoundError
+from .texceptions import EpisodeNotFoundError
 from .texceptions import IncompleteEpisodeError
-from .texceptions import ShowNotFoundError, SeasonNotFoundError, EpisodeNotFoundError
+from .texceptions import ShowNotFoundError
 from .texceptions import InvalidDirectoryError
 from .tvdbwrapper import lookup
-from .quality import quality_battle
+from .util import split_root_dir
+from .util import normpath
+from .util import bytestring_path
+from .util import syspath
+from .util import safe_make_dirs
+from .util import make_symlink
+from .dirscanner import get_episodes
+from .dirscanner import is_rar
+from .dirscanner import get_file_from_single_ep_dir
 from .unrarman import unrar_file
-from .util import normpath, split_root_dir, bytestring_path 
-from .renaming import Renamer, SymlinkRenamer
+from .quality import quality_battle
 from . import appconfig as cfg
-from . import __pkgname__
 
-log = logging.getLogger(__pkgname__)
+log = logging.getLogger('tvunfucker')
 
-class Importer(object):    
+class Importer(object):
 
-    scrape_errors = (
+    lookup_error = (
         ShowNotFoundError,
         SeasonNotFoundError,
         EpisodeNotFoundError,
         IncompleteEpisodeError
         )
+    
+    def __init__(self, rootdir, destdir, **kwargs):
+        self.db = TVDatabase(rootdir)
+        self.rootdir = self.db.directory
 
-    def __init__(self, directory, destdir, **kwargs):
-        #TODO: take options from cfg and do update and reset functions
-        """
-        the kwargs must be the command line options thingies, right..?
-        """        
-        self.db = TVDatabase(directory)
-        self.directory = self.db.directory
-        #Episodes which weren't found on the web
-        self._not_found = []
-        self.scraped_count = 0 #deprecate
-        self.success_count = 0
+        self._cleardb = cfg.get('database', 'clear', bool)
+        self._update = cfg.get('database', 'update', bool)
+        self._brute = cfg.get('importer', 'brute', bool)
+        self._unrar = cfg.get('importer', 'unrar', bool)
+        self._forcerename = cfg.get('importer', 'force-rename', bool)
+        self._rename = cfg.get('importer', 'rename-files', bool)
+        self._symlinks = cfg.get('importer', 'symlinks', bool)
 
+        ns = cfg.get('importer', 'naming-scheme')
         if cfg.get('importer', 'symlinks', bool):
-            log.debug(
-                'doing a symlink renamer dir: %s, destdir: %s',
-                directory,
-                destdir
-                )
-            self.renamer = SymlinkRenamer(
-                self.directory,
-                destdir,
-                cfg.get('importer', 'naming-scheme')                
-                )
+            self.renamer = SymlinkRenamer(self.rootdir, destdir, ns)
+        elif cfg.get('importer', 'rename-files', bool):
+            self.renamer = Renamer(self.rootdir, destdir, ns)   
         else:
-            self.renamer = Renamer(
-                self.directory,
-                destdir,
-                cfg.get('importer', 'naming-scheme')
-                )
+            self.renamer = None
 
-    def start_import(self):
-        clear = cfg.get('database', 'clear', bool)
-        if clear:
+        if self._cleardb:
             self.last_stat = {}
         else:
-            self.last_stat = self.read_laststat()            
+            self.last_stat = self._read_laststat()
+
+        self.failed_lookup = []
+        self.added_to_db = []
+        self.success_lookup = []
+
+    def do_import(self):
         if self.db.db_file_exists():
-            if clear:
-                os.unlink(self.db.dbfile)
-                self.db.create_database(
-                    force=True
-                    )
+            if self._cleardb:
+                self.db.create_database(force=True)
         else:
             self.db.create_database()
-        self.wrap()
-        self.write_laststat(self.last_stat)
+        def get_ep_by_id(id_):
+            w = 'WHERE id = ?'
+            p = (id_,)
+            return self.db.get_episodes(w, p).next()
+        for ep in get_episodes(self.rootdir):
+            self.last_stat[ep.path()] = os.path.getmtime(ep.path())
+            if self.should_import(ep):
+                res = self.import_episode(ep)
+                if res and self.renamer:
+                    ep = get_ep_by_id(res)
+                    self.renamer.move_episode(ep, force=self._forcerename)
+        if self._symlinks:
+            self._make_unknown_dir()
+        self._write_laststat(self.last_stat)
+        log.info('Failed lookup count: %s', len(self.failed_lookup))
+        log.info('Added to db count: %s', len(self.added_to_db))
+        log.info('Succesful lookup count: %s', len(self.success_lookup))
 
-    def get_ep_by_id(self, id_):
+    def import_episode(self, ep):
         """
-        Get episode from database with given id.
+        Import a single episode.
+        Lookup info, unrar, compare with existing ep, upsert to db.
+        Actions performed depend on cfg options.
         """
-        w = 'WHERE id = ?'
-        p = (id_,)
-        return self.db.get_episodes(w, p).next()
-
-    def wrap(self):
-        ren = cfg.get('importer', 'rename-files', bool)
-        if not ren: 
-            ren = cfg.get('importer', 'symlinks', bool)
-        for ep in self.episodes():
-            if cfg.get('importer', 'unrar', bool) and is_rar(ep.path()):
-                ep = self.unrar_episode(ep)
-            res = self._wrap_single(ep)
-            if isinstance(res, int):
-                self.success_count+=1
-                if ren:
-                    ep = self.get_ep_by_id(res)
-                    self.rename_episode(ep)
-        log.warning(
-            '%s episodes were scraped and added to the database.', 
-            self.success_count
-            )
-        log.warning(
-            '%s "episodes" were not fully parsed or not found the tvdb', 
-            len(self._not_found)
-            )
-
-    def episodes(self):
-        """
-        Yield Episodes in directory.
-        Episodes returned from here are result of ez_parse_episode.
-        """
-        for ep in get_episodes(self.directory):
-            p = ep.path()
-            mt = float(str(os.path.getmtime(p)))
-            if self.last_stat.has_key(p):
-                log.debug('%s is in laststat', p)
-                if mt > self.last_stat[p]:
-                    log.debug('%s mtime has changed', p)
-                    self.last_stat[p] = mt
-                    pass
-                elif cfg.get('database', 'clear', bool):
-                    yield ep
-                elif cfg.get('database', 'update', bool):
-                    continue #it's da same, skip it
-            else:
-                log.debug('%s not in laststat', p)
-                self.last_stat[p] = mt
-            yield ep
-
-    def _scrape_episode(self, episode):
-        """
-        scrape_episode(Episode) -> Episode
-        Fully parse it, look it up, fill it with info and return.
-        Ideally results in an Episode with full info, ready for the database.
-        Can raise ShowNotFoundError, SeasonNotFoundError 
-        or EpisodeNotFoundError
-        """
-        #TODO: be smarter (all eps in same dir
-        #should be the same series, right, unless 
-        #there's a mix thing like incoming)
-        if not episode.is_fully_parsed():
-            episode = reverse_parse_episode(
-                episode.path(), self.directory)
-        scrapedep = lookup(episode)
-        return scrapedep            
-
-    def _fallback_scrape_episode(self, path):
-        """
-        hard_scrape_path(path) -> Episode
-        Do a reverse_parse and scrape given path.
-        """
-        ep = reverse_parse_episode(path, self.directory)
-        return self._scrape_episode(ep)
-
-
-    def fill_episode(self, ep):
-        """
-        fill_episode(Episode) -> Episode
-        Parses and looks up given episode info and returns.
-        May raise exceptions in self.scrape_errors.
-        """
+        def upsert(epi):
+            idd = self.db.upsert_episode(epi)
+            self.added_to_db.append(epi)
+            return idd            
         try:
-            ep = self._scrape_episode(ep)
-        except self.scrape_errors as e:
-            log.debug(
-                u'Failed lookup for episode %s.\nMessage:%s', 
-                ep.path(),
-                e.message
-                )
-            ep = self._fallback_scrape_episode(ep.path())
-        return ep
-
-    def dump_unscraped(self, ep):
-        self._not_found.append(ep)
-        self.db.add_unparsed_child(ep.path('rel'))            
-
-    def should_scrape(self, ep):
-        """
-        Determine whether given episode should be scraped for this run.
-        """
-        fileindb = self.db.path_exists(ep.path('rel'))
-        update = cfg.get('database', 'update', bool)
-        if fileindb and update:
-            return False
+            ep = self.fill_episode(ep)
+        except self.lookup_error as e:
+            self.failed_lookup.append(ep)
+            self.db.add_unparsed_child(ep.path('rel'))
+            return
         else:
-            return True
+            self.success_lookup.append(ep)
+        if self._unrar:
+            ep = self.unrar_episode(ep)
+        idindb = self.db.episode_exists(ep)
+        if idindb and self._brute:
+            return upsert(ep)
+        elif idindb:
+            better = self.get_better(ep)
+            if better is ep:
+                return upsert(better)
+            else:
+                return
+        else:
+            return upsert(ep)
+            
 
-    def battle_existing(self, ep):
+    def get_better(self, ep):
         """
-        Do a quality battle with existing ep in db with same id as `ep`.
-        Winner returns.
-        If no winner, return None
+        Check if given `ep` is better quality than 
+        one with same id in db.
+        Returns True or False accordingly.
         """
         oldep = self.db.get_episodes('WHERE id=?', params=(ep['id'],)).next()
         log.info(
@@ -214,53 +150,45 @@ class Importer(object):
             return
         #let's fight
         return quality_battle(ep, oldep, self.db.directory)
+        
 
-    def _wrap_single(self, ep):
+    def should_import(self, ep):
         """
-        _wrap_single(Episode)
-        Wrapper method to handle single episode, from filename to db.
+        Decide if given episode should be scraped 
+        or not.
         """
-        todb = False
-        tobin = False
-        if not self.should_scrape(ep):
-            return
-        try:
-            ep = self.fill_episode(ep)
-        except self.scrape_errors as e:
-            return self.dump_unscraped(ep)
-#        if fileindb:
-#            return self.db.upsert_episode(ep) #we update it
-        log.debug(
-            'Checking if episode exists. id:%s,sname:%s-s%se%s',
-            ep['id'], ep['series_title'], ep['season_number'], ep['ep_number']
-            )
-        idindb = self.db.episode_exists(ep)
-        if idindb and not cfg.get('importer', 'brute', bool):
-            better = self.battle_existing(ep)
-            log.info(
-                '"%s" won the quality battle.',
-                better.path() if better else None
-                )
-            if better is ep:
-                return self.db.upsert_episode(better)                
+        if self._cleardb:
+            return True #always scrape when clearing        
+        p = ep.path()
+        newmt = round(os.path.getmtime(p), 2)
+        #newmt = float(str(os.path.getmtime(p)))
+        if self.last_stat.has_key(p):
+            log.debug('"%s" was scraped last run.', p)
+            if newmt > round(self.last_stat[p],2):
+                log.debug('"%s" changed since last run.', p)
+                return True
+            elif self._update:
+                return False #no change, update, no scrape
             else:
-                #don't care if it's oldep or None
-                return
+                return True
         else:
-            return self.db.upsert_episode(ep)        
+            return True #not been scraped before, do it
 
-    def trash_rars_in_dir(self, directory):
+    def fill_episode(self, ep):
         """
-        trash_rars_in_dir(directory)
-        Send rar files in given directory to trash.
+        Fill the given `ep` with info from tvdb and return it.
+        Raises `lookup_error` if not possible.
         """
-        log.info('Sending rar files in "%s" to trash.', directory)
-        rnfiles = glob(
-            os.path.join(directory, '*.r[0-9][0-9]'))
-        rarfiles = glob(
-            os.path.join(directory, '*.rar'))
-        for f in rnfiles+rarfiles:
-            send2trash(f)
+        if not ep.is_fully_parsed():
+            ep = reverse_parse_episode(
+                ep.path(), self.rootdir
+                )
+        try:
+            return  lookup(ep)
+        except self.lookup_error as e:
+            log.debug(e.message)
+            ep = reverse_parse_episode(ep.path(), self.rootdir)
+            return lookup(ep)
 
     def unrar_episode(self, ep, out_dir=None):
         """
@@ -281,11 +209,40 @@ class Importer(object):
             self.trash_rars_in_dir(p)
         return ep
 
-    def rename_episode(self, ep):
-        force = cfg.get('importer', 'force-rename', bool)
-        self.renamer.move_episode(ep, force=force)
+    def trash_rars_in_dir(self, directory):
+        """
+        trash_rars_in_dir(directory)
+        Send rar files in given directory to trash.
+        """
+        log.info('Sending rar files in "%s" to trash.', directory)
+        rnfiles = glob(
+            os.path.join(directory, '*.r[0-9][0-9]'))
+        rarfiles = glob(
+            os.path.join(directory, '*.rar'))
+        for f in rnfiles+rarfiles:
+            send2trash(f)
 
-    def read_laststat(self):
+    def _make_unknown_dir(self):
+        """
+        When symlinks, make a virtual dir based on 
+        unparsed_episode table.
+        """
+        pj = os.path.join
+        root = normpath(
+            pj(self.renamer.destdir, '_unknown')
+            )
+        safe_make_dirs(root)        
+        q = 'SELECT * FROM unparsed_episode'
+        for row in self.db.execute_query(q):
+            path = row['child_path']
+            rpath = pj(self.rootdir, path)
+            vpath = pj(root, path)
+            if os.path.isdir(rpath):
+                safe_make_dirs(vpath)
+            else:
+                make_symlink(rpath, vpath)
+
+    def _read_laststat(self):
         p = self._last_stat_path()
         try:
             f = open(p, 'r')
@@ -301,33 +258,26 @@ class Importer(object):
             bs = bytestring_path
             #path should always be relative to root
             path,mtime = line.strip('\n').split(';')
-            path = normpath(os.path.join(bs(self.directory), bs(path)))
-            stats[path] = float(mtime)
+            path = normpath(os.path.join(bs(self.rootdir), bs(path)))
+            stats[path] = round(float(mtime),2)
         return stats
 
-    def write_laststat(self, stats):
+    def _write_laststat(self, stats):
         p = self._last_stat_path()
         try:
             f = open(p, 'w')
         except IOError as e:
-            raise        
+            raise
         s = ''
         for fn, mtime in stats.iteritems():
-            fn = split_root_dir(fn, self.directory)[1]
-            s+='%s;%s\n' % (fn,mtime)
+            fn = split_root_dir(fn, self.rootdir)[1]
+            s+='%s;%s\n' % (fn,round(mtime,2))
         s = s[:-1] #strip last newline
         f.write(s)
         f.close()
             
     def _last_stat_path(self):
-        return os.path.join(
-            self.directory,
+        return syspath(os.path.join(
+            self.rootdir,
             cfg.get('database', 'resume-data-filename')
-            )                    
-        
-
-class DifficultEpisodeHandler(object):
-    """
-    Handler of difficult episodes which can't be scraped with ordinary methods.
-    """
-    pass
+            ))
