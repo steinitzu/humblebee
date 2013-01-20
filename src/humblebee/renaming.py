@@ -117,6 +117,21 @@ class Renamer(object):
         ep['file_path'] = newpath
         return self.db.upsert_episode(ep)
 
+    def spare_dest_file(self, fn):
+        """
+        Move file to _unknown dir.
+        """
+        pj = os.path.join
+        unknown = normpath(
+            pj(self.destdir, '_unknown')
+            )
+        safe_make_dirs(unknown)
+        destfile = normpath(
+            pj(unknown, os.path.split(fn)[1])
+            )
+        os.rename(fn, destfile)
+        
+
     def move_episode(self, ep, force=False):
         """
         Path will be moved to `destdir` in a filename structure 
@@ -126,11 +141,8 @@ class Renamer(object):
 
         Containing directory of ep is pruned afterwards.
 
-        If the new potential path exists already in filesystem, 
-        an FileExistsError is raised.
-        If  `force` is True, no error is raised and existing file is overwritten.
-        If `force` and new file is a directory, it will be overwritten regardless 
-        of whether it is empty or not (you have been warned).
+        If the new path currently exists, it will be moved to '_unknown' before 
+        ep is put in its place. Unless `force` is True, then it is overwritten.
         """        
         oldfile = ep.path()
         olddir = os.path.dirname(oldfile)
@@ -140,9 +152,7 @@ class Renamer(object):
         log.debug('Renaming "%s" -> "%s"', oldfile, newfile)
         pathindb = self.db.path_exists(ep.path('db'))        
         if os.path.exists(newfile) and not force:
-            raise FileExistsError(
-                'Can not overwrite file at "%s"' % newfile
-                )
+            self.spare_dest_file(newfile)
         if os.path.isdir(newfile) and force:
             shutil.rmtree(newfile)
         safe_make_dirs(os.path.dirname(newfile))

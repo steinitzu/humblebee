@@ -112,7 +112,7 @@ class Episode(OrderedDict):
         )
     
     def __init__(self, path, root_dir):
-        path = util.ensure_utf8(path)
+        #path = util.ensure_utf8(path)
         super(Episode, self).__init__()
         for key in self.preset_keys:
             super(Episode, self).__setitem__(

@@ -95,7 +95,7 @@ def is_clutter(filename):
     return False    
 
 def is_noscan(filename):
-    noscan = cfg.get('scanner', 'dont-scan').split(',')
+    noscan = cfg.get('scanner', 'no-scan').split(',')
     for pat in noscan:
         if fnmatch(filename.lower(), pat.lower()):
             return True
