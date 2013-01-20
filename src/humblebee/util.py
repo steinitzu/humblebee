@@ -258,10 +258,11 @@ def prune_dirs(path, root=None, clutter=('.DS_Store', 'Thumbs.db')):
         else:
             break
 
-def make_symlink(target, link):
+def make_symlink(target, link, overwrite=False):
     """
     Make symlink and all dirs leading up to it.
     OSError 17 (file exists) will be ignored.
+    If overwrite, existing symlink at `link` will be overwritten.
     """
     target = syspath(target)
     link = syspath(link)
@@ -272,7 +273,9 @@ def make_symlink(target, link):
         os.symlink(target, link)
     except OSError as e:
         if e.errno == 17:
-            pass
+            if overwrite and os.path.islink(link):
+                os.unlink(link)
+                os.symlink(target, link)
         else:
             raise        
 

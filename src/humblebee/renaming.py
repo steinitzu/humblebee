@@ -179,7 +179,7 @@ class SymlinkRenamer(Renamer):
     def move_episode(self, ep, force=True):
         oldfile = ep.path()
         newfile = self.naming_scheme.full_path(ep, root=self.destdir)
-        make_symlink(oldfile, newfile)
+        make_symlink(oldfile, newfile, overwrite=True)
 
 
 

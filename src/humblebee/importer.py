@@ -86,6 +86,8 @@ class Importer(object):
             w = 'WHERE id = ?'
             p = (id_,)
             return self.db.get_episodes(w, p).next()
+        log.info('Cleaning up')
+        c = self.dust_database()
         for ep in get_episodes(self.rootdir):
             if self.should_import(ep):
                 res = self.import_episode(ep)
@@ -96,8 +98,6 @@ class Importer(object):
             self.last_stat.sync()
         if self._symlinks:
             make_unknown_dir(self.db, self.renamer.destdir)
-        log.info('Cleaning up')
-        c = self.dust_database()
         log.info('Deleted %s zombie eps from database', c)
         log.info('Failed lookup count: %s', len(self.failed_lookup))
         log.info('Added to db count: %s', len(self.added_to_db))
