@@ -16,7 +16,7 @@ setup(
     packages=[
         'humblebee', 
         ],
-    package_data = {'' : ['default.cfg', 'schema.sql']},    
+    package_data = {'' : ['default.cfg', 'schema.sql', 'cacert.txt']},    
 
 
     entry_points={
