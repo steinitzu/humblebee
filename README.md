@@ -1,4 +1,4 @@
-# Humblebee  (version 1.0) #
+# Humblebee  (version 1.01) #
 
 Humblebee is a scraper and renamer for TV shows.
 It handles many naming schemes and the most odd directory structures.
