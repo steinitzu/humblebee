@@ -344,7 +344,16 @@ class TVDatabase(Database):
         for row in self.execute_query(q, params):
             e = Episode('', self.directory)
             e.update(row)
-            yield e            
+            yield e           
+    
+    def delete_episode(self, epid):
+        """
+        Delete episode with given `epid` from database.
+        """        
+        q = 'DELETE FROM episode WHERE id = ?;'
+        p = (epid,)
+        self.execute_query(q, p, fetch=0)
+        
 
     def _insert_episode(self, epobj):
         q = 'INSERT INTO episode (%s) VALUES (%s);'

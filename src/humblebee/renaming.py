@@ -141,7 +141,7 @@ class Renamer(object):
         pathindb = self.db.path_exists(ep.path('db'))        
         if os.path.exists(newfile) and not force:
             raise FileExistsError(
-                'Can not overwrite file at "%s"', newfile
+                'Can not overwrite file at "%s"' % newfile
                 )
         if os.path.isdir(newfile) and force:
             shutil.rmtree(newfile)

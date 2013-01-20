@@ -96,6 +96,9 @@ class Importer(object):
             self.last_stat.sync()
         if self._symlinks:
             make_unknown_dir(self.db, self.renamer.destdir)
+        log.info('Cleaning up')
+        c = self.dust_database()
+        log.info('Deleted %s zombie eps from database', c)
         log.info('Failed lookup count: %s', len(self.failed_lookup))
         log.info('Added to db count: %s', len(self.added_to_db))
         log.info('Succesful lookup count: %s', len(self.success_lookup))
@@ -248,6 +251,18 @@ class Importer(object):
             self.rootdir,
             cfg.get('database', 'resume-data-filename')
             ))
+
+    def dust_database(self):
+        """
+        Remove entries from database for non-existing paths.
+        Run after import.
+        """
+        c = 0
+        for ep in self.db.get_episodes():
+            if not os.path.exists(ep.path()):
+                c+=1
+                self.db.delete_episode(ep['id'])
+        return c
 
     def write_stats(self):
         """

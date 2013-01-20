@@ -94,6 +94,13 @@ def is_clutter(filename):
             return True    
     return False    
 
+def is_noscan(filename):
+    noscan = cfg.get('scanner', 'dont-scan').split(',')
+    for pat in noscan:
+        if fnmatch(filename.lower(), pat.lower()):
+            return True
+    return False
+
 def get_episodes(dir_):
     if not os.path.isdir(dir_):
         raise InvalidArgumentError(
@@ -104,12 +111,13 @@ def get_episodes(dir_):
     bs = bytestring_path
     for dirpath, dirnames, filenames in os.walk(dir_):
         dirpath = normpath(dirpath)
-        if is_clutter(os.path.split(dirpath)[1]):
+        p = os.path.split(dirpath)[1]
+        if is_clutter(p) or is_noscan(p):
             continue
         log.debug('Walking path: %s', dirpath)
         for subdir in dirnames:
             subdir = bs(subdir)
-            if is_clutter(subdir):
+            if is_clutter(subdir) or is_noscan(subdir):
                 continue
             subdir = os.path.join(dirpath, subdir)
             if dir_is_empty(subdir):
