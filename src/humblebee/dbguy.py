@@ -270,15 +270,18 @@ class TVDatabase(Database):
             )
         super(TVDatabase, self).__init__(dbfile)
 
-    def create_database(self, force=False):
+    def create_database(self, force=False, soft=False):
         """
         Import the database schema to a new database.
         This will raise a InitExistingDatabaseError if db already exists.
         If force==True: delete existing dbfile before creating.
+        If force==True: ignore InitExistingDatabaseError
         """
         if self.db_file_exists():
             if force:
                 os.unlink(self.dbfile)
+            elif soft:
+                return
             else:
                 raise InitExistingDatabaseError(self.dbfile)
         schema = open(

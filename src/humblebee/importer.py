@@ -98,6 +98,9 @@ class Importer(object):
             self.last_stat.sync()
         if self._symlinks:
             make_unknown_dir(self.db, self.renamer.destdir)
+        log.info('Cleaning up')
+        cc = self.dust_database()
+        c = c+cc
         log.info('Deleted %s zombie eps from database', c)
         log.info('Failed lookup count: %s', len(self.failed_lookup))
         log.info('Added to db count: %s', len(self.added_to_db))

@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 #encoding:utf-8
 
@@ -5,7 +6,7 @@ from setuptools import setup
 
 setup(
     name='humblebee',
-    version='0.6',
+    version='1.0',
     description='A scraper for TV shows.',
     author='Steinthor Palsson',
     author_email='steinitzu@gmail.com',

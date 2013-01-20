@@ -109,13 +109,18 @@ class Renamer(object):
         self.destdir = normpath(destdir)
         self.naming_scheme = naming_schemes[naming_scheme]()
         safe_make_dirs(self.destdir)
+        if not samefile(self.destdir, self.db.directory):
+            self.destdb = TVDatabase(self.destdir)
+            self.destdb.create_database(soft=True)
+        else:
+            self.destdb = self.db
 
     def update_db_path(self, ep, newpath):
         """
         Update file_path in database for given episode.
         """
         ep['file_path'] = newpath
-        return self.db.upsert_episode(ep)
+        return self.destdb.upsert_episode(ep)
 
     def spare_dest_file(self, fn):
         """
@@ -157,8 +162,8 @@ class Renamer(object):
             shutil.rmtree(newfile)
         safe_make_dirs(os.path.dirname(newfile))
         os.rename(oldfile, newfile)
-        if samefile(self.destdir, self.db.directory):
-            self.update_db_path(ep, newfile)
+        #if samefile(self.destdir, self.db.directory):
+        self.update_db_path(ep, newfile)
         prune_dirs(olddir, root=self.db.directory)
         return ep
 
