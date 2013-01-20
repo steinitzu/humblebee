@@ -94,7 +94,7 @@ class Bing(object):
         self.http = self.get_http()
 
     def get_http(self):
-        h = httplib2.Http(cache=self.cache)
+        h = httplib2.Http(cache=self.cache, ca_certs=cacert)
         return h        
 
     def get_json(self, query):
