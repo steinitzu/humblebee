@@ -1,0 +1,4 @@
+include humblebee/default.cfg
+include humblebee/schema.sql
+include LICENSE
+include README.md
