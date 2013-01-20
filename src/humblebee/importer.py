@@ -8,7 +8,7 @@ from datetime import datetime
 from send2trash import send2trash
 
 from .dbguy import TVDatabase
-from .renaming import Renamer, SymlinkRenamer
+from .renaming import Renamer, SymlinkRenamer, make_unknown_dir
 from .parser import reverse_parse_episode
 from .texceptions import SeasonNotFoundError
 from .texceptions import EpisodeNotFoundError
@@ -80,6 +80,7 @@ class Importer(object):
             if self._cleardb:
                 self.db.create_database(force=True)
         else:
+            self._cleardb = True #no existing db means "first" import
             self.db.create_database()
         def get_ep_by_id(id_):
             w = 'WHERE id = ?'
@@ -94,7 +95,7 @@ class Importer(object):
             self.last_stat[ep.path('db')] = round(os.path.getmtime(ep.path()),2)
             self.last_stat.sync()
         if self._symlinks:
-            self._make_unknown_dir()
+            make_unknown_dir(self.db, self.renamer.destdir)
         log.info('Failed lookup count: %s', len(self.failed_lookup))
         log.info('Added to db count: %s', len(self.added_to_db))
         log.info('Succesful lookup count: %s', len(self.success_lookup))
@@ -241,26 +242,6 @@ class Importer(object):
             os.path.join(directory, '*.rar'))
         for f in rnfiles+rarfiles:
             send2trash(f)
-
-    def _make_unknown_dir(self):
-        """
-        When symlinks, make a virtual dir based on 
-        unparsed_episode table.
-        """
-        pj = os.path.join
-        root = normpath(
-            pj(self.renamer.destdir, '_unknown')
-            )
-        safe_make_dirs(root)        
-        q = 'SELECT * FROM unparsed_episode'
-        for row in self.db.execute_query(q):
-            path = row['child_path']
-            rpath = pj(self.rootdir, path)
-            vpath = pj(root, path)
-            if os.path.isdir(rpath):
-                safe_make_dirs(vpath)
-            else:
-                make_symlink(rpath, vpath)
             
     def _last_stat_path(self):
         return syspath(os.path.join(

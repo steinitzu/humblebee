@@ -10,6 +10,7 @@ from .util import prune_dirs
 from .util import make_symlink
 from .dbguy import TVDatabase
 from .texceptions import FileExistsError, InvalidDirectoryError
+from .texceptions import NoSuchDatabaseError
 
 log = logging.getLogger('humblebee')
 
@@ -169,3 +170,60 @@ class SymlinkRenamer(Renamer):
         oldfile = ep.path()
         newfile = self.naming_scheme.full_path(ep, root=self.destdir)
         make_symlink(oldfile, newfile)
+
+
+
+
+
+def make_unknown_dir(db, destdir):
+    """nn
+    When symlinks, make a virtual dir based on 
+    unparsed_episode table.
+    """
+    pj = os.path.join
+    root = normpath(
+        pj(destdir, '_unknown')
+        )
+    safe_make_dirs(root)        
+    q = 'SELECT * FROM unparsed_episode'
+    for row in db.execute_query(q):
+        path = row['child_path']
+        rpath = pj(db.directory, path)
+        vpath = pj(root, path)
+        if os.path.isdir(rpath):
+            safe_make_dirs(vpath)
+        else:
+            make_symlink(rpath, vpath)
+
+def make_symlinkfs(rootdir, destdir, naming_scheme='friendly'):
+    """
+    Make a symlinkfs in destdir based on existing database in rootdir.
+    """
+    db = TVDatabase(rootdir)
+    if not db.db_file_exists():
+        raise NoSuchDatabaseError(
+            'No tv database in "%s", please import first.' % rootdir
+            )
+    if not os.path.exists(destdir):
+        safe_make_dirs(destdir)
+    renamer = SymlinkRenamer(rootdir, destdir, naming_scheme='friendly')
+    for ep in db.get_episodes():
+        renamer.move_episode(ep)    
+    make_unknown_dir(db, destdir)
+
+
+def renamer_all(rootdir, destdir, force=False, naming_scheme='friendly'):
+    """
+    Rename all episodes in database in `rootdir` to `destdir`.
+    """
+    db = TVDatabase(rootdir)
+    if not db.db_file_exists():
+        raise NoSuchDatabaseError(
+            'No tv database in "%s", please import first.' % rootdir
+            )
+    if not os.path.exists(destdir):
+        safe_make_dirs(destdir)
+    renamer = Renamer(rootdir, destdir, naming_scheme='friendly')
+    for ep in db.get_episodes():
+        renamer.move_episode(ep, force=force)
+    
