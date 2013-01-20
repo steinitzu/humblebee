@@ -247,7 +247,7 @@ class Importer(object):
             send2trash(f)
             
     def _last_stat_path(self):
-        return syspath(os.path.join(
+        return normpath(os.path.join(
             self.rootdir,
             cfg.get('database', 'resume-data-filename')
             ))
