@@ -16,7 +16,6 @@ setup(
     
     packages=[
         'humblebee', 
-        'humblebee.tvdb_api'
         ],
     
     package_data = {'humblebee' : ['default.cfg', 'schema.sql']},

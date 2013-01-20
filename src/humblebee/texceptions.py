@@ -60,3 +60,5 @@ class NoIdInURLError(TVUFError):
 
 class InvalidVideoFileError(TVUFError):
     pass
+
+class RARError(TVUFError): pass

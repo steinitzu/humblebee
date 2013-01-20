@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import logging, os
+import logging, os, time, shelve
 from glob import glob
+from datetime import datetime
 
 from send2trash import send2trash
 
@@ -14,18 +15,22 @@ from .texceptions import EpisodeNotFoundError
 from .texceptions import IncompleteEpisodeError
 from .texceptions import ShowNotFoundError
 from .texceptions import InvalidDirectoryError
+from .texceptions import RARError
 from .tvdbwrapper import lookup
 from .util import split_root_dir
 from .util import normpath
 from .util import bytestring_path
+from .util import soft_unlink
 from .util import syspath
 from .util import safe_make_dirs
 from .util import make_symlink
+from .util import samefile
 from .dirscanner import get_episodes
 from .dirscanner import is_rar
 from .dirscanner import get_file_from_single_ep_dir
 from .unrarman import unrar_file
 from .quality import quality_battle
+from .util import get_prog_home_dir
 from . import appconfig as cfg
 
 log = logging.getLogger('humblebee')
@@ -59,14 +64,16 @@ class Importer(object):
         else:
             self.renamer = None
 
+
         if self._cleardb:
-            self.last_stat = {}
-        else:
-            self.last_stat = self._read_laststat()
+            soft_unlink(self._last_stat_path())
+        self.last_stat = shelve.open(self._last_stat_path())
 
         self.failed_lookup = []
         self.added_to_db = []
         self.success_lookup = []
+        self.extracted_rar = []
+        self.failed_rar = []
 
     def do_import(self):
         if self.db.db_file_exists():
@@ -79,24 +86,28 @@ class Importer(object):
             p = (id_,)
             return self.db.get_episodes(w, p).next()
         for ep in get_episodes(self.rootdir):
-            self.last_stat[ep.path()] = os.path.getmtime(ep.path())
             if self.should_import(ep):
                 res = self.import_episode(ep)
                 if res and self.renamer:
                     ep = get_ep_by_id(res)
                     self.renamer.move_episode(ep, force=self._forcerename)
+            self.last_stat[ep.path('db')] = round(os.path.getmtime(ep.path()),2)
+            self.last_stat.sync()
         if self._symlinks:
             self._make_unknown_dir()
-        self._write_laststat(self.last_stat)
         log.info('Failed lookup count: %s', len(self.failed_lookup))
         log.info('Added to db count: %s', len(self.added_to_db))
         log.info('Succesful lookup count: %s', len(self.success_lookup))
+        log.info('extracted rar count: %s', len(self.extracted_rar))
+        log.info('failed rar count: %s', len(self.failed_rar))
+        self.write_stats()
 
     def import_episode(self, ep):
         """
         Import a single episode.
         Lookup info, unrar, compare with existing ep, upsert to db.
         Actions performed depend on cfg options.
+        Returns ep id or None
         """
         def upsert(epi):
             idd = self.db.upsert_episode(epi)
@@ -110,7 +121,7 @@ class Importer(object):
             return
         else:
             self.success_lookup.append(ep)
-        if self._unrar:
+        if self._unrar and is_rar(ep.path()):
             ep = self.unrar_episode(ep)
         idindb = self.db.episode_exists(ep)
         if idindb and self._brute:
@@ -132,6 +143,8 @@ class Importer(object):
         Returns True or False accordingly.
         """
         oldep = self.db.get_episodes('WHERE id=?', params=(ep['id'],)).next()
+        if samefile(oldep.path(), ep.path()):
+            return
         log.info(
             'Found duplicates. Original: "%s". Contender: "%s".',
             oldep.path(),
@@ -159,13 +172,14 @@ class Importer(object):
         """
         if self._cleardb:
             return True #always scrape when clearing        
-        p = ep.path()
-        newmt = round(os.path.getmtime(p), 2)
-        #newmt = float(str(os.path.getmtime(p)))
+        p = ep.path('db')
+        newmt = round(os.path.getmtime(ep.path()), 2)
         if self.last_stat.has_key(p):
             log.debug('"%s" was scraped last run.', p)
-            if newmt > round(self.last_stat[p],2):
+            oldmt = round(self.last_stat[p],2)
+            if newmt > oldmt:
                 log.debug('"%s" changed since last run.', p)
+                log.debug('newmt: %s, oldmt: %s', newmt,oldmt)
                 return True
             elif self._update:
                 return False #no change, update, no scrape
@@ -193,6 +207,7 @@ class Importer(object):
     def unrar_episode(self, ep, out_dir=None):
         """
         unrar_episode(Episode)
+        Errors are swallowed.
         """
         p = ep.path()
         if not os.path.isdir(p):
@@ -200,13 +215,18 @@ class Importer(object):
                 'Episode path must be a directory. "%s" is not.' % p
                 )
         log.info('Extracting "%s" from rar files.', p)
-        unrar_file(p, out_dir=out_dir)
-        #get new path to episode
-        
+        try:            
+            unrar_file(p, out_dir=out_dir)
+        except RARError as e:
+            log.debug('RARError: %s', e.message)
+            self.failed_rar.append(ep)
+            return ep            
+        #get new path to episode        
         ep['file_path'] = get_file_from_single_ep_dir(p)
         delr = cfg.get('importer', 'delete-rar', bool)
         if delr:
             self.trash_rars_in_dir(p)
+        self.extracted_rar.append(ep)
         return ep
 
     def trash_rars_in_dir(self, directory):
@@ -241,43 +261,51 @@ class Importer(object):
                 safe_make_dirs(vpath)
             else:
                 make_symlink(rpath, vpath)
-
-    def _read_laststat(self):
-        p = self._last_stat_path()
-        try:
-            f = open(p, 'r')
-        except IOError as e:
-            if e.errno == 2:
-                return {} #means no last run
-            else:
-                raise
-        stats = {}
-        lines = f.readlines()
-        f.close()
-        for line in lines:
-            bs = bytestring_path
-            #path should always be relative to root
-            path,mtime = line.strip('\n').split(';')
-            path = normpath(os.path.join(bs(self.rootdir), bs(path)))
-            stats[path] = round(float(mtime),2)
-        return stats
-
-    def _write_laststat(self, stats):
-        p = self._last_stat_path()
-        try:
-            f = open(p, 'w')
-        except IOError as e:
-            raise
-        s = ''
-        for fn, mtime in stats.iteritems():
-            fn = split_root_dir(fn, self.rootdir)[1]
-            s+='%s;%s\n' % (fn,round(mtime,2))
-        s = s[:-1] #strip last newline
-        f.write(s)
-        f.close()
             
     def _last_stat_path(self):
         return syspath(os.path.join(
             self.rootdir,
             cfg.get('database', 'resume-data-filename')
             ))
+
+    def write_stats(self):
+        """
+        Write some stats for this import.
+        """
+        statdir = os.path.join(
+            get_prog_home_dir('humblebee'),
+            'stats'
+            )
+        safe_make_dirs(statdir)
+        sfile = os.path.join(
+            statdir, 
+            str(int(time.time()))
+            )
+        f = open(sfile, 'w')
+        f.write(
+            '\nimport at: %s\n----------------\n' % (
+                str(datetime.now()))
+            )
+        
+        f.write(
+            '\nsuccess lookup count: %s\n----------------\n' % len(self.success_lookup)
+            )
+        f.write('\n'.join([e.path() for e in self.success_lookup]))
+        f.write(
+            '\nfailed lookup count: %s\n----------------\n' % len(self.failed_lookup)
+            )
+        f.write('\n'.join([e.path() for e in self.failed_lookup]))
+        f.write(
+            '\nadded to db count: %s\n----------------\n' % len(self.added_to_db)
+            )
+        f.write('\n'.join([e.path() for e in self.added_to_db]))
+        f.write(
+            '\nextracted from rar files count: %s\n----------------\n' % len(self.extracted_rar)
+            )
+        f.write('\n'.join([e.path() for e in self.extracted_rar]))
+        f.write(
+            '\nfailed rar files count: %s\n----------------\n' % len(self.failed_rar)
+            )
+        f.write('\n'.join([e.path() for e in self.failed_rar]))
+        f.close()
+                

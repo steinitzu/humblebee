@@ -67,14 +67,18 @@ class Friendly(NamingScheme):
         if eep:
             epd['extra_ep_number'] = 'e'+padnum(eep)
         else:
-            epd['extra_ep_number'] = ''                
-        epd['ext'] = os.path.splitext(ep.path())[1]
-        return self.ep_mask % epd
+            epd['extra_ep_number'] = ''             
+        p = ep.path()
+        if os.path.isdir(p):
+            epd['ext'] = ''
+        else:
+            epd['ext'] = os.path.splitext(p)[1]
+        return replace_bad_chars(self.ep_mask % epd)
 
     def season_filename(self, ep):
         epd = dict(ep.items())
         epd['season_number'] = padnum(ep['season_number'])
-        return self.season_mask % epd
+        return replace_bad_chars(self.season_mask % epd)
 
     def series_filename(self, ep):
         """
@@ -86,8 +90,8 @@ class Friendly(NamingScheme):
             epd['series_start_date'] = firstair.year
         else:
             epd['series_start_date'] = 'no-date'
-        if ep['series_title'].endswith('(%s)' % ep['series_start_date']):
-            epd['series_title'] = ep['series_title'][:5]
+        if ep['series_title'].endswith('(%s)' % epd['series_start_date']):
+            epd['series_title'] = ep['series_title'][:-7]
         return replace_bad_chars(self.series_mask % epd)
 
 naming_schemes = {
@@ -130,6 +134,8 @@ class Renamer(object):
         oldfile = ep.path()
         olddir = os.path.dirname(oldfile)
         newfile = self.naming_scheme.full_path(ep, root=self.destdir)
+        if samefile(oldfile, newfile):
+            return ep
         log.debug('Renaming "%s" -> "%s"', oldfile, newfile)
         pathindb = self.db.path_exists(ep.path('db'))        
         if os.path.exists(newfile) and not force:
@@ -143,6 +149,7 @@ class Renamer(object):
         if samefile(self.destdir, self.db.directory):
             self.update_db_path(ep, newfile)
         prune_dirs(olddir, root=self.db.directory)
+        return ep
 
 class SymlinkRenamer(Renamer):
 

@@ -90,7 +90,7 @@ def main():
         'unrar':args.extract_rars,
         'delete-rar':args.extract_rars,
         'brute':args.brute,
-        'move-files':args.rename_files,
+        'rename-files':args.rename_files,
         'naming-scheme':args.naming_scheme,
         'force-rename':args.force_rename,
         'symlinks':args.symlinks,
@@ -103,12 +103,13 @@ def main():
     appconfig.import_to_runtime_parser(argsd)
 
     lfn = appconfig.get('logging', 'filename')
-    logger.set_filehandler(lfn)
-    logger.log.setLevel(logging.__getattribute__(args.log_level.upper()))
     if args.clear_log_file:
         try:
-            lfn
+            os.unlink(lfn)
         except: pass
+    logger.set_filehandler(lfn)
+    logger.log.setLevel(logging.__getattribute__(args.log_level.upper()))
+
     entrypoint.start_importer(args.directory, args.dest_directory)
 
 

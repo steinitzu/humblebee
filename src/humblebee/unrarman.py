@@ -1,6 +1,17 @@
-import os
+import os, sys
 
 from UnRAR2 import RarFile
+from UnRAR2.rar_exceptions import ArchiveHeaderBroken, InvalidRARArchive, FileOpenError, IncorrectRARPassword, InvalidRARArchiveUsage
+
+from .texceptions import RARError
+
+error = (
+    ArchiveHeaderBroken,
+    InvalidRARArchiveUsage,
+    FileOpenError,
+    IncorrectRARPassword,
+    InvalidRARArchiveUsage
+    )
 
 
 
@@ -18,6 +29,16 @@ def unrar_file(path, out_dir=None):
             out_dir = path
         else:
             out_dir = os.path.dirname(path)
-    rf = RarFile(path)
-    rf.extract(path=out_dir)
+    try:
+        rf = RarFile(path)
+    except error as e:
+        raise RARError(
+            'Failed to open file "%s"' % path), None, sys.exc_info()[2]
+    try:
+        rf.extract(path=out_dir)
+    except error as e:
+        raise RARError(
+            'Failed to extract file "%s"' % path), None, sys.exc_info()[2]
+    
+        
 

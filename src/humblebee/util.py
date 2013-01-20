@@ -41,6 +41,18 @@ def scene_style(string):
         return
     return '.'.join(string.split())
 
+def soft_unlink(fn):
+    """
+    os.unlink which ignores 'file not exist' errors.
+    """
+    try:
+        os.unlink(fn)
+    except OSError as e:
+        if e.errno == 2:
+            pass
+        else:
+            raise
+
 
 def fndotify(string, keep_bad_chars=False):
     """
@@ -253,7 +265,9 @@ def make_symlink(target, link):
     """
     target = syspath(target)
     link = syspath(link)
-    safe_make_dirs(os.path.dirname(link))
+    dirs = os.path.split(link)[0]
+    if dirs:
+        safe_make_dirs(dirs)
     try:        
         os.symlink(target, link)
     except OSError as e:
