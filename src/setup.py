@@ -10,7 +10,7 @@ setup(
     description='A scraper for TV shows.',
     author='Steinthor Palsson',
     author_email='steinitzu@gmail.com',
-    url='https://github.com/steinitzu/romdb',
+    url='https://github.com/steinitzu/humblebee',
     license='MIT',
 
     include_package_data=True,
