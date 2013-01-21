@@ -319,6 +319,37 @@ def safe_make_dirs(path):
         else:
             raise
 
+def _append_num(path):
+    """
+    Append a number from 1 up to path.
+    If path is file, number is added before extension.
+    Number is incremented until we find a path that doesn't 
+    exist.
+    """
+    ext = ''
+    if os.path.isfile(path):
+        path, ext = os.path.splitext(path)        
+    n = 1
+    while True:
+        newp = path + ' (%s)%s' % (n, ext)
+        if os.path.exists(newp):
+            n+=1
+        else:
+            return newp        
+
+def safe_rename(oldpath, newpath):
+    """
+    Rename which does not overwrite destination path.
+    If destination path exists, the source path name will 
+    have a number starting with 1 appended.
+    Number is incremented until path is unique.
+    """
+    oldpath = syspath(os.path.abspath(oldpath))
+    newpath = syspath(os.path.abspath(newpath))
+    if os.path.exists(newpath):
+        newpath = _append_num(newpath)
+    os.rename(oldpath, newpath)
+
 
 def ancestry(path, pathmod=None):
     """Return a list consisting of path's parent directory, its

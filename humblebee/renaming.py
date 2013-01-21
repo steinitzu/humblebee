@@ -8,6 +8,7 @@ from .util import safe_make_dirs
 from .util import samefile
 from .util import prune_dirs
 from .util import make_symlink
+from .util import safe_rename
 from .dbguy import TVDatabase
 from .texceptions import FileExistsError, InvalidDirectoryError
 from .texceptions import NoSuchDatabaseError
@@ -175,7 +176,7 @@ class Renamer(object):
         destfile = normpath(
             pj(unknown, os.path.split(fn)[1])
             )
-        os.rename(fn, destfile)
+        safe_rename(fn, destfile)
         
 
     def move_episode(self, ep, force=False):
