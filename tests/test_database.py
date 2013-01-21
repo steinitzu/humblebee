@@ -2,8 +2,9 @@
 
 import unittest, os
 
-from tvunfucker import dbguy, parser, tvdbwrapper
-from tvunfucker import log
+from testprep import log
+
+from humblebee import dbguy, parser, tvdbwrapper
 
 class test_Database(unittest.TestCase):
     @classmethod
@@ -21,18 +22,6 @@ class test_Database(unittest.TestCase):
     def tearDown(self):
         ###  XXX code to do tear down
         os.unlink(self.db.dbfile)
-    """
-    def test_XXX_Test_Name(self):
-        raise NotImplementedError('Insert test code here.')
-        #  Examples:
-        # self.assertEqual(fp.readline(), 'This is a test')
-        # self.assertFalse(os.path.exists('a'))
-        # self.assertTrue(os.path.exists('a'))
-        # self.assertTrue('already a backup server' in c.stderr)
-        # with self.assertRaises(Exception):
-        #    raise Exception('test')
-        # self.assertIn('fun', 'disfunctional')
-    """
 
     def test_initialize_existing_tvdb_error(self):
         """
@@ -56,7 +45,7 @@ class test_Database(unittest.TestCase):
         also tests upsert.
         """
         self.db.create_database()
-        ep = parser.ez_parse_episode(
+        ep = parser.base_parse_episode(
             os.path.join(
                 self.db.directory,
                 'Sons of Anarchy/S04/Sons.of.'\

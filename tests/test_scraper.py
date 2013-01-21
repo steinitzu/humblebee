@@ -3,31 +3,15 @@ import unittest
 import os
 import logging
 
-from tvunfucker.importer import Importer
-from tvunfucker.util import normpath, syspath
-from tvunfucker.tvregexes import tv_regexes
-from tvunfucker.parser import base_parse_episode, reverse_parse_episode
-from tvunfucker.tvdbwrapper import lookup
+from testprep import log
 
-def get_log():
-    lf = logging.Formatter('%(levelname)s:%(funcName)s: %(message)s')
-    lh = logging.StreamHandler()
-    lh.setFormatter(lf)    
-    l = logging.getLogger('tester')
-    l.addHandler(lh)
-    l.setLevel(logging.DEBUG)
-    """
-    if not l.handlers:
-        logging.getLogger('tvunfucker').setLevel(logging.FATAL)
-        l.addHandler(
-            logging.StreamHandler()
-            )
-        l.setLevel(logging.DEBUG)
-    """
-    return l
+from humblebee.importer import Importer
+from humblebee.util import normpath, syspath
+from humblebee.tvregexes import tv_regexes
+from humblebee.parser import base_parse_episode, reverse_parse_episode
+from humblebee.tvdbwrapper import lookup
 
-log = get_log()
-logging.getLogger('tvunfucker').setLevel(logging.DEBUG)
+
 
 testfsdir = os.path.abspath(normpath(
     os.path.join(

@@ -1,8 +1,10 @@
 import unittest, os
 
-from tvunfucker import cfg
+import testprep
 
-class Test_Cfg(unittest.TestCase):
+from humblebee import cfg
+
+class test_Cfg(unittest.TestCase):
     @classmethod
     def setUp(self):
         dfg = os.path.join(
@@ -17,7 +19,6 @@ class Test_Cfg(unittest.TestCase):
 
     def tearDown(self):
         pass
-
 
     def test_set_get(self):
         self.cfgparser.set('newsection', 'dasoption', 45, parser='user')
