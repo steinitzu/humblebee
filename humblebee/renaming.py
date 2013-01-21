@@ -262,7 +262,7 @@ def make_symlinkfs(rootdir, destdir, naming_scheme='friendly'):
             )
     if not os.path.exists(destdir):
         safe_make_dirs(destdir)
-    renamer = SymlinkRenamer(rootdir, destdir, naming_scheme='friendly')
+    renamer = SymlinkRenamer(rootdir, destdir, naming_scheme=naming_scheme)
     for ep in db.get_episodes():
         renamer.move_episode(ep)    
     make_unknown_dir(db, destdir)
@@ -279,7 +279,7 @@ def renamer_all(rootdir, destdir, force=False, naming_scheme='friendly'):
             )
     if not os.path.exists(destdir):
         safe_make_dirs(destdir)
-    renamer = Renamer(rootdir, destdir, naming_scheme='friendly')
+    renamer = Renamer(rootdir, destdir, naming_scheme=naming_scheme)
     for ep in db.get_episodes():
         renamer.move_episode(ep, force=force)
     
