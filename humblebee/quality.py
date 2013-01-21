@@ -2,7 +2,7 @@ from __future__ import division
 
 import os
 
-from .mediainfo import MediaInfo
+from .mediainfo import MediaInfo, MediaInfoError
 from .texceptions import InvalidVideoFileError
 
 def quality_battle(ep1, ep2, source_dir):
@@ -18,18 +18,31 @@ def quality_battle(ep1, ep2, source_dir):
     3. video duration -> 1 point if longer but less than 10% longer, 
        if more than 10% it's the winning point no matter what
     """
+    m = [ep1.path(), ep2.path()]
+    try:
+        m[0] = MediaInfo(ep1.path())
+    except MediaInfoError:
+        m[0] = False
+    try:
+        m[1] = MediaInfo(ep2.path())
+    except MediaInfoError:
+        m[1] = False     
 
-    m = (
-        MediaInfo(ep1.path()),
-        MediaInfo(ep2.path())
-        )
 
     def raise_inv(plusmsg=''):
-        raise InvalidVideoFileError(
+        raise MediaInfoError(
             '"%s" and "%s" are not video files. '+plusmsg % 
             m[0].general.complete_name,
             m[1].general.complete_name
             )        
+
+    if not m[0] and m[1]:
+        return m[1]
+    elif not m[1] and m[0]:
+        return m[0]
+    elif not m[1] and not m[0]:
+        raise_inv()
+
 
     points = [0, 0] #ep1, ep2
     ep = [ep1, ep2]

@@ -20,6 +20,11 @@ On ubuntu, mint, debian and other debian based distros, pip can be install with 
 Now install humblebee using
 
     sudo pip install humblebee
+
+This program also depends on `mediainfo` and `unrar` (if you want to use the unrar option). Install using
+
+     sudo apt-get install mediainfo
+     sudo apt-get install unrar
     
 That's it. Now lets see how we use this thing.  
 

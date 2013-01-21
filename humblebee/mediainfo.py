@@ -100,8 +100,12 @@ def get_dict(filename):
     d = xmltodict.parse(
         get_raw_xml(filename)
         )
-    return d['Mediainfo']['File']
-
+    try:
+        return d['Mediainfo']['File']
+    except KeyError:
+        raise MediaInfoError(
+            'No media data found for "%s"' % filename
+            )
 
 
 def get_tracks(filename):

@@ -11,6 +11,7 @@ from .util import make_symlink
 from .dbguy import TVDatabase
 from .texceptions import FileExistsError, InvalidDirectoryError
 from .texceptions import NoSuchDatabaseError
+from . import appconfig
 
 log = logging.getLogger('humblebee')
 
@@ -114,6 +115,7 @@ class Renamer(object):
             self.destdb.create_database(soft=True)
         else:
             self.destdb = self.db
+        self.clutter = appconfig.get('scanner', 'clutter').split(',')
 
     def update_db_path(self, ep, newpath):
         """
@@ -164,7 +166,7 @@ class Renamer(object):
         os.rename(oldfile, newfile)
         #if samefile(self.destdir, self.db.directory):
         self.update_db_path(ep, newfile)
-        prune_dirs(olddir, root=self.db.directory)
+        prune_dirs(olddir, root=self.db.directory, clutter=self.clutter)
         return ep
 
 class SymlinkRenamer(Renamer):

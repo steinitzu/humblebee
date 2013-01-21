@@ -30,6 +30,7 @@ from .dirscanner import is_rar
 from .dirscanner import get_file_from_single_ep_dir
 from .unrarman import unrar_file
 from .quality import quality_battle
+from .quality import MediaInfoError
 from .util import get_prog_home_dir
 from . import appconfig as cfg
 
@@ -169,7 +170,11 @@ class Importer(object):
             #can't battle rars
             return
         #let's fight
-        return quality_battle(ep, oldep, self.db.directory)
+        try:
+            return quality_battle(ep, oldep, self.db.directory)
+        except MediaInfoError as e:
+            log.warning(e.message)
+            return
         
 
     def should_import(self, ep):

@@ -60,7 +60,7 @@ def get_file_from_single_ep_dir(dir_):
         return vfiles[0]
     elif len(vfiles) == 0:
         log.debug('No media file found in dir: %s. Returning dirname', dir_)
-        return dir_
+        return None
     #do something when more than 1 file in the dir
     log.debug('There was more than one media file in dir: %s', dir_)
     for f in vfiles:
@@ -124,8 +124,14 @@ def get_episodes(dir_):
                 continue
             if dir_is_single_ep(subdir):
                 ret = get_file_from_single_ep_dir(subdir)
-                log.info('Found episode: %s', ret)
-                yield base_parse_episode(ret, dir_)
+                if ret:
+                    log.info('Found episode: %s', ret)
+                    yield base_parse_episode(ret, dir_)
+                elif is_rar(subdir):
+                    log.info('Found rar episode: %s', subdir)
+                    yield base_parse_episode(subdir, dir_)
+                else:
+                    continue            
         for fn in filenames:
             if is_clutter(fn):
                 continue

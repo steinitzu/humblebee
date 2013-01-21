@@ -373,46 +373,6 @@ def posixpath(path):
     """
     return path.replace('\\', '/')
 
-def prune_dirs(path, root=None, clutter=('.DS_Store', 'Thumbs.db')):
-    """If path is an empty directory, then remove it. Recursively remove
-    path's ancestry up to root (which is never removed) where there are
-    empty directories. If path is not contained in root, then nothing is
-    removed. Filenames in clutter are ignored when determining
-    emptiness. If root is not provided, then only path may be removed
-    (i.e., no recursive removal).
-    """
-    path = normpath(path)
-    if root is not None:
-        root = normpath(root)
-
-    ancestors = ancestry(path)
-    if root is None:
-        # Only remove the top directory.
-        ancestors = []
-    elif root in ancestors:
-        # Only remove directories below the root.
-        ancestors = ancestors[ancestors.index(root)+1:]
-    else:
-        # Remove nothing.
-        return
-
-    # Traverse upward from path.
-    ancestors.append(path)
-    ancestors.reverse()
-    for directory in ancestors:
-        directory = syspath(directory)
-        if not os.path.exists(directory):
-            # Directory gone already.
-            continue
-
-        if all(fn in clutter for fn in os.listdir(directory)):
-            # Directory contains only clutter (or nothing).
-            try:
-                shutil.rmtree(directory)
-            except OSError:
-                break
-        else:
-            break
 
 #blatantly stolen from beets
 #string distance stuff
