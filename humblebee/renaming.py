@@ -96,8 +96,47 @@ class Friendly(NamingScheme):
             epd['series_title'] = ep['series_title'][:-7]
         return replace_bad_chars(self.series_mask % epd)
 
+
+class Structured(NamingScheme):
+    """
+    Series Name (year)/s01/Series Name s01e02 Episode Title.avi
+    """
+    ep_mask = u'%(series_title)s s%(season_number)se%(ep_number)s%(extra_ep_number)s %(title)s%(ext)s'
+    series_mask = u'%(series_title)s'
+    season_mask = u'season %(season_number)s'
+    
+    def ep_filename(self, ep):
+        epd = dict(ep.items())
+        eep = epd['extra_ep_number']
+        epd['season_number'] = padnum(epd['season_number'])
+        epd['ep_number'] = padnum(epd['ep_number'])
+        if eep:
+            epd['extra_ep_number'] = 'e'+padnum(eep)
+        else:
+            epd['extra_ep_number'] = ''             
+        p = ep.path()
+        if os.path.isdir(p):
+            epd['ext'] = ''
+        else:
+            epd['ext'] = os.path.splitext(p)[1]
+        return replace_bad_chars(self.ep_mask % epd)
+
+    def season_filename(self, ep):
+        epd = dict(ep.items())
+        epd['season_number'] = padnum(ep['season_number'])
+        return replace_bad_chars(self.season_mask % epd)
+
+    def series_filename(self, ep):
+        """
+        Get a series foldername from ep.
+        """
+        epd = dict(ep.items())
+        return replace_bad_chars(self.series_mask % epd)
+    
+
 naming_schemes = {
-    'friendly' : Friendly
+    'friendly' : Friendly,
+    'structured' : Structured
     }
 
 
