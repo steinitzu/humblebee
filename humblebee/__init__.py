@@ -23,6 +23,7 @@ quotes = [
     "Screw you guys, I'm goin' home...",
     "I want to be the one person who doesn't die with dignity.",    
     "Shaka, when the walls fell.",
+    'Resistance is futile.',
     ]
 
 def app_excepthook(etype, e, etraceback):

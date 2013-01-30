@@ -157,13 +157,18 @@ def lookup(ep):
             )
     log.info('Looking up series: %s', ep['series_title'])
     series = get_series(ep.clean_name(ep['series_title']))
-    newep = Episode(ep.path(), ep.root_dir)
+    newep = Episode(ep.path(), ep.root_dir)    
     #put base info in new ep
     for key in newep.local_keys:
         newep[key] = ep[key]
+    newep.dvdrip = ep.dvdrip
     webep = None
+    if ep.dvdrip:
+        order = 'dvd'
+    else:
+        order = 'aired'
     try:
-        webep = series.season(ep['season_number']).episode(ep['ep_number'])
+        webep = series.season(ep['season_number'], order=order).episode(ep['ep_number'])
     except SeasonNotFoundError as e:
         raise texc.SeasonNotFoundError(
             series['seriesname'], ep['season_number']), None, sys.exc_info()[2]

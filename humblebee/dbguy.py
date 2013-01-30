@@ -51,6 +51,11 @@ class Episode(OrderedDict):
     except those listed.
     __setitem__ will convert given values to their correct types 
     when possible.    
+
+    attributes
+    -----------------
+    dvdrip = bool - this will suggest using dvd episode ordering when 
+                    looking up info from tvdb.    
     """
     preset_keys = (
         'id',
@@ -120,6 +125,7 @@ class Episode(OrderedDict):
                 )
         self['file_path'] = path        
         self.root_dir = normpath(root_dir)
+        self.dvdrip = False
 
     def safe_update(self, otherep):
         """
