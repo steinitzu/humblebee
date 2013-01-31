@@ -1,4 +1,4 @@
-# Humblebee  (version 1.1) #
+# Humblebee  (version 1.10) #
 
 Humblebee is a scraper and renamer/organizer for TV shows.  
 It is made with the intention to automatically organize the most disorganized collections without any manual user input.
