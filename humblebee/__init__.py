@@ -24,6 +24,7 @@ quotes = [
     "I want to be the one person who doesn't die with dignity.",    
     "Shaka, when the walls fell.",
     'Resistance is futile.',
+    'You wanna commit suicide? Tie your shoes and have a bite of rissole.',
     ]
 
 def app_excepthook(etype, e, etraceback):

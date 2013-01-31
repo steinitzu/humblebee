@@ -6,7 +6,7 @@ from setuptools import setup
 
 setup(
     name='humblebee',
-    version='1.08',
+    version='1.1',
     description='A scraper for TV shows.',
     author='Steinthor Palsson',
     author_email='steinitzu@gmail.com',
