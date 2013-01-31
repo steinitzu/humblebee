@@ -157,27 +157,41 @@ def lookup(ep):
             )
     log.info('Looking up series: %s', ep['series_title'])
     series = get_series(ep.clean_name(ep['series_title']))
-    newep = Episode(ep.path(), ep.root_dir)
+    newep = Episode(ep.path(), ep.root_dir)    
     #put base info in new ep
     for key in newep.local_keys:
         newep[key] = ep[key]
+    newep.dvdrip = ep.dvdrip
     webep = None
-    try:
-        webep = series.season(ep['season_number']).episode(ep['ep_number'])
-    except SeasonNotFoundError as e:
-        raise texc.SeasonNotFoundError(
-            series['seriesname'], ep['season_number']), None, sys.exc_info()[2]
-    except EpisodeNotFoundError as e:
-        raise texc.EpisodeNotFoundError(
-            series['seriesname'], ep['season_number'], ep['ep_number']), None, sys.exc_info()[2]
+    if ep.dvdrip:
+        order = 'dvd'
     else:
-        log.debug(
-            'Match was found for %s-s%se%s',
-            ep['series_title'],
-            ep['season_number'],
-            ep['ep_number']
-            )
-        return _update_ep_with_tvdb_ep(newep, webep)
+        order = 'aired'
+    def _lookup(ep, order):
+        try:
+            we = series.season(ep['season_number'], order=order).episode(ep['ep_number'])
+        except SeasonNotFoundError as e:
+            raise texc.SeasonNotFoundError(
+                series['seriesname'], ep['season_number']), None, sys.exc_info()[2]
+        except EpisodeNotFoundError as e:
+            raise texc.EpisodeNotFoundError(
+                series['seriesname'], ep['season_number'], ep['ep_number']), None, sys.exc_info()[2]
+        else:
+            log.debug(
+                'Match was found for %s-s%se%s',
+                ep['series_title'],
+                ep['season_number'],
+                ep['ep_number']
+                )
+            return we        
+    try:
+        webep = _lookup(ep, order)
+    except (texc.SeasonNotFoundError, texc.EpisodeNotFoundError):
+        if order == 'dvd':
+            webep = _lookup(ep, 'aired')
+        else:
+            raise
+    return _update_ep_with_tvdb_ep(ep, webep)
 
 def _safe_string_to_date(dstring):
     """
