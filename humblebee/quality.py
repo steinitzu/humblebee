@@ -31,9 +31,10 @@ def quality_battle(ep1, ep2, source_dir):
 
     def raise_inv(plusmsg=''):
         raise MediaInfoError(
-            '"%s" and "%s" are not video files. '+plusmsg % 
+            '"%s" and "%s" are not video files. %s' % (
             m[0].general.complete_name,
-            m[1].general.complete_name
+            m[1].general.complete_name,
+            plusmsg)
             )        
 
     if not m[0] and m[1]:
