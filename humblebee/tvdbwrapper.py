@@ -167,22 +167,31 @@ def lookup(ep):
         order = 'dvd'
     else:
         order = 'aired'
+    def _lookup(ep, order):
+        try:
+            we = series.season(ep['season_number'], order=order).episode(ep['ep_number'])
+        except SeasonNotFoundError as e:
+            raise texc.SeasonNotFoundError(
+                series['seriesname'], ep['season_number']), None, sys.exc_info()[2]
+        except EpisodeNotFoundError as e:
+            raise texc.EpisodeNotFoundError(
+                series['seriesname'], ep['season_number'], ep['ep_number']), None, sys.exc_info()[2]
+        else:
+            log.debug(
+                'Match was found for %s-s%se%s',
+                ep['series_title'],
+                ep['season_number'],
+                ep['ep_number']
+                )
+            return we        
     try:
-        webep = series.season(ep['season_number'], order=order).episode(ep['ep_number'])
-    except SeasonNotFoundError as e:
-        raise texc.SeasonNotFoundError(
-            series['seriesname'], ep['season_number']), None, sys.exc_info()[2]
-    except EpisodeNotFoundError as e:
-        raise texc.EpisodeNotFoundError(
-            series['seriesname'], ep['season_number'], ep['ep_number']), None, sys.exc_info()[2]
-    else:
-        log.debug(
-            'Match was found for %s-s%se%s',
-            ep['series_title'],
-            ep['season_number'],
-            ep['ep_number']
-            )
-        return _update_ep_with_tvdb_ep(newep, webep)
+        webep = _lookup(ep, order)
+    except (texc.SeasonNotFoundError, texc.EpisodeNotFoundError):
+        if order == 'dvd':
+            webep = _lookup(ep, 'aired')
+        else:
+            raise
+    return _update_ep_with_tvdb_ep(ep, webep)
 
 def _safe_string_to_date(dstring):
     """
