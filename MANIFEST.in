@@ -1,5 +1,4 @@
 include humblebee/default.cfg
 include humblebee/schema.sql
-include humblebee/cacert.txt
 include LICENSE
 include README.md

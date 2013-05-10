@@ -6,7 +6,7 @@ from setuptools import setup
 
 setup(
     name='humblebee',
-    version='1.10',
+    version='1.101',
     description='A scraper for TV shows.',
     author='Steinthor Palsson',
     author_email='steinitzu@gmail.com',
@@ -16,7 +16,7 @@ setup(
     packages=[
         'humblebee', 
         ],
-    package_data = {'' : ['default.cfg', 'schema.sql', 'cacert.txt']},    
+    package_data = {'' : ['default.cfg', 'schema.sql']},    
 
 
     entry_points={

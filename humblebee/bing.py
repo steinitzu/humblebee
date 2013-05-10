@@ -12,10 +12,6 @@ from cStringIO import StringIO
 
 import httplib2
 
-cacert = os.path.join(
-    os.path.abspath(os.path.dirname(__file__)), 'cacert.txt'
-    )
-
 def _dir_exists(path):
     return os.path.exists(path) and os.path.isdir(path)
 
@@ -81,7 +77,7 @@ class Bing(object):
         self.http = self.get_http()
 
     def get_http(self):
-        h = httplib2.Http(cache=self.cache, ca_certs=cacert)
+        h = httplib2.Http(cache=self.cache)
         return h        
 
     def get_json(self, query):
